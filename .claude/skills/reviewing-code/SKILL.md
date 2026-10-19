@@ -1,6 +1,6 @@
 ---
 name: reviewing-code
-description: Review checklist for pull requests in this repository, with the only criteria that may block a merge and the required comment format. Use for every pull request review, locally and in CI.
+description: Review checklist for pull requests in this repository, with the only criteria that may block a merge and the required comment format. Use for every pull request review. The review runs in CI.
 ---
 
 # Reviewing code
@@ -25,4 +25,7 @@ Report these as warnings or suggestions, at most five.
 First line: `Review: APPROVED`, `Review: BLOCKED` or `Review: ESCALATED`.
 Then one line per finding:
 `[critical|warning|suggestion] <file>:<line>: <problem and why> (criterion <n>)`
-In CI, the check fails only when the first line is `Review: BLOCKED`.
+The review runs in CI (`.github/workflows/review.yml`) and is posted by claude[bot]. The check
+`Claude review` is red only when the first line is `Review: BLOCKED` (or when no valid review
+was posted); with the label `review-override` it is always green. Only the PO sets that label and then re-runs the `Claude review` job.
+PRs that change `review.yml` cannot be reviewed in CI; the `reviewer` subagent reviews them locally.

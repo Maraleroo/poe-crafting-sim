@@ -41,3 +41,4 @@ the human is the Product Owner (PO).
 - Never silence clippy warnings globally.
 - Never hard-code user-facing text. Add a translation key instead.
 - Never download or install tools or binaries yourself. Use only tools that are already installed; if one is missing, stop and ask the PO to install it.
+- Only the PO adds or removes the review-override label. Agents never change labels on pull requests.
