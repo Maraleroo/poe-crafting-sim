@@ -38,3 +38,4 @@ the human is the Product Owner (PO).
 - This repository is public: never commit secrets, tokens or personal data.
 - Never silence clippy warnings globally.
 - Never hard-code user-facing text. Add a translation key instead.
+- Never download or run tools or binaries. If a tool is missing, stop and ask the PO to install it.
