@@ -2,6 +2,7 @@
 <!-- What does this PR do, in one or two sentences? -->
 
 Fixes AB#<id>
+<!-- Use "Related AB#<id>" instead when acceptance criteria can only be checked after the merge -->
 
 ## Changes
 -
