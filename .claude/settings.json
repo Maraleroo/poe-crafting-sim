@@ -43,7 +43,12 @@
       "Bash(gh label edit *)",
       "Bash(gh label delete *)",
       "Bash(gh label clone *)",
-      "Bash(gh api *labels*)"
+      "Bash(gh api *labels*)",
+      "Bash(gh api graphql*)",
+      "Bash(gh pr create *--label*)",
+      "Bash(gh pr create *-l *)",
+      "Bash(gh issue create *--label*)",
+      "Bash(gh issue create *-l *)"
     ]
   }
 }
