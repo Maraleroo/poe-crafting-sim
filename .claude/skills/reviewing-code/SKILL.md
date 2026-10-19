@@ -27,5 +27,5 @@ Then one line per finding:
 `[critical|warning|suggestion] <file>:<line>: <problem and why> (criterion <n>)`
 The review runs in CI (`.github/workflows/review.yml`) and is posted by claude[bot]. The check
 `Claude review` is red only when the first line is `Review: BLOCKED` (or when no valid review
-was posted); with the label `review-override` it is always green. Only the PO sets that label.
+was posted); with the label `review-override` it is always green. Only the PO sets that label and then re-runs the `Claude review` job.
 PRs that change `review.yml` cannot be reviewed in CI; the `reviewer` subagent reviews them locally.

@@ -35,8 +35,8 @@ Copy this checklist into your reply and tick it off as you go:
    blocks, send the critical findings to the developer and wait for the review of the new push.
    After the second blocked round, stop and escalate to the PO. A PR that changes `review.yml`
    cannot be reviewed in CI and its check is red: run the `reviewer` subagent locally on it
-   instead, and tell the PO that only the label `review-override` (set by the PO) turns the
-   check green. Never change labels yourself.
+   instead, and tell the PO that only the label `review-override` (set by the PO, followed by a
+   re-run of the `Claude review` job) turns the check green. Never change labels yourself.
 7. Report to the PO: what changed, the PR link, open questions. Start the local preview.
 8. After the PO has merged, write a short retrospective: what went wrong, which skill
    or instruction should change. Propose the change; do not apply it yourself.

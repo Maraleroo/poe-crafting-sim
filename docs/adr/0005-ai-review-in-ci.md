@@ -27,9 +27,9 @@ Facts from the action's documentation and source (v1):
 
 ## Decision
 - A separate workflow `.github/workflows/review.yml`, job `review`, triggered by
-  `pull_request` on `main` (types `opened`, `synchronize`, `reopened`, `labeled`,
-  `unlabeled`; label events only when the label is `review-override`). Never
-  `pull_request_target`. Only PRs from branches of this repository are reviewed.
+  `pull_request` on `main` (types `opened`, `synchronize`, `reopened`). Never
+  `pull_request_target`. The job has no condition and is never skipped: a skipped job
+  counts as passing a required check, so a skipped review would look like an approval.
 - Permissions: workflow level `permissions: {}`; job level exactly `contents: read`,
   `pull-requests: read`, `id-token: write`. The comment is written with the Claude App
   token, so the workflow token needs no write permission.
@@ -49,7 +49,8 @@ Facts from the action's documentation and source (v1):
   never looks like an approval).
 - Override: when the PR has the label `review-override` (read at run time with `gh pr view`,
   so a re-run sees a newly added label), the review still runs and posts its findings,
-  and the final step always succeeds.
+  and the final step always succeeds. There are no label triggers: after setting
+  `review-override`, the PO re-runs the `Claude review` job.
 - A PR that changes `review.yml` cannot be reviewed in CI (validation mismatch, see above).
   Its review check is red with an explanatory message; the Scrum Master runs the
   `reviewer` subagent locally as a fallback, or the PO adds `review-override`.
@@ -65,8 +66,9 @@ Facts from the action's documentation and source (v1):
   subagent, or the PO adding `review-override`.
 - Label rule: only the PO creates, adds and removes the label `review-override`, because it
   switches the check to green. This is enforced by a hard rule in `CLAUDE.md` and, as defense
-  in depth, by deny rules in `.claude/settings.json` for label changes (`gh pr edit` stays
-  allowed for the PR description). The CI reviewer has no tool that can change labels.
+  in depth, by deny rules in `.claude/settings.json` for label changes, including `--label` on
+  `gh pr create` and `gh issue create` and `gh api graphql` (`gh pr edit` stays allowed for the
+  PR description). The CI reviewer has no tool that can change labels.
 
 ## Alternatives considered
 - Passing `github_token: ${{ secrets.GITHUB_TOKEN }}`: works on the PR that adds the
@@ -88,4 +90,5 @@ Facts from the action's documentation and source (v1):
 - Every push to a PR runs a full review on the PO's Claude subscription.
 - The CI reviewer cannot read Azure Boards; it relies on the acceptance criteria copied
   into the PR description (PR template) and on the acceptance tests.
-- Fork PRs get no secrets and no OIDC token; they are not reviewed.
+- Fork PRs get no secrets and no OIDC token; they are not reviewed. Their check ends red
+  (no verdict), so they cannot pass unnoticed.
