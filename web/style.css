@@ -1,0 +1,22 @@
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
+main {
+  flex: 1;
+  padding: 1rem 2rem;
+}
+
+footer {
+  padding: 1rem 2rem;
+  border-top: 1px solid #888;
+  font-size: 0.875rem;
+}
+
+footer p {
+  margin: 0.25rem 0;
+}
