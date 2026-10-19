@@ -40,7 +40,7 @@ const JOB_ID: &str = "review";
 const CHECK_NAME: &str = "Claude review";
 
 /// The action that runs the review, and how it authenticates.
-const CLAUDE_ACTION: &str = "anthropics/claude-code-action@v1";
+const CLAUDE_ACTION: &str = "anthropics/claude-code-action@";
 const OAUTH_TOKEN_INPUT: &str = "claude_code_oauth_token";
 const OAUTH_TOKEN_VALUE: &str = "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}";
 

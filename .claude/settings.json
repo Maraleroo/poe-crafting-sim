@@ -6,6 +6,7 @@
       "Bash(cargo build *)",
       "Bash(cargo test *)",
       "Bash(git status)",
+      "Bash(git fetch origin)",
       "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(git add *)",
@@ -46,9 +47,11 @@
       "Bash(gh api *labels*)",
       "Bash(gh api graphql*)",
       "Bash(gh pr create *--label*)",
-      "Bash(gh pr create *-l *)",
+      "Bash(gh pr create -l*)",
+      "Bash(gh pr create * -l*)",
       "Bash(gh issue create *--label*)",
-      "Bash(gh issue create *-l *)"
+      "Bash(gh issue create -l*)",
+      "Bash(gh issue create * -l*)"
     ]
   }
 }

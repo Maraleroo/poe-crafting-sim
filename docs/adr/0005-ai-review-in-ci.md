@@ -79,6 +79,45 @@ Facts from the action's documentation and source (v1):
 - Changes to `.claude/settings.json` (allow and deny rules) go through the tech lead's plan:
   the plan names the change and its reason as a step, and the PR shows it in the diff.
 
+## Amendment (AB#25, 2026-10-20)
+- Short label flag: the deny list also catches the short flag `-l` of `gh pr create` and
+  `gh issue create` when the value is attached (`-lreview-override`, `-l=review-override`),
+  not only `-l review-override`. This narrows the AB#24 amendment: the attached short form is
+  covered because it is the most likely other spelling; the list is still not extended to every
+  possible spelling. The patterns are:
+  - `Bash(gh pr create -l*)` and `Bash(gh issue create -l*)`: the flag right after the subcommand;
+  - `Bash(gh pr create * -l*)` and `Bash(gh issue create * -l*)`: the flag after a space anywhere
+    later in the command.
+  They replace `Bash(gh pr create *-l *)` and `Bash(gh issue create *-l *)`, which they include.
+  The leading space is deliberate: an unanchored `*-l*` would also block PR descriptions with
+  words such as "file-level", "text-level" or "multi-line", which this project uses often.
+  Known false positive: a description that contains a space followed by `-l` (for example
+  "ls -l"); use `--body-file` for such a description. Known gaps: combined short flags
+  (`-dl review-override`), a quoted flag (`"-lreview-override"`), a flag after a line break
+  without indentation, and label changes through other tools. The hard rule in `CLAUDE.md`
+  covers them.
+- Re-run hint: every red `Claude review` check names the override path in its error message:
+  the PO adds the label `review-override` and then re-runs the `Claude review` job, because the
+  label is only read while the job runs.
+- Removing the label: the label is only read while the job runs. When the PO removes
+  `review-override` after a green run, the check stays green until the next run of the
+  `Claude review` job (a new push or a manual re-run); only that run can turn it red. To make
+  the removal take effect at once, the PO re-runs the job after removing the label.
+- Dependabot PRs (ADR 0006): the `Claude review` check is red on every Dependabot PR, for
+  three independent reasons:
+  1. Workflows started by Dependabot get Dependabot secrets, not Actions secrets, so
+     `CLAUDE_CODE_OAUTH_TOKEN` is empty.
+  2. `claude-code-action` refuses runs started by a bot unless the bot is listed in its input
+     `allowed_bots` (default: none).
+  3. Updates of `actions/checkout` or `anthropics/claude-code-action` change `review.yml`
+     (validation mismatch, see above).
+  Adding the token as a Dependabot secret alone would therefore not help, and it is not done.
+  For a Dependabot PR the PO checks that CI is green and reads the diff and the release notes
+  (or asks the Scrum Master to run the local `reviewer` subagent), then adds `review-override`,
+  re-runs the `Claude review` job and merges. Reviewing Dependabot PRs in CI (`allowed_bots`
+  plus a Dependabot secret) would be a separate story, and it would still not cover updates
+  that change `review.yml`.
+
 ## Alternatives considered
 - Passing `github_token: ${{ secrets.GITHUB_TOKEN }}`: works on the PR that adds the
   workflow, but comments appear as `github-actions[bot]`, not as the Claude bot.
