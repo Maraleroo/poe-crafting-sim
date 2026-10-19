@@ -22,6 +22,9 @@ harness would add tooling (headless browser, driver) that the project does not n
 - Criteria that need a running browser, the CI system or the public URL are checked
   outside `cargo test`: by the CI run visible on the PR, by the PO in the local preview
   and on the published page after the merge. The PR description lists these steps.
+- For CI and process stories (workflows, skills, agents), the file-level checks stay lean
+  and text-level: a file exists, contains or does not contain a string. No parsers or
+  structural models of YAML or Markdown files (added by AB#24, see `writing-acceptance-tests`).
 - No headless browser tests for now. When the first interactive story needs them, a new
   ADR decides the tool and the test location.
 

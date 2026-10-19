@@ -70,6 +70,15 @@ Facts from the action's documentation and source (v1):
   `gh pr create` and `gh issue create` and `gh api graphql` (`gh pr edit` stays allowed for the
   PR description). The CI reviewer has no tool that can change labels.
 
+## Amendment (AB#24, 2026-10-20)
+- The deny rules in `.claude/settings.json` are only a safeguard for the hard rule in
+  `CLAUDE.md`, not the control itself. They match the command text, so other spellings slip
+  through, for example combined short flags such as `gh pr create -lreview-override`. The
+  rule in `CLAUDE.md` applies regardless of whether a deny rule catches a command; the deny
+  list is not extended to every possible spelling.
+- Changes to `.claude/settings.json` (allow and deny rules) go through the tech lead's plan:
+  the plan names the change and its reason as a step, and the PR shows it in the diff.
+
 ## Alternatives considered
 - Passing `github_token: ${{ secrets.GITHUB_TOKEN }}`: works on the PR that adds the
   workflow, but comments appear as `github-actions[bot]`, not as the Claude bot.
