@@ -34,7 +34,16 @@
       "Bash(git reset --hard *)",
       "Bash(gh pr merge *)",
       "Bash(gh repo delete *)",
-      "Bash(az devops login *)"
+      "Bash(az devops login *)",
+      "Bash(gh pr edit *--add-label*)",
+      "Bash(gh pr edit *--remove-label*)",
+      "Bash(gh issue edit *--add-label*)",
+      "Bash(gh issue edit *--remove-label*)",
+      "Bash(gh label create *)",
+      "Bash(gh label edit *)",
+      "Bash(gh label delete *)",
+      "Bash(gh label clone *)",
+      "Bash(gh api *labels*)"
     ]
   }
 }
