@@ -38,3 +38,6 @@ cargo test --all
 ```
 The same checks run in CI on every pull request. After a merge to `main`, CI builds the page with
 `trunk build --release --public-url /poe-crafting-sim/` and publishes it to GitHub Pages.
+
+Every pull request on `main` is also reviewed automatically by Claude in CI (workflow
+`.github/workflows/review.yml`).
