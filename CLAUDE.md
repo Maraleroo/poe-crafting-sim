@@ -16,7 +16,8 @@ the human is the Product Owner (PO).
 - Format: `cargo fmt --all`
 - Lint: `cargo clippy --all-targets -- -D warnings`
 - Test: `cargo test --all`
-- Local preview: defined in the walking skeleton story
+- Local preview: `trunk serve --open` in `web/` (needs Trunk and the `wasm32-unknown-unknown` target, see README)
+- Pages build: `trunk build --release --public-url /poe-crafting-sim/` in `web/`
 
 ## Workflow
 - Every change belongs to a work item in Azure Boards. Stories start with `/story AB#<id>`.

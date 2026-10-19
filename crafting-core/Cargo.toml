@@ -1,0 +1,10 @@
+[package]
+name = "crafting-core"
+description = "Pure crafting logic for the Path of Exile 1 crafting simulator"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+
+[dev-dependencies]
+serde_json = "1"
