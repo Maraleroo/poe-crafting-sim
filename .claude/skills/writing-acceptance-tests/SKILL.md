@@ -23,6 +23,13 @@ description: How to turn acceptance criteria into Rust acceptance tests that fai
   If it does not exist yet, the test failing to compile is the expected red state.
 - Test behaviour, never implementation details.
 
+## CI and process stories
+Stories that change workflows, skills, agents or other team files get only lean
+text-level checks (ADR 0004): a file exists, contains or does not contain a given string,
+a line with a given text exists. No parsers for YAML, Markdown or JSON, no structural
+models of the file. Behaviour that needs a real run is verified after the merge by the
+verification task from the tech lead's plan, not by `cargo test`.
+
 ## Randomness
 - Always use a seeded RNG with a fixed seed, so every run is identical.
 - For probabilities, run N trials and compare the observed share with the expected

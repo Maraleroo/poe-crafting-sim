@@ -10,7 +10,10 @@ description: Review checklist for pull requests in this repository, with the onl
 2. Expected test values are hard-coded, or special cases exist only for tests.
 3. Game mechanics contradict `poe-crafting-rules` or the imported data.
 4. Security: a secret in code or logs, a workflow using `pull_request_target`,
-   or workflow permissions broader than needed.
+   workflow permissions broader than needed, or a check that can pass without running its
+   verification: a job or step that can be skipped (for example by an `if:` condition; a
+   skipped job counts as passed), or a fail-open path (`continue-on-error`, `|| true`, an early `exit 0`, a missing
+   result treated as success).
 5. Quality gates bypassed: clippy warnings silenced globally, CI steps removed.
 
 ## Never blocking

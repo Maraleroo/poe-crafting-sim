@@ -24,9 +24,12 @@ the human is the Product Owner (PO).
 - Work items are written in German. Everything in this repository (code, comments,
   commits, pull requests, docs) is written in English.
 - One branch per work item: `<prefix>/<id>-<short-name>` with prefix `feat`, `fix`, `chore`,
-  `ci` or `docs`.
-- Commits and PR titles follow Conventional Commits. Scopes: core, web, data, ci, docs.
-- Every PR description contains `Fixes AB#<id>`.
+  `ci` or `docs`, created from `origin/main` with `--no-track`.
+- Commits and PR titles follow Conventional Commits. The type follows the kind of change
+  (`feat` only for product functionality). Scopes: core, web, data, team (`.claude/` and
+  `CLAUDE.md`); no scope that repeats the type.
+- Every PR description contains `Fixes AB#<id>`, or `Related AB#<id>` when the story has
+  acceptance criteria that can only be checked after the merge.
 - Versioning follows Semantic Versioning, starting at 0.1.0.
 
 ## Hard rules
