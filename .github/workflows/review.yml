@@ -5,26 +5,21 @@ name: Review
 on:
   pull_request:
     branches: [main]
-    # Label events matter only for the label review-override (see the job condition).
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
 
 # No permissions by default. The job asks for exactly what it needs.
 permissions: {}
 
-# One review per pull request: a new push cancels the outdated run. Label events for other
-# labels get their own group, so they never cancel a running review.
+# One review per pull request: a new push cancels the outdated run.
 concurrency:
-  group: review-${{ github.event.pull_request.number }}${{ (github.event.action == 'labeled' || github.event.action == 'unlabeled') && github.event.label.name != 'review-override' && format('-ignored-{0}', github.run_id) || '' }}
+  group: review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   review:
     name: Claude review
-    # Only branches of this repository: pull requests from forks get no secrets.
-    if: |
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      ((github.event.action != 'labeled' && github.event.action != 'unlabeled') ||
-       github.event.label.name == 'review-override')
+    # No job condition: the job is never skipped, because a skipped job passes a required check.
+    # Fork pull requests get no secret and no OIDC token, so the verdict step ends red for them.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -90,8 +85,8 @@ jobs:
             --json-schema '{"type":"object","properties":{"verdict":{"type":"string","enum":["APPROVED","BLOCKED","ESCALATED"]}},"required":["verdict"],"additionalProperties":false}'
 
       # Sets the check status. Fails closed: red on BLOCKED, and red when there is no verdict or
-      # no matching comment. The label review-override (read now, so a re-run sees a new label)
-      # keeps the check green; the findings were posted anyway.
+      # no matching comment. The label review-override (read now, so the PO re-runs this job after
+      # setting it) keeps the check green; the findings were posted anyway.
       - name: Set check status
         if: ${{ !cancelled() }}
         env:
