@@ -111,7 +111,7 @@ jobs:
               echo "::notice title=Claude review::$1 The label review-override is set, so the check stays green."
               exit 0
             fi
-            echo "::error title=Claude review::$1"
+            echo "::error title=Claude review::$1 To override, the PO adds the label review-override and then re-runs the Claude review job."
             exit 1
           }
 
@@ -119,7 +119,7 @@ jobs:
           case "$verdict" in
             APPROVED | BLOCKED | ESCALATED) ;;
             *)
-              red "The review produced no verdict (Claude step: $CLAUDE_OUTCOME). This is expected when the pull request changes .github/workflows/review.yml, because the Claude App token is refused while the workflow differs from main. Run the local reviewer subagent, or let the PO add the label review-override."
+              red "The review produced no verdict (Claude step: $CLAUDE_OUTCOME). This is expected when the pull request changes .github/workflows/review.yml, because the Claude App token is refused while the workflow differs from main. Run the local reviewer subagent."
               ;;
           esac
 
