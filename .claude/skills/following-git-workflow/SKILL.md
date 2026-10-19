@@ -6,7 +6,9 @@ description: Branch naming, Conventional Commits and pull request conventions fo
 # Git workflow
 
 ## Branches
-- One branch per work item, created from `main`: `feat/<id>-<short-name>` or `fix/<id>-<short-name>`.
+- One branch per work item, created from `main`: `<prefix>/<id>-<short-name>`.
+- Prefixes: `feat` (user story), `fix` (bug), `chore` (maintenance and team configuration),
+  `ci` (CI and workflows only), `docs` (documentation only).
 - Push with `git push -u origin <branch>`. Never push to `main`. Never force-push.
 
 ## Commits (Conventional Commits)

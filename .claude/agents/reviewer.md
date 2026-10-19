@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Reviews a pull request against the review checklist and decides whether it is blocked. Use for local pre-checks; the same checklist runs in CI on every PR.
+description: Reviews a pull request against the review checklist, decides whether it is blocked and posts the review as a PR comment. Runs locally once CI has finished (story step 6).
 tools: Read, Grep, Glob, Bash
 model: opus
 effort: high
