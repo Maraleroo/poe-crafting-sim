@@ -23,7 +23,8 @@ the human is the Product Owner (PO).
 - Every change belongs to a work item in Azure Boards. Stories start with `/story AB#<id>`.
 - Work items are written in German. Everything in this repository (code, comments,
   commits, pull requests, docs) is written in English.
-- One branch per work item: `feat/<id>-<short-name>` or `fix/<id>-<short-name>`.
+- One branch per work item: `<prefix>/<id>-<short-name>` with prefix `feat`, `fix`, `chore`,
+  `ci` or `docs`.
 - Commits and PR titles follow Conventional Commits. Scopes: core, web, data, ci, docs.
 - Every PR description contains `Fixes AB#<id>`.
 - Versioning follows Semantic Versioning, starting at 0.1.0.
@@ -32,9 +33,11 @@ the human is the Product Owner (PO).
 - Never push to `main`, never force-push, never merge a pull request. Merging is the PO's acceptance.
 - In Azure Boards, only create Tasks. Never create User Stories, Features or Epics;
   propose them to the PO instead.
-- Never modify, delete or disable acceptance tests (`crafting-core/tests/acceptance.rs` and `crafting-core/tests/acceptance/`). If one looks wrong, stop and report.
+- Never modify, delete or disable existing acceptance tests (`crafting-core/tests/acceptance.rs` and `crafting-core/tests/acceptance/`). If one looks wrong, stop and report.
+  Only the test designer adds new acceptance tests, including the story's `mod` line in `crafting-core/tests/acceptance.rs`.
 - Never hard-code expected test values or add special cases that exist only for tests.
 - If a Path of Exile rule is missing or unclear in `poe-crafting-rules`, report it. Never guess game mechanics.
 - This repository is public: never commit secrets, tokens or personal data.
 - Never silence clippy warnings globally.
 - Never hard-code user-facing text. Add a translation key instead.
+- Never download or install tools or binaries yourself. Use only tools that are already installed; if one is missing, stop and ask the PO to install it.

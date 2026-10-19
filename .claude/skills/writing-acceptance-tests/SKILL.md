@@ -6,7 +6,13 @@ description: How to turn acceptance criteria into Rust acceptance tests that fai
 # Acceptance tests
 
 ## Location
-- `crafting-core/tests/acceptance.rs` declares one module per story: `mod story_<id>;`
+- `crafting-core/tests/acceptance.rs` declares one module per story, with an explicit path:
+  ```rust
+  #[path = "acceptance/story_<id>.rs"]
+  mod story_<id>;
+  ```
+  The file is the crate root of the test target, so a plain `mod story_<id>;` would look
+  for `tests/story_<id>.rs` and not compile.
 - The tests live in `crafting-core/tests/acceptance/story_<id>.rs`.
 
 ## Structure
