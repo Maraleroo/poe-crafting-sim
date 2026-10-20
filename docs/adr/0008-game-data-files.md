@@ -1,6 +1,6 @@
 # 0008: Game data files embedded in crafting-core
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-20
 - Work item: AB#52
 

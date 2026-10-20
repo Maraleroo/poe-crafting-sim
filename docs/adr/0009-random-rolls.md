@@ -1,6 +1,6 @@
 # 0009: Random rolls with a caller-supplied seeded RNG
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-20
 - Work item: AB#52
 
