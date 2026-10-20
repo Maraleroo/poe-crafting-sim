@@ -3,6 +3,11 @@
   "footer.core_version": "crafting-core v{version}",
   "footer.disclaimer": "This product isn't affiliated with or endorsed by Grinding Gear Games in any way.",
   "footer.privacy": "Privacy",
+  "item.rarity.magic": "Magic",
+  "item.rarity.normal": "Normal",
+  "item.rarity.rare": "Rare",
+  "item.rarity.unique": "Unique",
+  "item.requires_level": "Requires Level {level}",
   "privacy.title": "Privacy Policy",
   "privacy.german_version": "German version",
   "privacy.english_version": "English version"
