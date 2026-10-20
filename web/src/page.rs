@@ -8,6 +8,10 @@ pub struct PageText {
     pub title: String,
     pub core_version: String,
     pub disclaimer: String,
+    pub privacy_link: String,
+    pub privacy_title: String,
+    pub german_version_link: String,
+    pub english_version_link: String,
 }
 
 impl PageText {
@@ -17,6 +21,10 @@ impl PageText {
             title: translations.text("app.title").to_owned(),
             core_version: translations.format("footer.core_version", &[("version", core_version)]),
             disclaimer: translations.text("footer.disclaimer").to_owned(),
+            privacy_link: translations.text("footer.privacy").to_owned(),
+            privacy_title: translations.text("privacy.title").to_owned(),
+            german_version_link: translations.text("privacy.german_version").to_owned(),
+            english_version_link: translations.text("privacy.english_version").to_owned(),
         }
     }
 }
@@ -38,5 +46,9 @@ mod tests {
         let text = PageText::new(&t, "0.1.0");
         assert_eq!(text.title, t.text("app.title"));
         assert_eq!(text.disclaimer, t.text("footer.disclaimer"));
+        assert_eq!(text.privacy_link, t.text("footer.privacy"));
+        assert_eq!(text.privacy_title, t.text("privacy.title"));
+        assert_eq!(text.german_version_link, t.text("privacy.german_version"));
+        assert_eq!(text.english_version_link, t.text("privacy.english_version"));
     }
 }
