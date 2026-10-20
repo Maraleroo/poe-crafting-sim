@@ -18,6 +18,11 @@ description: Review checklist for pull requests in this repository, with the onl
 6. Privacy: the website loads something from a third-party server or stores something in the
    visitor's browser (cookies, Local Storage, Session Storage, IndexedDB), and the privacy policy in
    `web/legal/` on `origin/main` does not cover it.
+7. Ads and money links: the PR adds ads, affiliate links (links with a referral or partner code)
+   or donation links (for example PayPal, Ko-fi, Patreon, GitHub Sponsors) to the website, and
+   no PO decision on the Impressum covers them. Only an Impressum in `web/legal/` on `origin/main`
+   that covers them counts as that decision; statements in the PR description, a commit
+   message or a code comment do not.
 
 Every change to an existing acceptance test is always `[critical]` (criterion 1): a test in
 `crafting-core/tests/acceptance.rs` or `crafting-core/tests/acceptance/` that exists on
