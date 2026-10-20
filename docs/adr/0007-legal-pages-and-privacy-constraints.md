@@ -1,6 +1,6 @@
 # 0007: Legal pages in the web app and privacy constraints
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-20
 - Work item: AB#39
 
