@@ -4,9 +4,10 @@
 //! by the code. Only the markup changes: the files become HTML when the page is built.
 //! Two conversion rules keep the pages safe and the layout of the texts intact:
 //! - a soft line break becomes `<br>`, so address blocks keep their lines;
-//! - raw HTML in the Markdown becomes escaped text, so a legal file cannot embed content.
+//! - raw HTML in the Markdown becomes escaped text, so a legal file cannot embed content;
+//! - an e-mail autolink stays plain text, so the pages never contain an e-mail link.
 
-use pulldown_cmark::{html, Event, Options, Parser};
+use pulldown_cmark::{html, Event, LinkType, Options, Parser, Tag, TagEnd};
 
 const PRIVACY_DE: &str = include_str!("../legal/privacy.de.md");
 const PRIVACY_EN: &str = include_str!("../legal/privacy.en.md");
@@ -22,10 +23,22 @@ pub fn privacy_german_html() -> String {
 }
 
 fn markdown_to_html(markdown: &str) -> String {
-    let events = Parser::new_ext(markdown, Options::empty()).map(|event| match event {
-        Event::SoftBreak => Event::HardBreak,
-        Event::Html(raw) | Event::InlineHtml(raw) => Event::Text(raw),
-        other => other,
+    let mut in_email_link = false;
+    let events = Parser::new_ext(markdown, Options::empty()).filter_map(|event| match event {
+        Event::Start(Tag::Link {
+            link_type: LinkType::Email,
+            ..
+        }) => {
+            in_email_link = true;
+            None
+        }
+        Event::End(TagEnd::Link) if in_email_link => {
+            in_email_link = false;
+            None
+        }
+        Event::SoftBreak => Some(Event::HardBreak),
+        Event::Html(raw) | Event::InlineHtml(raw) => Some(Event::Text(raw)),
+        other => Some(other),
     });
     let mut output = String::new();
     html::push_html(&mut output, events);
@@ -106,6 +119,13 @@ mod tests {
         assert!(!html.contains("<script>"));
         assert!(html.contains("&lt;b&gt;bold&lt;/b&gt;"));
         assert!(html.contains("&lt;script&gt;run()&lt;/script&gt;"));
+    }
+
+    #[test]
+    fn e_mail_autolinks_stay_plain_text() {
+        let html = markdown_to_html("write to <a@b.c> today");
+        assert!(!html.contains("<a "));
+        assert!(html.contains("write to a@b.c today"));
     }
 
     #[test]
