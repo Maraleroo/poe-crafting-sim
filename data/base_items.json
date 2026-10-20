@@ -1,0 +1,26 @@
+{
+  "base_items": [
+    {
+      "id": "Metadata/Items/Rings/Ring1",
+      "name": "Iron Ring",
+      "item_class": "Rings",
+      "required_level": 2,
+      "tags": ["default", "ring"],
+      "implicits": [
+        {
+          "family": "PhysicalDamage",
+          "tags": ["physical_damage", "damage", "physical", "attack"],
+          "stats": [
+            { "id": "attack minimum added physical damage", "min": 1, "max": 1, "global": true },
+            { "id": "attack maximum added physical damage", "min": 4, "max": 4, "global": true }
+          ],
+          "text": "Adds {minimum} to {maximum} Physical Damage to Attacks",
+          "placeholders": {
+            "minimum": "attack minimum added physical damage",
+            "maximum": "attack maximum added physical damage"
+          }
+        }
+      ]
+    }
+  ]
+}
