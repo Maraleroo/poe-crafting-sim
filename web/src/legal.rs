@@ -2,7 +2,7 @@
 //!
 //! The Markdown files in `web/legal/` are embedded at compile time and are never edited
 //! by the code. Only the markup changes: the files become HTML when the page is built.
-//! Two conversion rules keep the pages safe and the layout of the texts intact:
+//! Three conversion rules keep the pages safe and the layout of the texts intact:
 //! - a soft line break becomes `<br>`, so address blocks keep their lines;
 //! - raw HTML in the Markdown becomes escaped text, so a legal file cannot embed content;
 //! - an e-mail autolink stays plain text, so the pages never contain an e-mail link.
