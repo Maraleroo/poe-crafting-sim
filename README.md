@@ -7,7 +7,7 @@ Live page: https://maraleroo.github.io/poe-crafting-sim/ (published automaticall
 - `crafting-core/`: pure crafting logic, no UI and no I/O.
 - `web/`: user interface, compiled to WebAssembly with Trunk. All visible text lives in
   `web/i18n/en.json`.
-- `data/`: imported game data.
+- `data/`: imported game data (JSON files, embedded into `crafting-core` at build time, see `data/README.md`).
 - `docs/adr/`: architecture decision records.
 
 ## Local preview
@@ -27,7 +27,8 @@ trunk serve --open
 ```
 
 Trunk builds the page, opens it in your browser (http://127.0.0.1:8080/) and rebuilds on every change.
-You should see the heading "Hello Crafting" and, in the footer, the `crafting-core` version and
+You should see the heading "Hello Crafting", below it a normal item (the Iron Ring with its name, class,
+rarity, level requirement and implicit mod) and, in the footer, the `crafting-core` version and
 the disclaimer.
 
 ## Development checks
