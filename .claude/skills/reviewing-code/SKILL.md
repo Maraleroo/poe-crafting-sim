@@ -15,6 +15,9 @@ description: Review checklist for pull requests in this repository, with the onl
    skipped job counts as passed), or a fail-open path (`continue-on-error`, `|| true`, an early `exit 0`, a missing
    result treated as success).
 5. Quality gates bypassed: clippy warnings silenced globally, CI steps removed.
+6. Privacy: the website loads something from a third-party server or stores something in the
+   visitor's browser (cookies, Local Storage, Session Storage, IndexedDB), and the privacy policy in
+   `web/legal/` on `origin/main` does not cover it.
 
 Every change to an existing acceptance test is always `[critical]` (criterion 1): a test in
 `crafting-core/tests/acceptance.rs` or `crafting-core/tests/acceptance/` that exists on
