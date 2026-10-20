@@ -4,11 +4,13 @@
 //! so that `cargo clippy` and `cargo test` cover it; only `main` needs a browser.
 
 mod i18n;
+mod item_view;
 mod legal;
 mod page;
 mod route;
 
 use i18n::Translations;
+use item_view::{start_item, ItemView};
 use page::PageText;
 use route::Route;
 use wasm_bindgen::JsValue;
@@ -38,6 +40,8 @@ fn render() -> Result<(), JsValue> {
         Route::Home => {
             document.set_title(&text.title);
             append(&main, element(&document, "h1", Some(&text.title))?)?;
+            let item = ItemView::new(&Translations::english(), &start_item());
+            append(&main, item_section(&document, &item)?)?;
         }
         Route::PrivacyEnglish => {
             document.set_title(&text.privacy_title);
@@ -82,6 +86,25 @@ fn element(document: &Document, tag: &str, text: Option<&str>) -> Result<Element
     let element = document.create_element(tag)?;
     element.set_text_content(text);
     Ok(element)
+}
+
+/// The item as a section: name, class, rarity, level requirement and implicit mods.
+fn item_section(document: &Document, item: &ItemView) -> Result<Element, JsValue> {
+    let section = element(document, "section", None)?;
+    section.set_class_name("item");
+    append(&section, element(document, "h2", Some(&item.name))?)?;
+    append(&section, element(document, "p", Some(&item.item_class))?)?;
+    append(&section, element(document, "p", Some(&item.rarity))?)?;
+    append(
+        &section,
+        element(document, "p", Some(&item.requires_level))?,
+    )?;
+    let implicits = element(document, "ul", None)?;
+    for text in &item.implicits {
+        append(&implicits, element(document, "li", Some(text))?)?;
+    }
+    append(&section, implicits)?;
+    Ok(section)
 }
 
 /// A link to a page of the site.

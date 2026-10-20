@@ -24,3 +24,21 @@ footer p {
 article {
   max-width: 50rem;
 }
+
+.item {
+  display: inline-block;
+  min-width: 16rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #888;
+}
+
+.item h2,
+.item p {
+  margin: 0.25rem 0;
+}
+
+.item ul {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
