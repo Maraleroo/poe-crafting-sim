@@ -22,7 +22,8 @@ States for Task: New, Active, Closed, Removed.
 Console output on Windows:
 - On Windows, the Azure CLI prints text in Windows-1252, not UTF-8. `az.cmd` starts Python in
   isolated mode, so environment variables have no effect. In Git Bash, pipe the output through
-  `iconv -f WINDOWS-1252 -t UTF-8`. Never add an environment variable to `.claude/settings.json`.
+  `iconv -f WINDOWS-1252 -t UTF-8`. An environment variable such as `PYTHONUTF8` in
+  `.claude/settings.json` does not change this.
 - A wrongly displayed character in the console does not mean that the stored data is broken.
 - Verbatim copies from work items are checked byte for byte against the work item.
 
