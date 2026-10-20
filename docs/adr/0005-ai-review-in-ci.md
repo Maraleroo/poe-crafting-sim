@@ -1,6 +1,6 @@
 # 0005: AI review in CI
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-19
 - Work item: AB#16
 

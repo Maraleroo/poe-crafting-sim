@@ -26,6 +26,7 @@ Copy this checklist into your reply and tick it off as you go:
    A missing tool goes on the list for the PO; never install it yourself.
    For a bug: repro steps, expected and actual behaviour; the first acceptance test must
    reproduce the bug.
+   A rule that the PO quotes verbatim in an acceptance criterion counts as present.
    If anything is missing, list it for the PO and stop.
 2. Set the story to Active. Create the branch from `origin/main` without upstream:
    `git fetch origin`, then `git switch --no-track -c <prefix>/<id>-<short-name> origin/main`.
@@ -33,6 +34,9 @@ Copy this checklist into your reply and tick it off as you go:
    target `main`. The first push sets the upstream (`git push -u origin <branch>`). Choose the
    prefix by the kind of change (`following-git-workflow`): `feat` only for product
    functionality, `fix` for a bug.
+   If the PO quoted a game rule verbatim in an acceptance criterion, commit it unchanged to
+   `poe-crafting-rules`, checked byte for byte against the work item, in its own commit before
+   the tech lead and the tests start.
    If the PO has provided input files for the story (texts, data) in the working tree, commit
    them unchanged in their own commit right away, before the tech lead and the tests start.
    Type and scope follow `following-git-workflow` (for example `docs(web): add privacy policy

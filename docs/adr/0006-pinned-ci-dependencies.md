@@ -1,6 +1,6 @@
 # 0006: Pinned CI dependencies and Dependabot
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-20
 - Work item: AB#25
 

@@ -6,9 +6,10 @@ the human is the Product Owner (PO).
 
 ## Architecture
 - `crafting-core/`: pure crafting logic (items, mod pools, weights, currencies). No UI, no I/O.
-- `web/`: user interface, uses `crafting-core` via WebAssembly. All user-facing text comes
-  from translation files; default language is English.
-- `crafting-core` returns structured results and reason codes, never user-facing text.
+- `web/`: user interface, uses `crafting-core` via WebAssembly. All UI text comes from
+  translation files; default language is English.
+- `crafting-core` returns structured results and reason codes, never UI text.
+- Game data texts such as item names and mod texts are data (ADR 0008).
 - `data/`: imported game data.
 - `docs/adr/`: architecture decision records.
 
@@ -44,7 +45,7 @@ the human is the Product Owner (PO).
 - If a Path of Exile rule is missing or unclear in `poe-crafting-rules`, report it. Never guess game mechanics.
 - This repository is public: never commit secrets, tokens or personal data.
 - Never silence clippy warnings globally.
-- Never hard-code user-facing text. Add a translation key instead.
+- Never hard-code UI text. Add a translation key instead.
 - Never download or install tools or binaries yourself. Use only tools that are already installed; if one is missing, stop and ask the PO to install it.
 - Only the PO adds or removes the review-override label. Agents never change labels on pull requests.
 - The website loads nothing from third-party servers and stores nothing in the visitor's browser. Any change to that first needs a privacy policy updated by the PO.
