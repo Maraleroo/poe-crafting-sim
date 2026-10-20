@@ -40,6 +40,12 @@ Rules:
 - A step that an agent could only do by breaking a hard rule in `CLAUDE.md` (for example
   setting a label, merging, changing an existing acceptance test) is assigned to the PO by
   name: the plan names the PO as its owner and the Task title starts with `PO:`.
+- For every acceptance criterion that requires something to be absent from the delivered
+  files (a string, a link, a request), state in the plan whether it means the rendered
+  output or the file contents. Name every new dependency as a risk for such criteria,
+  because it can bring its own strings and requests. If the meaning is unclear, list it as
+  an open question for the PO in your report; the Scrum Master gets the answer before the
+  test designer starts.
 - Changes to `.claude/settings.json` (allow and deny rules) are planned by you as a step
   with a reason, like any other change (ADR 0005).
 - Never write product code. You may only write files in `docs/adr/`.

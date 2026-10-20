@@ -17,7 +17,9 @@ the human is the Product Owner (PO).
 - Lint: `cargo clippy --all-targets -- -D warnings`
 - Test: `cargo test --all`
 - Local preview: `trunk serve --open` in `web/` (needs Trunk and the `wasm32-unknown-unknown` target, see README)
-- Pages build: `trunk build --release --public-url /poe-crafting-sim/` in `web/`
+- Pages build: `trunk build --release --public-url /poe-crafting-sim/` in `web/`.
+  In Git Bash on Windows, run it as `MSYS_NO_PATHCONV=1 trunk build ...`; otherwise Git Bash
+  rewrites `/poe-crafting-sim/` into a Windows path.
 
 ## Workflow
 - Every change belongs to a work item in Azure Boards. Stories start with `/story AB#<id>`.
@@ -46,3 +48,4 @@ the human is the Product Owner (PO).
 - Never download or install tools or binaries yourself. Use only tools that are already installed; if one is missing, stop and ask the PO to install it.
 - Only the PO adds or removes the review-override label. Agents never change labels on pull requests.
 - The website loads nothing from third-party servers and stores nothing in the visitor's browser. Any change to that first needs a privacy policy updated by the PO.
+- The website shows no ads, affiliate links or donation links. Adding any of them first needs a PO decision on the Impressum, because it changes the legal situation.
