@@ -13,7 +13,7 @@ States for Task: New, Active, Closed, Removed.
 
 - Read: `az boards work-item show --id <id> --output json`
 - Set state: `az boards work-item update --id <id> --state Active`
-- Comment: `az boards work-item update --id <id> --discussion "<text>"`
+- Comment: `az boards work-item update --id <id> --discussion "[Claude · <Rolle>] <text>"`
 - Story points: `az boards work-item update --id <id> --fields "Microsoft.VSTS.Scheduling.StoryPoints=3"`
 - Create task: `az boards work-item create --type Task --title "<title>" --description "<text>" --iteration "<iteration path of the story>" --output json`
 - Link task to story: `az boards work-item relation add --id <task-id> --relation-type parent --target-id <story-id>`
@@ -22,3 +22,6 @@ States for Task: New, Active, Closed, Removed.
 Rules:
 - Only create Tasks. Never create User Stories, Features or Epics.
 - Write titles and comments in German, matching the board.
+- Every comment an agent writes starts with `[Claude · <Rolle>]`, for example
+  `[Claude · Scrum Master]`, `[Claude · Tech Lead]`, `[Claude · Test Designer]` or
+  `[Claude · Developer]`. All comments appear under the PO's name, so the prefix shows who wrote them.

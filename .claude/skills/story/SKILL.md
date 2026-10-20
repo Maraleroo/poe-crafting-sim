@@ -33,9 +33,14 @@ Copy this checklist into your reply and tick it off as you go:
    target `main`. The first push sets the upstream (`git push -u origin <branch>`). Choose the
    prefix by the kind of change (`following-git-workflow`): `feat` only for product
    functionality, `fix` for a bug.
+   If the PO has provided input files for the story (texts, data) in the working tree, commit
+   them unchanged in their own commit right away, before the tech lead and the tests start.
+   Type and scope follow `following-git-workflow` (for example `docs(web): add privacy policy
+   texts from the PO`).
 3. Run the `tech-lead` subagent. If it estimates more than 8 story points, stop and
    present its split proposal to the PO. If it reports that the plan breaks an existing
-   acceptance test, stop and present its `PO:` task to the PO.
+   acceptance test, stop and present its `PO:` task to the PO. If it lists open questions for
+   the PO, get the answers before step 4.
 4. Run the `test-designer` subagent. Run the tests yourself and confirm they fail
    because the feature is missing.
 5. Run the `developer` subagent until the PR is open.
@@ -51,6 +56,9 @@ Copy this checklist into your reply and tick it off as you go:
    cannot be reviewed in CI and its check is red: run the `reviewer` subagent locally on it
    instead, and tell the PO that only the label `review-override` (set by the PO, followed by a
    re-run of the `Claude review` job) turns the check green. Never change labels yourself.
+   The CI review reads its criteria from `origin/main`. If the PR introduces a new review
+   criterion, check the PR against it once by hand and mention the result in the report to
+   the PO.
 7. Report to the PO: what changed, the PR link, open questions. Start the local preview (configuration `web` in
    `.claude/launch.json`).
 8. After the PO has merged, write a short retrospective: what went wrong, which skill
