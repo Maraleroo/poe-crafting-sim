@@ -22,7 +22,7 @@ concurrency:
 jobs:
   check:
     name: Check (fmt, clippy, test)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # The toolchain, components and wasm target come from rust-toolchain.toml.
@@ -39,7 +39,7 @@ jobs:
   build-web:
     name: Build web (WebAssembly)
     needs: check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust toolchain
@@ -61,7 +61,7 @@ jobs:
     name: Deploy to GitHub Pages
     needs: build-web
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       pages: write
       id-token: write
