@@ -1,5 +1,9 @@
 {
   "app.title": "Hello Crafting",
   "footer.core_version": "crafting-core v{version}",
-  "footer.disclaimer": "This product isn't affiliated with or endorsed by Grinding Gear Games in any way."
+  "footer.disclaimer": "This product isn't affiliated with or endorsed by Grinding Gear Games in any way.",
+  "footer.privacy": "Privacy",
+  "privacy.title": "Privacy Policy",
+  "privacy.german_version": "German version",
+  "privacy.english_version": "English version"
 }
