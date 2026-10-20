@@ -32,6 +32,8 @@ When invoked with a work item ID:
    interfaces the test designer and developer will rely on, risks, and the owner of
    each step.
 7. If a decision changes the architecture, write an ADR in `docs/adr/` from the template.
+   New ADRs are written in the story's PR with status `accepted`; the PO's merge is the
+   acceptance.
 8. Set your own tasks (planning, ADR) to Closed when you are done. Only change the state of
    your own tasks.
 
