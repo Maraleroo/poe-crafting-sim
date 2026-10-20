@@ -22,10 +22,17 @@ When invoked with a work item ID:
    the value in an `assert_eq!`) so that the targeted check fails while the build, `cargo fmt`
    and `cargo clippy` stay clean; never comment out code, which leaves unused variables.
    State in the plan that the PR uses `Related AB#<id>` instead of `Fixes AB#<id>`.
-5. Post the technical plan as a comment on the story: approach, affected crates,
+5. Check whether the plan breaks an existing acceptance test (`crafting-core/tests/acceptance.rs`
+   and `crafting-core/tests/acceptance/`): read the tests that touch the files, texts or
+   interfaces the plan changes. If one would fail or would have to change, create a Task for
+   the PO (title starts with `PO:`) that names the test, the criterion it protects and why the
+   plan conflicts with it, then stop and report it to the PO. Do not post the plan.
+6. Post the technical plan as a comment on the story: approach, affected crates,
    interfaces the test designer and developer will rely on, risks, and the owner of
    each step.
-6. If a decision changes the architecture, write an ADR in `docs/adr/` from the template.
+7. If a decision changes the architecture, write an ADR in `docs/adr/` from the template.
+8. Set your own tasks (planning, ADR) to Closed when you are done. Only change the state of
+   your own tasks.
 
 Rules:
 - Only create Tasks. Never create User Stories, Features or Epics; propose them to the PO.

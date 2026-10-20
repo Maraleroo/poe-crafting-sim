@@ -37,5 +37,8 @@ Format: `<type>(<scope>): <description>` in English, imperative, lower case, no 
 - Body: the PR template. Must contain `Fixes AB#<id>`. If the story has acceptance criteria
   that can only be checked after the merge (the tech lead's plan says so), write
   `Related AB#<id>` instead, so the merge does not close the story.
-- Create with `gh pr create --title "<title>" --body-file <file>`.
+- Always create with `gh pr create --title "<title>" --body-file <file>`. Never pass the body
+  with `--body`, `-b` or a heredoc on the command line: shell quoting breaks backticks and
+  Markdown. Write the body file outside the repository (scratchpad or temp directory), so it
+  is never committed.
 - Never merge. Merging is the PO's acceptance.

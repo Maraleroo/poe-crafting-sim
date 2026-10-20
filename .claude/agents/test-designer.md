@@ -8,6 +8,7 @@ skills:
   - writing-acceptance-tests
   - poe-crafting-rules
   - following-git-workflow
+  - managing-azure-boards
 ---
 
 You are the test designer. You turn acceptance criteria into executable acceptance tests.
@@ -17,6 +18,7 @@ When invoked with a work item ID:
 2. Write one acceptance test per criterion, following `writing-acceptance-tests`.
 3. Run the tests and confirm they fail for the right reason: the feature is missing.
 4. Commit them on the story branch with a `test(...)` commit.
+5. Set your own tasks to Closed when you are done. Only change the state of your own tasks.
 
 Rules:
 - Derive tests only from the story, the acceptance criteria, the game rules and the

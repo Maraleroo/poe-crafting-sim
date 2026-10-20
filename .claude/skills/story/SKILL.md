@@ -19,7 +19,11 @@ Copy this checklist into your reply and tick it off as you go:
 - [ ] 8. Retrospective note
 
 1. Read the work item. Check the Definition of Ready: user story format, testable
-   acceptance criteria, required game rules present, no open questions, dependencies merged.
+   acceptance criteria, required game rules present, no open questions, dependencies merged,
+   and every tool and toolchain the story needs is installed locally. Check each one by
+   running it, for example `cargo --version`, `trunk --version`, `gh --version`,
+   `az --version` and `rustup target list --installed` for `wasm32-unknown-unknown`.
+   A missing tool goes on the list for the PO; never install it yourself.
    For a bug: repro steps, expected and actual behaviour; the first acceptance test must
    reproduce the bug.
    If anything is missing, list it for the PO and stop.
@@ -30,13 +34,16 @@ Copy this checklist into your reply and tick it off as you go:
    prefix by the kind of change (`following-git-workflow`): `feat` only for product
    functionality, `fix` for a bug.
 3. Run the `tech-lead` subagent. If it estimates more than 8 story points, stop and
-   present its split proposal to the PO.
+   present its split proposal to the PO. If it reports that the plan breaks an existing
+   acceptance test, stop and present its `PO:` task to the PO.
 4. Run the `test-designer` subagent. Run the tests yourself and confirm they fail
    because the feature is missing.
 5. Run the `developer` subagent until the PR is open.
-6. Wait for CI with `gh pr checks <nr> --watch`. If that is not possible (the command is
-   refused or times out), end your turn, tell the PO that CI is still running and continue
-   when the PO reports the result. Do not poll in a loop.
+6. Wait for CI with `gh pr checks <nr> --watch`. Alternatively, when the session runs in
+   the Claude desktop app, use the app's CI monitor for the PR: end your turn and continue
+   when its CI event for the PR arrives. If neither is possible (the command is refused or
+   times out), end your turn, tell the PO that CI is still running and continue when the PO
+   reports the result. Do not poll in a loop.
    The review runs in CI too (`.github/workflows/review.yml`): claude[bot] posts
    the review as a PR comment and the check `Claude review` follows its verdict. If the review
    blocks, send the critical findings to the developer and wait for the review of the new push.
@@ -44,7 +51,8 @@ Copy this checklist into your reply and tick it off as you go:
    cannot be reviewed in CI and its check is red: run the `reviewer` subagent locally on it
    instead, and tell the PO that only the label `review-override` (set by the PO, followed by a
    re-run of the `Claude review` job) turns the check green. Never change labels yourself.
-7. Report to the PO: what changed, the PR link, open questions. Start the local preview.
+7. Report to the PO: what changed, the PR link, open questions. Start the local preview (configuration `web` in
+   `.claude/launch.json`).
 8. After the PO has merged, write a short retrospective: what went wrong, which skill
    or instruction should change. Propose the change; do not apply it yourself.
    If the story has criteria that can only be checked after the merge, its PR says

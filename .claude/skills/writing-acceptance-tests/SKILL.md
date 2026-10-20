@@ -27,7 +27,12 @@ description: How to turn acceptance criteria into Rust acceptance tests that fai
 Stories that change workflows, skills, agents or other team files get only lean
 text-level checks (ADR 0004): a file exists, contains or does not contain a given string,
 a line with a given text exists. No parsers for YAML, Markdown or JSON, no structural
-models of the file. Behaviour that needs a real run is verified after the merge by the
+models of the file.
+Tests check formats and contracts, never concrete versions, tags or SHAs: for example
+"every action is pinned to a 40-character SHA with a `# v` comment", not "checkout is
+pinned to `3d3c42e…`"; "no job runs on `ubuntu-latest`", not "every job runs on
+`ubuntu-24.04`". Otherwise every Dependabot or
+toolchain update breaks a protected test. Behaviour that needs a real run is verified after the merge by the
 verification task from the tech lead's plan, not by `cargo test`.
 
 ## Randomness
