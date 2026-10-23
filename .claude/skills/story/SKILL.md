@@ -27,6 +27,10 @@ Copy this checklist into your reply and tick it off as you go:
    For a bug: repro steps, expected and actual behaviour; the first acceptance test must
    reproduce the bug.
    A rule that the PO quotes verbatim in an acceptance criterion counts as present.
+   Every user-visible text that a criterion requires (button, error message, hint) is quoted
+   verbatim in the work item. If it is missing, it goes on the list for the PO.
+   If a criterion prescribes a concrete mechanism (a setting, a variable, a command), try it
+   during the Definition of Ready.
    If anything is missing, list it for the PO and stop.
 2. Set the story to Active. Create the branch from `origin/main` without upstream:
    `git fetch origin`, then `git switch --no-track -c <prefix>/<id>-<short-name> origin/main`.
@@ -36,7 +40,9 @@ Copy this checklist into your reply and tick it off as you go:
    functionality, `fix` for a bug.
    If the PO quoted a game rule verbatim in an acceptance criterion, commit it unchanged to
    `poe-crafting-rules`, checked byte for byte against the work item, in its own commit before
-   the tech lead and the tests start.
+   the tech lead and the tests start. A quoted rule is compared byte for byte after resolving
+   HTML escapes (for example `&gt;`, `&quot;`) and without the quote markers. Copies of work
+   items are stored in the session's scratchpad, not in %TEMP%.
    If the PO has provided input files for the story (texts, data) in the working tree, commit
    them unchanged in their own commit right away, before the tech lead and the tests start.
    Type and scope follow `following-git-workflow` (for example `docs(web): add privacy policy
@@ -45,6 +51,8 @@ Copy this checklist into your reply and tick it off as you go:
    present its split proposal to the PO. If it reports that the plan breaks an existing
    acceptance test, stop and present its `PO:` task to the PO. If it lists open questions for
    the PO, get the answers before step 4.
+   Prompts to subagents name the work item and new decisions. For conventions, such as
+   commit types and scopes, they refer to the skills instead of repeating them.
 4. Run the `test-designer` subagent. Run the tests yourself and confirm they fail
    because the feature is missing.
 5. Run the `developer` subagent until the PR is open.
@@ -67,6 +75,8 @@ Copy this checklist into your reply and tick it off as you go:
    `.claude/launch.json`).
 8. After the PO has merged, write a short retrospective: what went wrong, which skill
    or instruction should change. Propose the change; do not apply it yourself.
+   Try a proposed change to tools or configuration before proposing it. The proposal names
+   what was tried and the result.
    If the story has criteria that can only be checked after the merge, its PR says
    `Related AB#<id>` instead of `Fixes AB#<id>`, so the merge does not close it. The
    verification task from the plan runs after the merge; set the story to Closed only after
