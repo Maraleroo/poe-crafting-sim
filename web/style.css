@@ -42,3 +42,22 @@ article {
   padding: 0;
   list-style: none;
 }
+
+.item ul + ul {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #888;
+}
+
+.buttons {
+  margin: 0.75rem 0;
+}
+
+.buttons button {
+  margin-right: 0.5rem;
+}
+
+.message {
+  min-height: 1.5rem;
+  color: #b00020;
+}
