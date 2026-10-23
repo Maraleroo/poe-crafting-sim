@@ -26,7 +26,8 @@
       "Bash(az boards work-item create *)",
       "Bash(az boards work-item update *)",
       "Bash(az boards work-item relation add *)",
-      "Bash(az boards query *)"
+      "Bash(az boards query *)",
+      "Bash(az devops invoke --area wit --resource workitemsbatch *)"
     ],
     "deny": [
       "Bash(git push --force *)",
