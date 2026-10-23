@@ -57,7 +57,7 @@ const QUOTED_RULE_COMMITTED: &str = "commit it unchanged to `poe-crafting-rules`
 const UI_TEXT_SENTENCES: [&str; 3] = [
     "All UI text comes from translation files",
     "`crafting-core` returns structured results and reason codes, never UI text.",
-    "Game data texts such as item names and mod texts are data (ADR 0008).",
+    "All texts that come from the game, such as names of items, currencies and mods and mod texts, are data (ADR 0008, ADR 0011).",
 ];
 /// Exact hard rule line (AC5, wording decided by the PO on AB#61).
 const UI_TEXT_RULE: &str = "- Never hard-code UI text. Add a translation key instead.";
