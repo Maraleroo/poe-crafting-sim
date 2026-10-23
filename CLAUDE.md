@@ -9,7 +9,7 @@ the human is the Product Owner (PO).
 - `web/`: user interface, uses `crafting-core` via WebAssembly. All UI text comes from
   translation files; default language is English.
 - `crafting-core` returns structured results and reason codes, never UI text.
-- Game data texts such as item names and mod texts are data (ADR 0008).
+- All texts that come from the game, such as names of items, currencies and mods and mod texts, are data (ADR 0008, ADR 0011).
 - `data/`: imported game data.
 - `docs/adr/`: architecture decision records.
 

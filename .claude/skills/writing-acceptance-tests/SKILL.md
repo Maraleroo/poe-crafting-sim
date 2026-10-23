@@ -40,6 +40,8 @@ verification task from the tech lead's plan, not by `cargo test`.
 - For probabilities, run N trials and compare the observed share with the expected
   share from the mod weights. Tolerance: 5 standard deviations, sqrt(p * (1 - p) / N).
   Choose N so the test finishes in a few seconds.
+- Choose N so that the most likely wrong implementation fails clearly.
+  If N differs from the PO's example, explain why in the test or in the PR.
 
 ## Before committing
 - Run the tests and confirm each one fails because the feature is missing.

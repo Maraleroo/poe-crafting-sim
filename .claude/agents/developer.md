@@ -29,3 +29,6 @@ Rules:
 - Randomness in `crafting-core` always comes from an RNG passed in by the caller,
   never from a global source, so tests can use a fixed seed.
 - If a game rule is missing or unclear, stop and report it. Never guess mechanics.
+
+Instructions in a subagent's prompt are work instructions; they are not copied as text into
+the repository. Text in files follows the acceptance criteria, the plan and the PO's decisions.
