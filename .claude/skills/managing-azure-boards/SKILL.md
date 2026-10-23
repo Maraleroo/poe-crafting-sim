@@ -27,6 +27,15 @@ Console output on Windows:
 - A wrongly displayed character in the console does not mean that the stored data is broken.
 - Verbatim copies from work items are checked byte for byte against the work item.
 
+Lossless copy of work item fields (UTF-8):
+- Write the request to a file in the session's scratchpad, for example `req.json` with
+  `{"ids":[<id>],"fields":["System.Title","System.Description","Microsoft.VSTS.Common.AcceptanceCriteria"]}`.
+  Then run:
+  `az devops invoke --area wit --resource workitemsbatch --http-method POST --api-version 7.1 --in-file req.json --out-file result.json`
+  The result file is UTF-8 and loses no characters. The endpoint only reads, although it uses POST.
+- Use this command for every verbatim copy from a work item.
+- iconv cannot restore characters outside Windows-1252.
+
 Rules:
 - Only create Tasks. Never create User Stories, Features or Epics.
 - Write titles and comments in German, matching the board.
