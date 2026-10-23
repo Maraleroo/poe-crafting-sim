@@ -1,6 +1,7 @@
 //! Content of the page, built as plain data so it can be tested without a browser.
 
 use crate::i18n::Translations;
+use crafting_core::{CraftError, Currency};
 
 /// All visible texts of the page.
 #[derive(Debug, PartialEq, Eq)]
@@ -12,6 +13,9 @@ pub struct PageText {
     pub privacy_title: String,
     pub german_version_link: String,
     pub english_version_link: String,
+    /// Label of the orb button: the currency's name, a game text from `crafting-core`.
+    pub orb_button: String,
+    pub reset_button: String,
 }
 
 impl PageText {
@@ -25,7 +29,18 @@ impl PageText {
             privacy_title: translations.text("privacy.title").to_owned(),
             german_version_link: translations.text("privacy.german_version").to_owned(),
             english_version_link: translations.text("privacy.english_version").to_owned(),
+            orb_button: Currency::OrbOfTransmutation.name(),
+            reset_button: translations.text("craft.reset").to_owned(),
         }
+    }
+}
+
+/// The message for a failed craft, or `None` if the page shows no message for it.
+/// A disabled orb button needs none; its reason comes with a later story.
+pub fn error_message(translations: &Translations, error: CraftError) -> Option<String> {
+    match error {
+        CraftError::NoValidMod => Some(translations.text("craft.error.no_valid_mod").to_owned()),
+        CraftError::ItemNotNormal => None,
     }
 }
 
@@ -50,5 +65,29 @@ mod tests {
         assert_eq!(text.privacy_title, t.text("privacy.title"));
         assert_eq!(text.german_version_link, t.text("privacy.german_version"));
         assert_eq!(text.english_version_link, t.text("privacy.english_version"));
+        assert_eq!(text.reset_button, t.text("craft.reset"));
+    }
+
+    #[test]
+    fn orb_button_is_labelled_with_the_name_of_the_currency() {
+        let text = PageText::new(&Translations::english(), "0.1.0");
+        assert_eq!(text.orb_button, Currency::OrbOfTransmutation.name());
+    }
+
+    #[test]
+    fn a_missing_valid_mod_has_a_message_from_the_translations() {
+        let t = Translations::english();
+        assert_eq!(
+            error_message(&t, CraftError::NoValidMod),
+            Some(t.text("craft.error.no_valid_mod").to_owned())
+        );
+    }
+
+    #[test]
+    fn a_disabled_orb_shows_no_message() {
+        assert_eq!(
+            error_message(&Translations::english(), CraftError::ItemNotNormal),
+            None
+        );
     }
 }

@@ -28,3 +28,34 @@ Mod (an implicit):
 - `text`: display text with named placeholders, e.g. `Adds {minimum} to {maximum} ...`
 - `placeholders`: maps each placeholder name in `text` to the identifier of a stat of the same
   mod. The text is rendered through the identifier, never through the order of the stats.
+
+## mods.json
+
+Source: poedb.tw, supplied by the PO with work item AB#62 (one tier per mod; the weight is the
+spawn weight for rings). Until the spawn tags are imported, the whole file is the mod pool of
+the Iron Ring.
+
+```
+{ "mods": [ ExplicitMod, ... ] }
+```
+
+ExplicitMod has the fields of a Mod (see above) and:
+- `name`: name of the mod, used in the item name (`Hale` before the base name,
+  `of the Pupil` after it)
+- `affix_type`: `prefix` or `suffix`
+- `level`: level of the mod, a data value
+- `weight`: spawn weight, greater than zero
+
+The stats of a mod are listed in the order poedb shows them. The order has no meaning; the text
+is rendered through the placeholders. A text with several lines separates them with `\n`.
+
+## currencies.json
+
+Source: names from the story text of AB#62 (ADR 0011).
+
+```
+{ "currencies": [ { "id": "...", "name": "..." }, ... ] }
+```
+
+- `id`: project identifier in lower snake case, not a game value; unique
+- `name`: English name of the currency (game text, shown unchanged)

@@ -8,13 +8,19 @@ mod item_view;
 mod legal;
 mod page;
 mod route;
+mod workbench;
+
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use i18n::Translations;
-use item_view::{start_item, ItemView};
-use page::PageText;
+use item_view::ItemView;
+use page::{error_message, PageText};
 use route::Route;
-use wasm_bindgen::JsValue;
-use web_sys::{Document, Element};
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::{JsCast, JsValue};
+use web_sys::{Document, Element, HtmlButtonElement, Window};
+use workbench::Workbench;
 
 fn main() {
     if let Err(error) = render() {
@@ -40,8 +46,7 @@ fn render() -> Result<(), JsValue> {
         Route::Home => {
             document.set_title(&text.title);
             append(&main, element(&document, "h1", Some(&text.title))?)?;
-            let item = ItemView::new(&Translations::english(), &start_item());
-            append(&main, item_section(&document, &item)?)?;
+            StartPage::mount(&document, &main, &text, random_seed(&window)?)?;
         }
         Route::PrivacyEnglish => {
             document.set_title(&text.privacy_title);
@@ -88,7 +93,113 @@ fn element(document: &Document, tag: &str, text: Option<&str>) -> Result<Element
     Ok(element)
 }
 
-/// The item as a section: name, class, rarity, level requirement and implicit mods.
+/// The seed of the page's generator: 8 random bytes from the browser's Web Crypto API
+/// (ADR 0010). Asking for them sends no request and uses no browser storage.
+fn random_seed(window: &Window) -> Result<u64, JsValue> {
+    let mut bytes = [0u8; 8];
+    window
+        .crypto()?
+        .get_random_values_with_u8_array(&mut bytes)?;
+    Ok(u64::from_le_bytes(bytes))
+}
+
+/// The start page: the item on the workbench and the buttons that change it.
+struct StartPage {
+    document: Document,
+    translations: Translations,
+    workbench: RefCell<Workbench>,
+    item_host: Element,
+    orb: HtmlButtonElement,
+    message: Element,
+}
+
+impl StartPage {
+    /// Adds the item, the buttons and the message area to `parent` and registers the click
+    /// listeners. The listeners live as long as the page.
+    fn mount(
+        document: &Document,
+        parent: &Element,
+        text: &PageText,
+        seed: u64,
+    ) -> Result<(), JsValue> {
+        let item_host = element(document, "div", None)?;
+        let orb = button(document, &text.orb_button)?;
+        let reset = button(document, &text.reset_button)?;
+        let buttons = element(document, "div", None)?;
+        buttons.set_class_name("buttons");
+        append(&buttons, orb.clone().into())?;
+        append(&buttons, reset.clone().into())?;
+        let message = element(document, "p", None)?;
+        message.set_class_name("message");
+        append(parent, item_host.clone())?;
+        append(parent, buttons)?;
+        append(parent, message.clone())?;
+
+        let page = Rc::new(StartPage {
+            document: document.clone(),
+            translations: Translations::english(),
+            workbench: RefCell::new(Workbench::new(seed)),
+            item_host,
+            orb: orb.clone(),
+            message,
+        });
+        page.show(None)?;
+        listen(&orb, &page, StartPage::apply_orb)?;
+        listen(&reset, &page, StartPage::reset)
+    }
+
+    /// Renders the item again and updates the orb button and the message.
+    fn show(&self, message: Option<&str>) -> Result<(), JsValue> {
+        let workbench = self.workbench.borrow();
+        let view = ItemView::new(&self.translations, workbench.item());
+        self.item_host.set_text_content(None);
+        append(&self.item_host, item_section(&self.document, &view)?)?;
+        self.orb.set_disabled(!workbench.orb_enabled());
+        self.message.set_text_content(message);
+        Ok(())
+    }
+
+    fn apply_orb(&self) -> Result<(), JsValue> {
+        let result = self.workbench.borrow_mut().transmute();
+        let message = result
+            .err()
+            .and_then(|error| error_message(&self.translations, error));
+        self.show(message.as_deref())
+    }
+
+    fn reset(&self) -> Result<(), JsValue> {
+        self.workbench.borrow_mut().reset();
+        self.show(None)
+    }
+}
+
+/// A button with the given label.
+fn button(document: &Document, label: &str) -> Result<HtmlButtonElement, JsValue> {
+    element(document, "button", Some(label))?
+        .dyn_into::<HtmlButtonElement>()
+        .map_err(JsValue::from)
+}
+
+/// Runs `action` on the page whenever `button` is clicked.
+fn listen(
+    button: &HtmlButtonElement,
+    page: &Rc<StartPage>,
+    action: fn(&StartPage) -> Result<(), JsValue>,
+) -> Result<(), JsValue> {
+    let page = Rc::clone(page);
+    let on_click = Closure::<dyn FnMut()>::new(move || {
+        if let Err(error) = action(&page) {
+            web_sys::console::error_1(&error);
+        }
+    });
+    button.add_event_listener_with_callback("click", on_click.as_ref().unchecked_ref())?;
+    // The listener must stay alive as long as the page, so the closure is not dropped.
+    on_click.forget();
+    Ok(())
+}
+
+/// The item as a section: name, class, rarity, level requirement, implicit mods and the
+/// mods of its prefix and suffix.
 fn item_section(document: &Document, item: &ItemView) -> Result<Element, JsValue> {
     let section = element(document, "section", None)?;
     section.set_class_name("item");
@@ -99,12 +210,20 @@ fn item_section(document: &Document, item: &ItemView) -> Result<Element, JsValue
         &section,
         element(document, "p", Some(&item.requires_level))?,
     )?;
-    let implicits = element(document, "ul", None)?;
-    for text in &item.implicits {
-        append(&implicits, element(document, "li", Some(text))?)?;
+    append(&section, mod_list(document, &item.implicits)?)?;
+    if !item.explicits.is_empty() {
+        append(&section, mod_list(document, &item.explicits)?)?;
     }
-    append(&section, implicits)?;
     Ok(section)
+}
+
+/// A list with one entry per line of mod text.
+fn mod_list(document: &Document, lines: &[String]) -> Result<Element, JsValue> {
+    let list = element(document, "ul", None)?;
+    for line in lines {
+        append(&list, element(document, "li", Some(line))?)?;
+    }
+    Ok(list)
 }
 
 /// A link to a page of the site.

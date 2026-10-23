@@ -39,6 +39,28 @@ pub struct ModDefinition {
     pub placeholders: BTreeMap<String, String>,
 }
 
+/// Whether a mod is a prefix or a suffix.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AffixType {
+    Prefix,
+    Suffix,
+}
+
+/// A prefix or suffix in the game data: the mod together with what decides whether and how
+/// likely it is rolled on an item.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct ExplicitModDefinition {
+    /// Name shown in the item name: before the base name for a prefix, after it for a suffix.
+    pub name: String,
+    pub affix_type: AffixType,
+    pub level: u32,
+    /// Spawn weight, greater than zero.
+    pub weight: u32,
+    #[serde(flatten)]
+    pub definition: ModDefinition,
+}
+
 /// A base item in the game data.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct BaseItem {
@@ -116,12 +138,23 @@ impl Mod {
     }
 }
 
-/// An item: a base item with a rarity and rolled implicit mods.
+/// A prefix or suffix of an item: its name from the game data and the rolled mod.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExplicitMod {
+    pub name: String,
+    pub affix_type: AffixType,
+    pub modifier: Mod,
+}
+
+/// An item: a base item with a rarity, rolled implicit mods and at most one prefix and
+/// one suffix.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Item {
     pub base: BaseItem,
     pub rarity: Rarity,
     pub implicits: Vec<Mod>,
+    pub prefix: Option<ExplicitMod>,
+    pub suffix: Option<ExplicitMod>,
 }
 
 impl Item {
@@ -135,7 +168,23 @@ impl Item {
                 .iter()
                 .map(|definition| Mod::roll(definition, rng))
                 .collect(),
+            prefix: None,
+            suffix: None,
         }
+    }
+
+    /// The name of the item: `<prefix name> <base name> <suffix name>`. A missing prefix or
+    /// suffix leaves its part out.
+    pub fn name(&self) -> String {
+        [
+            self.prefix.as_ref().map(|prefix| prefix.name.as_str()),
+            Some(self.base.name.as_str()),
+            self.suffix.as_ref().map(|suffix| suffix.name.as_str()),
+        ]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>()
+        .join(" ")
     }
 }
 
@@ -226,5 +275,58 @@ mod tests {
         assert_eq!(item.rarity, Rarity::Normal);
         assert_eq!(item.base, base);
         assert_eq!(item.implicits.len(), 1);
+    }
+
+    fn explicit(name: &str, affix_type: AffixType) -> ExplicitMod {
+        ExplicitMod {
+            name: name.to_owned(),
+            affix_type,
+            modifier: Mod::roll(
+                &definition(vec![stat(LOW, 3), stat(HIGH, 12)]),
+                &mut SeededRng::new(1),
+            ),
+        }
+    }
+
+    fn item_with(prefix: Option<&str>, suffix: Option<&str>) -> Item {
+        let base = BaseItem {
+            id: "invented/base".to_owned(),
+            name: "Invented Base".to_owned(),
+            item_class: "Inventeds".to_owned(),
+            required_level: 1,
+            tags: Vec::new(),
+            implicits: Vec::new(),
+        };
+        let mut item = Item::new(&base, &mut SeededRng::new(1));
+        item.prefix = prefix.map(|name| explicit(name, AffixType::Prefix));
+        item.suffix = suffix.map(|name| explicit(name, AffixType::Suffix));
+        item
+    }
+
+    #[test]
+    fn new_item_has_neither_prefix_nor_suffix() {
+        let item = item_with(None, None);
+        assert_eq!((item.prefix, item.suffix), (None, None));
+    }
+
+    #[test]
+    fn name_puts_the_base_name_between_prefix_and_suffix() {
+        assert_eq!(
+            item_with(Some("Prefix"), Some("of Suffix")).name(),
+            "Prefix Invented Base of Suffix"
+        );
+    }
+
+    #[test]
+    fn name_leaves_out_a_missing_prefix_or_suffix() {
+        assert_eq!(item_with(None, None).name(), "Invented Base");
+        assert_eq!(
+            item_with(Some("Prefix"), None).name(),
+            "Prefix Invented Base"
+        );
+        assert_eq!(
+            item_with(None, Some("of Suffix")).name(),
+            "Invented Base of Suffix"
+        );
     }
 }
