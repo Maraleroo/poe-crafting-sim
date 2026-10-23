@@ -4,13 +4,26 @@ use std::collections::BTreeSet;
 
 use serde::Deserialize;
 
-use crate::model::{BaseItem, ModDefinition};
+use crate::currency::CurrencyDefinition;
+use crate::model::{BaseItem, ExplicitModDefinition, ModDefinition};
 
 const BASE_ITEMS_JSON: &str = include_str!("../../data/base_items.json");
+const MODS_JSON: &str = include_str!("../../data/mods.json");
+const CURRENCIES_JSON: &str = include_str!("../../data/currencies.json");
 
 #[derive(Deserialize)]
 struct BaseItemsFile {
     base_items: Vec<BaseItem>,
+}
+
+#[derive(Deserialize)]
+struct ModsFile {
+    mods: Vec<ExplicitModDefinition>,
+}
+
+#[derive(Deserialize)]
+struct CurrenciesFile {
+    currencies: Vec<CurrencyDefinition>,
 }
 
 /// All base items of the game data.
@@ -26,6 +39,50 @@ pub fn base_item(id: &str) -> Option<BaseItem> {
     base_items().into_iter().find(|base| base.id == id)
 }
 
+/// All prefixes and suffixes of the game data.
+///
+/// # Panics
+/// If the embedded data is invalid. That is a programming error, caught by the unit tests.
+pub fn explicit_mods() -> Vec<ExplicitModDefinition> {
+    parse_mods(MODS_JSON)
+}
+
+/// All currencies of the game data.
+///
+/// # Panics
+/// If the embedded data is invalid. That is a programming error, caught by the unit tests.
+pub fn currencies() -> Vec<CurrencyDefinition> {
+    parse_currencies(CURRENCIES_JSON)
+}
+
+fn parse_mods(json: &str) -> Vec<ExplicitModDefinition> {
+    let file: ModsFile =
+        serde_json::from_str(json).unwrap_or_else(|error| panic!("invalid mod data: {error}"));
+    for explicit in &file.mods {
+        assert!(
+            explicit.weight > 0,
+            "{}: the weight must be above zero",
+            explicit.name
+        );
+        validate_mod(&explicit.name, &explicit.definition);
+    }
+    file.mods
+}
+
+fn parse_currencies(json: &str) -> Vec<CurrencyDefinition> {
+    let file: CurrenciesFile =
+        serde_json::from_str(json).unwrap_or_else(|error| panic!("invalid currency data: {error}"));
+    let mut ids = BTreeSet::new();
+    for currency in &file.currencies {
+        assert!(
+            ids.insert(&currency.id),
+            "duplicate currency {:?}",
+            currency.id
+        );
+    }
+    file.currencies
+}
+
 fn parse_base_items(json: &str) -> Vec<BaseItem> {
     let file: BaseItemsFile = serde_json::from_str(json)
         .unwrap_or_else(|error| panic!("invalid base item data: {error}"));
@@ -39,37 +96,38 @@ fn parse_base_items(json: &str) -> Vec<BaseItem> {
     file.base_items
 }
 
-fn validate_mod(base_id: &str, definition: &ModDefinition) {
+/// Checks a mod; `owner` names the base item or mod it belongs to, for the messages.
+fn validate_mod(owner: &str, definition: &ModDefinition) {
     assert!(
         !definition.stats.is_empty(),
-        "{base_id}: a mod needs at least one stat"
+        "{owner}: a mod needs at least one stat"
     );
     for stat in &definition.stats {
         assert!(
             stat.min <= stat.max,
-            "{base_id}: stat {:?} has min above max",
+            "{owner}: stat {:?} has min above max",
             stat.id
         );
     }
     for (name, stat_id) in &definition.placeholders {
         assert!(
             definition.stats.iter().any(|stat| stat.id == *stat_id),
-            "{base_id}: placeholder {name:?} names the unknown stat {stat_id:?}"
+            "{owner}: placeholder {name:?} names the unknown stat {stat_id:?}"
         );
         assert!(
             definition.text.contains(&format!("{{{name}}}")),
-            "{base_id}: placeholder {name:?} does not occur in the mod text"
+            "{owner}: placeholder {name:?} does not occur in the mod text"
         );
     }
     let mut rest = definition.text.as_str();
     while let Some(start) = rest.find('{') {
         let length = rest[start..]
             .find('}')
-            .unwrap_or_else(|| panic!("{base_id}: unclosed placeholder in the mod text"));
+            .unwrap_or_else(|| panic!("{owner}: unclosed placeholder in the mod text"));
         let name = &rest[start + 1..start + length];
         assert!(
             definition.placeholders.contains_key(name),
-            "{base_id}: the mod text uses the unmapped placeholder {name:?}"
+            "{owner}: the mod text uses the unmapped placeholder {name:?}"
         );
         rest = &rest[start + length..];
     }
@@ -78,6 +136,7 @@ fn validate_mod(base_id: &str, definition: &ModDefinition) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::AffixType;
 
     const VALID: &str = r#"{"base_items": [{
         "id": "a", "name": "A", "item_class": "C", "required_level": 1, "tags": [],
@@ -88,9 +147,66 @@ mod tests {
         }]
     }]}"#;
 
+    const VALID_MODS: &str = r#"{"mods": [{
+        "name": "Invented", "affix_type": "suffix", "level": 1, "weight": 10,
+        "family": "F", "tags": [],
+        "stats": [{"id": "s", "min": 1, "max": 2, "global": false}],
+        "text": "+{v}", "placeholders": {"v": "s"}
+    }]}"#;
+
+    const VALID_CURRENCIES: &str = r#"{"currencies": [{"id": "a", "name": "A"}]}"#;
+
     #[test]
     fn embedded_data_is_valid() {
         assert!(!base_items().is_empty());
+        assert!(!explicit_mods().is_empty());
+        assert!(!currencies().is_empty());
+    }
+
+    #[test]
+    fn valid_mods_are_accepted() {
+        let mods = parse_mods(VALID_MODS);
+        assert_eq!(mods.len(), 1);
+        assert_eq!(mods[0].affix_type, AffixType::Suffix);
+        assert_eq!(mods[0].weight, 10);
+        assert_eq!(mods[0].definition.family, "F");
+    }
+
+    #[test]
+    #[should_panic(expected = "weight must be above zero")]
+    fn mod_with_weight_zero_is_rejected() {
+        parse_mods(&VALID_MODS.replace(r#""weight": 10"#, r#""weight": 0"#));
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid mod data")]
+    fn mod_with_an_unknown_affix_type_is_rejected() {
+        parse_mods(&VALID_MODS.replace("suffix", "implicit"));
+    }
+
+    #[test]
+    #[should_panic(expected = "unknown stat")]
+    fn mod_placeholder_of_an_unknown_stat_is_rejected() {
+        parse_mods(&VALID_MODS.replace(r#""v": "s""#, r#""v": "other""#));
+    }
+
+    #[test]
+    fn every_embedded_mod_has_a_positive_weight_and_a_unique_name() {
+        let mods = explicit_mods();
+        let names: BTreeSet<&str> = mods.iter().map(|m| m.name.as_str()).collect();
+        assert_eq!(names.len(), mods.len());
+        assert!(mods.iter().all(|m| m.weight > 0));
+    }
+
+    #[test]
+    fn valid_currencies_are_accepted() {
+        assert_eq!(parse_currencies(VALID_CURRENCIES).len(), 1);
+    }
+
+    #[test]
+    #[should_panic(expected = "duplicate currency")]
+    fn duplicate_currency_ids_are_rejected() {
+        parse_currencies(r#"{"currencies": [{"id": "a", "name": "A"}, {"id": "a", "name": "B"}]}"#);
     }
 
     #[test]
