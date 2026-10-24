@@ -66,9 +66,11 @@ Copy this checklist into your reply and tick it off as you go:
    criteria needs a permanent test, the test designer writes none and says so; then there is
    no red check, and the `test(...)` commit contains only the adapted tests, if there are any.
 5. Run the `developer` subagent until the PR is open.
-6. Wait for CI with `gh pr checks <nr> --watch`. Alternatively, when the session runs in
-   the Claude desktop app, use the app's CI monitor for the PR: end your turn and continue
-   when its CI event for the PR arrives. If neither is possible (the command is refused or
+6. Wait for CI: start `gh pr checks <nr> --watch` as a background command
+   (`run_in_background`) and continue when it reports that it has ended. Only if the
+   background command is not possible, and the session runs in the Claude desktop app, use
+   the app's CI monitor for the PR as a fallback: end your turn and continue when its CI
+   event for the PR arrives. If neither is possible (the command is refused or
    times out), end your turn, tell the PO that CI is still running and continue when the PO
    reports the result. Do not poll in a loop.
    The review runs in CI too (`.github/workflows/review.yml`): claude[bot] posts
