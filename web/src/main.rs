@@ -15,7 +15,7 @@ use std::rc::Rc;
 
 use i18n::Translations;
 use item_view::ItemView;
-use page::{error_message, PageText};
+use page::PageText;
 use route::Route;
 use wasm_bindgen::closure::Closure;
 use wasm_bindgen::{JsCast, JsValue};
@@ -154,16 +154,21 @@ impl StartPage {
         let view = ItemView::new(&self.translations, workbench.item());
         self.item_host.set_text_content(None);
         append(&self.item_host, item_section(&self.document, &view)?)?;
-        self.orb.set_disabled(!workbench.orb_enabled());
+        // The orb stays clickable when it does not apply: the click shows the reason. The
+        // HTML attribute `disabled` would swallow the click, so the state is `aria-disabled`.
+        let enabled = workbench.orb_enabled();
+        self.orb
+            .set_attribute("aria-disabled", if enabled { "false" } else { "true" })?;
+        self.orb
+            .set_class_name(if enabled { "" } else { "inapplicable" });
+        self.orb.set_title(&workbench.orb_tooltip());
         self.message.set_text_content(message);
         Ok(())
     }
 
     fn apply_orb(&self) -> Result<(), JsValue> {
         let result = self.workbench.borrow_mut().transmute();
-        let message = result
-            .err()
-            .and_then(|error| error_message(&self.translations, error));
+        let message = result.err().map(Workbench::failure_message);
         self.show(message.as_deref())
     }
 

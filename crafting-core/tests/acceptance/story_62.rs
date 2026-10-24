@@ -52,8 +52,6 @@ const MAGIC_KEY: &str = "item.rarity.magic";
 const MAGIC_TEXT: &str = "Magic";
 const RESET_KEY: &str = "craft.reset";
 const RESET_TEXT: &str = "Reset";
-const NO_VALID_MOD_KEY: &str = "craft.error.no_valid_mod";
-const NO_VALID_MOD_TEXT: &str = "No mod can be added: this item has no valid mods to roll from.";
 
 /// One row of the PO's mini mod pool on AB#62.
 struct TableMod {
@@ -174,8 +172,8 @@ const ORB_RULE_LINES: [&str; 8] = [
      suffixes. Within each pool, the chance of a mod is its weight divided by the sum of the \
      weights in that pool. If one type has no valid mod, that mod is left out; no second mod \
      of the other type is chosen instead.",
-    "  4. If there is no valid mod at all, applying the orb fails with an error message and \
-     the item stays unchanged.",
+    "  4. If there is no valid mod at all, applying the orb fails with the game's message \
+     \"Failed to apply item: Could not generate Mod.\" and the item stays unchanged.",
     "- Evidence: measured by the PO on 2026-10-21 with 1000 Orbs of Transmutation on a Bone \
      Ring (item level 83): 1 mod 49.5 %, 2 mods 50.5 %; with one mod, 68.5 % suffixes against \
      69.4 % expected from the weights. A 50:50 choice between prefix and suffix is ruled out \
@@ -1378,25 +1376,6 @@ fn ac8_own_test_pools_cover_unbalanced_and_empty_pools() {
         assert_eq!(result, Err(CraftError::NoValidMod));
         assert_eq!(item, before);
     }
-    // And the page shows the PO's error message from the translations
-    let translations = load_english_translations();
-    assert_eq!(
-        translation(&translations, NO_VALID_MOD_KEY),
-        NO_VALID_MOD_TEXT
-    );
-    assert_web_src_uses(
-        &[NO_VALID_MOD_KEY],
-        "the error message is a translation key",
-    );
-    let hard_coded = findings(
-        &web_files_except_translations(),
-        &[NO_VALID_MOD_TEXT],
-        false,
-    );
-    assert!(
-        hard_coded.is_empty(),
-        "the error message must only be in {EN_JSON}: {hard_coded:#?}"
-    );
 }
 
 // AC9: „Der Skill `poe-crafting-rules` enthält die Regeln des PO wörtlich: Im Abschnitt „Item

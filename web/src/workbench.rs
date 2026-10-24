@@ -5,7 +5,7 @@
 
 use crafting_core::{
     apply_orb_of_transmutation, base_item, can_apply_orb_of_transmutation, explicit_mods, BaseItem,
-    CraftError, ExplicitModDefinition, Item, SeededRng,
+    CraftError, Currency, ExplicitModDefinition, Item, SeededRng,
 };
 
 /// The base item on the workbench (a reference, not item data).
@@ -45,9 +45,23 @@ impl Workbench {
         &self.item
     }
 
-    /// Whether the orb button can be used. The reason, if not, comes with a later story.
+    /// Whether the orb can be applied to the item.
     pub fn orb_enabled(&self) -> bool {
         can_apply_orb_of_transmutation(&self.item).is_ok()
+    }
+
+    /// The tooltip of the orb button, a game text from `crafting-core`: the description if
+    /// the orb can be applied, otherwise the failure message for the reason it cannot.
+    pub fn orb_tooltip(&self) -> String {
+        match can_apply_orb_of_transmutation(&self.item) {
+            Ok(()) => Currency::OrbOfTransmutation.description(),
+            Err(error) => Currency::OrbOfTransmutation.failure_message(error),
+        }
+    }
+
+    /// The game's message for a failure of the orb.
+    pub fn failure_message(error: CraftError) -> String {
+        Currency::OrbOfTransmutation.failure_message(error)
     }
 
     /// Applies the orb to the item. On an error the item stays unchanged.
@@ -92,6 +106,35 @@ mod tests {
         let magic = workbench.item().clone();
         assert_eq!(workbench.transmute(), Err(CraftError::ItemNotNormal));
         assert_eq!(workbench.item(), &magic);
+    }
+
+    #[test]
+    fn the_tooltip_is_the_description_while_the_orb_applies() {
+        let workbench = Workbench::new(1);
+        assert_eq!(
+            workbench.orb_tooltip(),
+            Currency::OrbOfTransmutation.description()
+        );
+    }
+
+    #[test]
+    fn the_tooltip_is_the_failure_message_while_the_orb_does_not_apply() {
+        let mut workbench = Workbench::new(1);
+        workbench.transmute().unwrap();
+        assert_eq!(
+            workbench.orb_tooltip(),
+            Currency::OrbOfTransmutation.failure_message(CraftError::ItemNotNormal)
+        );
+    }
+
+    #[test]
+    fn a_failure_has_the_message_of_the_orb_for_its_reason() {
+        for error in [CraftError::ItemNotNormal, CraftError::NoValidMod] {
+            assert_eq!(
+                Workbench::failure_message(error),
+                Currency::OrbOfTransmutation.failure_message(error)
+            );
+        }
     }
 
     #[test]

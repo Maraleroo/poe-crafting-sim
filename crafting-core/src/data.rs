@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 
 use serde::Deserialize;
 
+use crate::craft::CraftError;
 use crate::currency::CurrencyDefinition;
 use crate::model::{BaseItem, ExplicitModDefinition, ModDefinition};
 
@@ -79,6 +80,18 @@ fn parse_currencies(json: &str) -> Vec<CurrencyDefinition> {
             "duplicate currency {:?}",
             currency.id
         );
+        for (code, message) in &currency.messages {
+            assert!(
+                CraftError::ALL.iter().any(|error| error.code() == code),
+                "currency {:?}: {code:?} is not the code of a craft error",
+                currency.id
+            );
+            assert!(
+                !message.is_empty(),
+                "currency {:?}: the message for {code:?} is empty",
+                currency.id
+            );
+        }
     }
     file.currencies
 }
@@ -154,7 +167,10 @@ mod tests {
         "text": "+{v}", "placeholders": {"v": "s"}
     }]}"#;
 
-    const VALID_CURRENCIES: &str = r#"{"currencies": [{"id": "a", "name": "A"}]}"#;
+    const VALID_CURRENCIES: &str = r#"{"currencies": [{
+        "id": "a", "name": "A", "description": "D",
+        "messages": {"item_not_normal": "M"}
+    }]}"#;
 
     #[test]
     fn embedded_data_is_valid() {
@@ -206,7 +222,26 @@ mod tests {
     #[test]
     #[should_panic(expected = "duplicate currency")]
     fn duplicate_currency_ids_are_rejected() {
-        parse_currencies(r#"{"currencies": [{"id": "a", "name": "A"}, {"id": "a", "name": "B"}]}"#);
+        let entry = r#"{"id": "a", "name": "A", "description": "D", "messages": {}}"#;
+        parse_currencies(&format!(r#"{{"currencies": [{entry}, {entry}]}}"#));
+    }
+
+    #[test]
+    #[should_panic(expected = "is not the code of a craft error")]
+    fn a_message_for_an_unknown_reason_is_rejected() {
+        parse_currencies(&VALID_CURRENCIES.replace("item_not_normal", "invented_reason"));
+    }
+
+    #[test]
+    #[should_panic(expected = "is empty")]
+    fn an_empty_message_is_rejected() {
+        parse_currencies(&VALID_CURRENCIES.replace(r#""M""#, r#""""#));
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid currency data")]
+    fn a_currency_without_a_description_is_rejected() {
+        parse_currencies(&VALID_CURRENCIES.replace(r#""description": "D","#, ""));
     }
 
     #[test]

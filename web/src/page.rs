@@ -1,7 +1,7 @@
 //! Content of the page, built as plain data so it can be tested without a browser.
 
 use crate::i18n::Translations;
-use crafting_core::{CraftError, Currency};
+use crafting_core::Currency;
 
 /// All visible texts of the page.
 #[derive(Debug, PartialEq, Eq)]
@@ -35,15 +35,6 @@ impl PageText {
     }
 }
 
-/// The message for a failed craft, or `None` if the page shows no message for it.
-/// A disabled orb button needs none; its reason comes with a later story.
-pub fn error_message(translations: &Translations, error: CraftError) -> Option<String> {
-    match error {
-        CraftError::NoValidMod => Some(translations.text("craft.error.no_valid_mod").to_owned()),
-        CraftError::ItemNotNormal => None,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -72,22 +63,5 @@ mod tests {
     fn orb_button_is_labelled_with_the_name_of_the_currency() {
         let text = PageText::new(&Translations::english(), "0.1.0");
         assert_eq!(text.orb_button, Currency::OrbOfTransmutation.name());
-    }
-
-    #[test]
-    fn a_missing_valid_mod_has_a_message_from_the_translations() {
-        let t = Translations::english();
-        assert_eq!(
-            error_message(&t, CraftError::NoValidMod),
-            Some(t.text("craft.error.no_valid_mod").to_owned())
-        );
-    }
-
-    #[test]
-    fn a_disabled_orb_shows_no_message() {
-        assert_eq!(
-            error_message(&Translations::english(), CraftError::ItemNotNormal),
-            None
-        );
     }
 }

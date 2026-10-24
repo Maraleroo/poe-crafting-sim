@@ -12,6 +12,20 @@ pub enum CraftError {
     NoValidMod,
 }
 
+impl CraftError {
+    /// Every reason code.
+    pub(crate) const ALL: [CraftError; 2] = [CraftError::ItemNotNormal, CraftError::NoValidMod];
+
+    /// The identifier of the reason in lower snake case. It is the key of the failure
+    /// messages in the game data (ADR 0012).
+    pub fn code(self) -> &'static str {
+        match self {
+            CraftError::ItemNotNormal => "item_not_normal",
+            CraftError::NoValidMod => "no_valid_mod",
+        }
+    }
+}
+
 /// Whether the orb can be applied to `item`, without looking at any mod pool.
 pub fn can_apply_orb_of_transmutation(item: &Item) -> Result<(), CraftError> {
     if item.rarity == Rarity::Normal {
@@ -134,6 +148,23 @@ mod tests {
             implicits: Vec::new(),
         };
         Item::new(&base, rng)
+    }
+
+    #[test]
+    fn all_lists_every_reason_with_a_unique_lower_snake_case_code() {
+        // The exhaustive match makes a new variant a compile error until it is listed.
+        for error in CraftError::ALL {
+            match error {
+                CraftError::ItemNotNormal | CraftError::NoValidMod => {}
+            }
+        }
+        let codes: std::collections::BTreeSet<&str> =
+            CraftError::ALL.iter().map(|error| error.code()).collect();
+        assert_eq!(codes.len(), CraftError::ALL.len());
+        for code in codes {
+            assert!(!code.is_empty());
+            assert!(code.chars().all(|c| c.is_ascii_lowercase() || c == '_'));
+        }
     }
 
     #[test]
