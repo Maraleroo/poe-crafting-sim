@@ -83,6 +83,9 @@ Copy this checklist into your reply and tick it off as you go:
    the PO.
 7. Report to the PO: what changed, the PR link, open questions. Start the local preview (configuration `web` in
    `.claude/launch.json`).
+   Whoever checks the local preview loads it with a fresh request that bypasses the browser
+   cache, for example with a parameter in the address (such as `?nocache=<random>`) or with
+   curl.
 8. After the PO has merged, write a short retrospective: what went well and what went
    wrong. Propose a change to a skill or instruction only for a problem that actually
    occurred in this story and cost time, caused a wrong result or needed an avoidable
