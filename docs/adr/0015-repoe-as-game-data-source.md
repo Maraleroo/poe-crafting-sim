@@ -1,6 +1,6 @@
 # 0015: RePoE as the source of the rings' game data
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-25
 - Work item: AB#162
 
@@ -110,7 +110,7 @@ The spike AB#162 checked the RePoE export for Path of Exile 1 that the PO suppli
 - The game version of the data is only as reliable as the export page, because the files do
   not carry it.
 - The section "Mod pools and weights" of `poe-crafting-rules` still names poedb.tw as the
-  data source; if this ADR is accepted, the PO updates it.
+  data source; as this ADR is accepted, the PO updates it.
 - The website does not change through this decision; it keeps embedding the data at build
   time (ADR 0008) and loads nothing from other servers.
 
