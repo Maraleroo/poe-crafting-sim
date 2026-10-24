@@ -30,14 +30,6 @@ article {
   max-width: 50rem;
 }
 
-/* Fixed height, so the buttons below keep their place whatever the item looks like. The value
-   fits the tallest item the data can produce on a narrow screen; it must not be a minimum,
-   because that grows with the item. */
-.item-area {
-  height: 28rem;
-  overflow-y: auto;
-}
-
 .item {
   display: inline-block;
   box-sizing: border-box;
