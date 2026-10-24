@@ -2,7 +2,7 @@
   "app.title": "Hello Crafting",
   "craft.error.no_valid_mod": "No mod can be added: this item has no valid mods to roll from.",
   "craft.reset": "Reset",
-  "footer.core_version": "crafting-core v{version}",
+  "footer.core_version": "Version {version}",
   "footer.disclaimer": "This product isn't affiliated with or endorsed by Grinding Gear Games in any way.",
   "footer.privacy": "Privacy",
   "item.rarity.magic": "Magic",
