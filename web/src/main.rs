@@ -13,6 +13,7 @@ mod workbench;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use crafting_core::Currency;
 use i18n::Translations;
 use item_view::ItemView;
 use page::PageText;
@@ -109,7 +110,8 @@ struct StartPage {
     translations: Translations,
     workbench: RefCell<Workbench>,
     item_host: Element,
-    orb: HtmlButtonElement,
+    /// The button of each currency, in the order they are shown.
+    currencies: Vec<(Currency, HtmlButtonElement)>,
     message: Element,
 }
 
@@ -123,11 +125,22 @@ impl StartPage {
         seed: u64,
     ) -> Result<(), JsValue> {
         let item_host = element(document, "div", None)?;
-        let orb = button(document, &text.orb_button)?;
+        let currencies = vec![
+            (
+                Currency::OrbOfTransmutation,
+                button(document, &text.transmutation_button)?,
+            ),
+            (
+                Currency::OrbOfAlteration,
+                button(document, &text.alteration_button)?,
+            ),
+        ];
         let reset = button(document, &text.reset_button)?;
         let buttons = element(document, "div", None)?;
         buttons.set_class_name("buttons");
-        append(&buttons, orb.clone().into())?;
+        for (_, orb) in &currencies {
+            append(&buttons, orb.clone().into())?;
+        }
         append(&buttons, reset.clone().into())?;
         let message = element(document, "p", None)?;
         message.set_class_name("message");
@@ -140,35 +153,40 @@ impl StartPage {
             translations: Translations::english(),
             workbench: RefCell::new(Workbench::new(seed)),
             item_host,
-            orb: orb.clone(),
+            currencies: currencies.clone(),
             message,
         });
         page.show(None)?;
-        listen(&orb, &page, StartPage::apply_orb)?;
+        for (currency, orb) in &currencies {
+            let currency = *currency;
+            listen(orb, &page, move |page| page.apply(currency))?;
+        }
         listen(&reset, &page, StartPage::reset)
     }
 
-    /// Renders the item again and updates the orb button and the message.
+    /// Renders the item again and updates the currency buttons and the message.
     fn show(&self, message: Option<&str>) -> Result<(), JsValue> {
         let workbench = self.workbench.borrow();
         let view = ItemView::new(&self.translations, workbench.item());
         self.item_host.set_text_content(None);
         append(&self.item_host, item_section(&self.document, &view)?)?;
-        // The orb stays clickable when it does not apply: the click shows the reason. The
+        // A currency stays clickable when it does not apply: the click shows the reason. The
         // HTML attribute `disabled` would swallow the click, so the state is `aria-disabled`.
-        let enabled = workbench.orb_enabled();
-        self.orb
-            .set_attribute("aria-disabled", if enabled { "false" } else { "true" })?;
-        self.orb
-            .set_class_name(if enabled { "" } else { "inapplicable" });
-        self.orb.set_title(&workbench.orb_tooltip());
+        for (currency, orb) in &self.currencies {
+            let enabled = workbench.applicable(*currency);
+            orb.set_attribute("aria-disabled", if enabled { "false" } else { "true" })?;
+            orb.set_class_name(if enabled { "" } else { "inapplicable" });
+            orb.set_title(&workbench.tooltip(*currency));
+        }
         self.message.set_text_content(message);
         Ok(())
     }
 
-    fn apply_orb(&self) -> Result<(), JsValue> {
-        let result = self.workbench.borrow_mut().transmute();
-        let message = result.err().map(Workbench::failure_message);
+    fn apply(&self, currency: Currency) -> Result<(), JsValue> {
+        let result = self.workbench.borrow_mut().apply(currency);
+        let message = result
+            .err()
+            .map(|error| Workbench::failure_message(currency, error));
         self.show(message.as_deref())
     }
 
@@ -189,7 +207,7 @@ fn button(document: &Document, label: &str) -> Result<HtmlButtonElement, JsValue
 fn listen(
     button: &HtmlButtonElement,
     page: &Rc<StartPage>,
-    action: fn(&StartPage) -> Result<(), JsValue>,
+    action: impl Fn(&StartPage) -> Result<(), JsValue> + 'static,
 ) -> Result<(), JsValue> {
     let page = Rc::clone(page);
     let on_click = Closure::<dyn FnMut()>::new(move || {
