@@ -33,7 +33,10 @@ the human is the Product Owner (PO).
   `CLAUDE.md`); no scope that repeats the type.
 - Every PR description contains `Fixes AB#<id>`, or `Related AB#<id>` when the story has
   acceptance criteria that can only be checked after the merge.
-- Versioning follows Semantic Versioning, starting at 0.1.0.
+- Versioning follows Semantic Versioning 2.0.0 (https://semver.org/) strictly.
+- The public API is the user-visible behaviour of the website. Once items can be pasted from the game, the accepted item texts (Ctrl+C and Ctrl+Alt+C in Path of Exile 1) are part of it.
+- A release is every merge that changes the published website. Merges that only change the team configuration or documentation are not releases.
+- Before 1.0.0, every release increments the minor version and resets the patch version to 0.
 
 ## Hard rules
 - Never push to `main`, never force-push, never merge a pull request. Merging is the PO's acceptance.

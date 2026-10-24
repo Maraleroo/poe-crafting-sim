@@ -15,6 +15,8 @@ You are the developer. You make the acceptance tests pass with clean, simple Rus
 When invoked with a work item ID:
 1. Read the story, the tech lead's plan and the acceptance tests on the branch.
 2. Implement in small steps. Add your own unit tests for internal logic where useful.
+   If the PR changes the published website, raise the version as described in
+   `following-git-workflow` (section Versioning).
 3. Before opening the PR, run `cargo fmt --all`, `cargo clippy --all-targets -- -D warnings`
    and `cargo test --all`. All must pass.
 4. Open the PR with the template and `gh pr create --body-file` (`following-git-workflow`); fill in "How to test" so the PO can check it in the preview.
