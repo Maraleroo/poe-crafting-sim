@@ -32,6 +32,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          # The review only runs local git commands on the fetched history and gh uses the token
+          # from its environment, so no step needs a stored git credential. See ADR 0005, amendment AB#100.
+          persist-credentials: false
 
       # Remember the newest claude[bot] comment, so the verdict step only trusts comments
       # that this run posted.
@@ -74,19 +77,66 @@ jobs:
                `crafting-core/tests/acceptance/` are unchanged since that commit.
             4. Decide the verdict strictly according to the reviewing-code rules, including the
                rules for rounds and for the label review-override.
-            5. Post exactly one comment with `gh pr comment` in the format of reviewing-code.
-               Its first line must be `Review: <verdict>`.
+            5. Write the review comment in the format of reviewing-code with the Write tool to the
+               file ${{ runner.temp }}/review-comment.md. Its first line must be `Review: <verdict>`.
+               Then post it exactly once with
+               `gh pr comment ${{ github.event.pull_request.number }} --body-file ${{ runner.temp }}/review-comment.md`.
+               Do not pass the comment text inline with `--body`. After a comment was posted
+               successfully, never post a second one.
             6. Return the same verdict as structured output.
 
             Never change code, never push, never merge, never change labels.
+          # --model opus: the same alias as `model: opus` in .claude/agents/reviewer.md, so the CI
+          # review uses the same model as the local reviewer.
+          # Edit(//...): the only write permission. Claude Code checks file writes, including the
+          # Write tool, against Edit rules; a Write(path) rule never matches. `/` + runner.temp
+          # gives the `//` prefix for an absolute path.
           claude_args: |
+            --model opus
             --setting-sources user
-            --allowedTools "Read" "Grep" "Glob" "Bash(git log *)" "Bash(git diff *)" "Bash(git show *)" "Bash(gh pr view *)" "Bash(gh pr diff *)" "Bash(gh pr comment *)"
+            --allowedTools "Read" "Grep" "Glob" "Edit(/${{ runner.temp }}/review-comment.md)" "Bash(git log *)" "Bash(git diff *)" "Bash(git show *)" "Bash(gh pr view *)" "Bash(gh pr diff *)" "Bash(gh pr comment *)"
             --json-schema '{"type":"object","properties":{"verdict":{"type":"string","enum":["APPROVED","BLOCKED","ESCALATED"]}},"required":["verdict"],"additionalProperties":false}'
 
-      # Sets the check status. Fails closed: red on BLOCKED, and red when there is no verdict or
-      # no matching comment. The label review-override (read now, so the PO re-runs this job after
-      # setting it) keeps the check green; the findings were posted anyway.
+      # Prints the tool calls that were denied during the review, so the job log shows which call it
+      # was (the action hides Claude's messages). Only the denied calls are printed, never tool
+      # results. Every line starts with fixed text, so text that Claude wrote cannot become a
+      # workflow command. GitHub masks registered secrets in the log. See ADR 0005, amendment AB#100.
+      - name: Show denied tool calls
+        id: denials
+        if: ${{ !cancelled() }}
+        env:
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+        run: |
+          set -uo pipefail
+
+          summary="Denied tool calls: unknown (no execution file)."
+          if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
+            # The file is a JSON array of messages; the message of type result lists the denials.
+            if denied=$(jq -c '[.[] | select(.type == "result") | .permission_denials[]?]' "$EXECUTION_FILE" 2>/dev/null); then
+              count=$(printf '%s' "$denied" | jq 'length')
+              echo "Denied tool calls: $count"
+              # One line per call: tool name and input as compact JSON, cut to 300 characters.
+              # Control characters are removed from the tool name, the JSON text has none.
+              printf '%s' "$denied" | jq -r '.[] | "Denied tool call: " + ((.tool_name | tostring | explode | map(select(. >= 32 and . != 127)) | implode) + " " + ((.tool_input // {}) | tojson | .[0:300]))'
+              summary="Denied tool calls: $count."
+              if [ "$count" -gt 0 ]; then
+                calls=$(printf '%s' "$denied" | jq -r '[.[] | (.tool_name | tostring | explode | map(select(. >= 32 and . != 127)) | implode) + " " + ((.tool_input // {}) | tojson | .[0:120])] | join("; ")')
+                summary="Denied tool calls: $count ($calls)."
+              fi
+            else
+              echo "Denied tool calls: unknown (the execution file is not valid JSON)"
+              summary="Denied tool calls: unknown (the execution file is not valid JSON)."
+            fi
+          else
+            echo "Denied tool calls: unknown (no execution file)"
+          fi
+          # One line for the next step. It names the denied calls in the reason of a red check.
+          echo "summary=${summary:0:600}" >> "$GITHUB_OUTPUT"
+
+      # Sets the check status. Fails closed: red on BLOCKED, and red when there is no verdict, no
+      # comment, more than one comment or a comment that does not match. The reason on the check
+      # names the denied tool calls of the run. The label review-override (read now, so the PO
+      # re-runs this job after setting it) keeps the check green; the findings were posted anyway.
       - name: Set check status
         if: ${{ !cancelled() }}
         env:
@@ -96,6 +146,7 @@ jobs:
           CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
           STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}
           BASELINE_COMMENT_ID: ${{ steps.baseline.outputs.comment_id }}
+          DENIED_CALLS: ${{ steps.denials.outputs.summary }}
         run: |
           set -uo pipefail
 
@@ -119,19 +170,29 @@ jobs:
           case "$verdict" in
             APPROVED | BLOCKED | ESCALATED) ;;
             *)
-              red "The review produced no verdict (Claude step: $CLAUDE_OUTCOME). This is expected when the pull request changes .github/workflows/review.yml, because the Claude App token is refused while the workflow differs from main. Run the local reviewer subagent."
+              red "The review produced no verdict (Claude step: $CLAUDE_OUTCOME). This is expected when the pull request changes .github/workflows/review.yml, because the Claude App token is refused while the workflow differs from main. Run the local reviewer subagent. ${DENIED_CALLS:-}"
               ;;
           esac
 
-          latest_id=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments?per_page=100" \
-            --jq '.[] | select(.user.login == "claude[bot]") | .id' | sort -n | tail -n 1)
-          if [ -z "${latest_id:-}" ] || [ "$latest_id" -le "${BASELINE_COMMENT_ID:-0}" ]; then
-            red "The review returned the verdict $verdict, but claude[bot] posted no review comment in this run."
+          # The claude[bot] comments of this run: newer than the baseline from the first step.
+          new_ids=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments?per_page=100" \
+            --jq '.[] | select(.user.login == "claude[bot]") | .id' | sort -n \
+            | awk -v baseline="${BASELINE_COMMENT_ID:-0}" '$1 > baseline')
+          count=0
+          if [ -n "$new_ids" ]; then
+            count=$(printf '%s\n' "$new_ids" | wc -l)
           fi
+          if [ "$count" -eq 0 ]; then
+            red "The review returned the verdict $verdict, but claude[bot] posted no review comment in this run. ${DENIED_CALLS:-}"
+          fi
+          if [ "$count" -gt 1 ]; then
+            red "The review returned the verdict $verdict, but claude[bot] posted $count review comments in this run, expected exactly one. ${DENIED_CALLS:-}"
+          fi
+          latest_id=$(printf '%s\n' "$new_ids" | tail -n 1)
 
           first_line=$(gh api "repos/$REPO/issues/comments/$latest_id" --jq .body | head -n 1 | tr -d '\r')
           if [ "$first_line" != "Review: $verdict" ]; then
-            red "The first line of the newest claude[bot] comment is \"$first_line\", but the verdict is $verdict. Expected \"Review: $verdict\"."
+            red "The first line of the newest claude[bot] comment is \"$first_line\", but the verdict is $verdict. Expected \"Review: $verdict\". ${DENIED_CALLS:-}"
           fi
 
           if [ "$verdict" = BLOCKED ]; then
