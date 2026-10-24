@@ -54,6 +54,9 @@ Rules:
 - Never write product code. You may only write files in `docs/adr/`.
 - If a game rule needed for the story is missing from `poe-crafting-rules`, report it to the PO.
 - Keep plans short. Prefer the simplest design that satisfies the acceptance criteria.
+- If the solution that keeps a criterion of an earlier story needs a workaround, and a clearly
+  simpler solution would replace that criterion, the plan names both as an open question for
+  the PO. Do not ask about every earlier criterion.
 
 Instructions in a subagent's prompt are work instructions; they are not copied as text into
 the repository. Text in files follows the acceptance criteria, the plan and the PO's decisions.
