@@ -44,6 +44,7 @@ the human is the Product Owner (PO).
   propose them to the PO instead.
 - Never modify, delete or disable existing acceptance tests (`crafting-core/tests/acceptance.rs` and `crafting-core/tests/acceptance/`). If one looks wrong, stop and report.
   Only the test designer adds new acceptance tests, including the story's `mod` line in `crafting-core/tests/acceptance.rs`.
+  Exception: when the PO has confirmed for a story that one of its criteria replaces a criterion of an earlier story, the test designer adapts the existing test of that criterion in the story's `test(...)` commit. The developer never changes acceptance tests.
 - Never hard-code expected test values or add special cases that exist only for tests.
 - If a Path of Exile rule is missing or unclear in `poe-crafting-rules`, report it. Never guess game mechanics.
 - This repository is public: never commit secrets, tokens or personal data.

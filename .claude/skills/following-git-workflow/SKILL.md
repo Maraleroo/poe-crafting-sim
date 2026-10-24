@@ -41,6 +41,7 @@ Format: `<type>(<scope>): <description>` in English, imperative, lower case, no 
   with `--body`, `-b` or a heredoc on the command line: shell quoting breaks backticks and
   Markdown. Write the body file outside the repository (scratchpad or temp directory), so it
   is never committed.
+- If the story's `test(...)` commit adapts existing acceptance tests, the body names each one with the criterion of the earlier story that is replaced and the criterion of this story that replaces it (section "Adapted acceptance tests" of the template).
 - Never merge. Merging is the PO's acceptance.
 
 ## Versioning

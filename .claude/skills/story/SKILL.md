@@ -31,6 +31,11 @@ Copy this checklist into your reply and tick it off as you go:
    verbatim in the work item. If it is missing, it goes on the list for the PO.
    If a criterion prescribes a concrete mechanism (a setting, a variable, a command), try it
    during the Definition of Ready.
+   If a criterion changes existing wording or existing behaviour, search the acceptance tests
+   for checks it affects. Every hit goes on the list for the PO with the question whether the
+   criterion of the earlier story is replaced. Record the PO's confirmation as a comment on
+   the work item. A test change that the PO announced in the story is not a gap in the
+   Definition of Ready.
    If anything is missing, list it for the PO and stop.
 2. Set the story to Active. Create the branch from `origin/main` without upstream:
    `git fetch origin`, then `git switch --no-track -c <prefix>/<id>-<short-name> origin/main`.
@@ -41,7 +46,8 @@ Copy this checklist into your reply and tick it off as you go:
    If the PO quoted a game rule verbatim in an acceptance criterion, commit it unchanged to
    `poe-crafting-rules`, checked byte for byte against the work item, in its own commit before
    the tech lead and the tests start. A quoted rule is compared byte for byte after resolving
-   HTML escapes (for example `&gt;`, `&quot;`) and without the quote markers. Copies of work
+   HTML escapes (for example `&gt;`, `&quot;`) and without the quote markers. A `&nbsp;` in
+   the work item counts as a normal space. Copies of work
    items are stored in the session's scratchpad, not in %TEMP%.
    If the PO has provided input files for the story (texts, data) in the working tree, commit
    them unchanged in their own commit right away, before the tech lead and the tests start.
@@ -53,8 +59,10 @@ Copy this checklist into your reply and tick it off as you go:
    the PO, get the answers before step 4.
    Prompts to subagents name the work item and new decisions. For conventions, such as
    commit types and scopes, they refer to the skills instead of repeating them.
-4. Run the `test-designer` subagent. Run the tests yourself and confirm they fail
-   because the feature is missing.
+4. Run the `test-designer` subagent. It adapts the existing tests that the PO confirmed as
+   replaced in the story's `test(...)` commit. Run the tests yourself and confirm they fail
+   because the feature is missing. If none of the criteria needs a permanent test, the test
+   designer writes none and says so; then there is no red check.
 5. Run the `developer` subagent until the PR is open.
 6. Wait for CI with `gh pr checks <nr> --watch`. Alternatively, when the session runs in
    the Claude desktop app, use the app's CI monitor for the PR: end your turn and continue

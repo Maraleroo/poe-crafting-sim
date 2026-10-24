@@ -15,8 +15,12 @@ Fixes AB#<id>
 <!-- Copied from the work item; tick each one -->
 - [ ]
 
+## Adapted acceptance tests
+<!-- Copied from the body of the story's test(...) commit: each adapted test, the criterion of the earlier story that is replaced and the criterion of this story that replaces it. Otherwise "none" -->
+none
+
 ## Definition of Done
-- [ ] Acceptance tests green and unchanged
+- [ ] Acceptance tests green and unchanged since the `test(...)` commit
 - [ ] `cargo fmt`, `cargo clippy` (no new warnings) and `cargo test` green
 - [ ] Docs updated where needed (README, ADR, CLAUDE.md)
 
