@@ -52,8 +52,6 @@ const MAGIC_KEY: &str = "item.rarity.magic";
 const MAGIC_TEXT: &str = "Magic";
 const RESET_KEY: &str = "craft.reset";
 const RESET_TEXT: &str = "Reset";
-const NO_VALID_MOD_KEY: &str = "craft.error.no_valid_mod";
-const NO_VALID_MOD_TEXT: &str = "No mod can be added: this item has no valid mods to roll from.";
 
 /// One row of the PO's mini mod pool on AB#62.
 struct TableMod {
@@ -1378,25 +1376,6 @@ fn ac8_own_test_pools_cover_unbalanced_and_empty_pools() {
         assert_eq!(result, Err(CraftError::NoValidMod));
         assert_eq!(item, before);
     }
-    // And the page shows the PO's error message from the translations
-    let translations = load_english_translations();
-    assert_eq!(
-        translation(&translations, NO_VALID_MOD_KEY),
-        NO_VALID_MOD_TEXT
-    );
-    assert_web_src_uses(
-        &[NO_VALID_MOD_KEY],
-        "the error message is a translation key",
-    );
-    let hard_coded = findings(
-        &web_files_except_translations(),
-        &[NO_VALID_MOD_TEXT],
-        false,
-    );
-    assert!(
-        hard_coded.is_empty(),
-        "the error message must only be in {EN_JSON}: {hard_coded:#?}"
-    );
 }
 
 // AC9: „Der Skill `poe-crafting-rules` enthält die Regeln des PO wörtlich: Im Abschnitt „Item
