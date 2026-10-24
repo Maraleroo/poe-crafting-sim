@@ -51,8 +51,8 @@ is rendered through the placeholders. A text with several lines separates them w
 
 ## currencies.json
 
-Source: names from the story text of AB#62 (ADR 0011); descriptions and failure messages from
-the story text of AB#113 (ADR 0012).
+Source: names from the story texts of AB#62 and AB#114 (ADR 0011); descriptions and failure
+messages from the story texts of AB#113 and AB#114 (ADR 0012).
 
 ```
 { "currencies": [ { "id": "...", "name": "...", "description": "...", "messages": { ... } }, ... ] }
@@ -62,5 +62,6 @@ the story text of AB#113 (ADR 0012).
 - `name`: English name of the currency (game text, shown unchanged)
 - `description`: the currency's English game description (game text, shown unchanged)
 - `messages`: maps a reason code to the game's failure message for this currency (game text,
-  shown unchanged). The keys are the codes of `CraftError` (`item_not_normal`, `no_valid_mod`);
-  a currency has a message for every reason it can fail with.
+  shown unchanged). The keys are the codes of `CraftError` (`item_not_normal`,
+  `item_not_magic`, `no_valid_mod`); a currency has a message for every reason it can fail
+  with, and for no other.
