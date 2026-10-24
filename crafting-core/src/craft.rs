@@ -163,9 +163,7 @@ mod tests {
         assert_eq!(codes.len(), CraftError::ALL.len());
         for code in codes {
             assert!(!code.is_empty());
-            assert!(code
-                .chars()
-                .all(|c| c.is_ascii_lowercase() || c == '_'));
+            assert!(code.chars().all(|c| c.is_ascii_lowercase() || c == '_'));
         }
     }
 
