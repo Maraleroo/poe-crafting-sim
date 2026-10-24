@@ -60,9 +60,10 @@ Copy this checklist into your reply and tick it off as you go:
    Prompts to subagents name the work item and new decisions. For conventions, such as
    commit types and scopes, they refer to the skills instead of repeating them.
 4. Run the `test-designer` subagent. It adapts the existing tests that the PO confirmed as
-   replaced in the story's `test(...)` commit. Run the tests yourself and confirm they fail
-   because the feature is missing. If none of the criteria needs a permanent test, the test
-   designer writes none and says so; then there is no red check.
+   replaced in the story's `test(...)` commit. Run the new tests yourself and confirm they fail
+   because the feature is missing; the red check covers only the new tests. If none of the
+   criteria needs a permanent test, the test designer writes none and says so; then there is
+   no red check, and the `test(...)` commit contains only the adapted tests, if there are any.
 5. Run the `developer` subagent until the PR is open.
 6. Wait for CI with `gh pr checks <nr> --watch`. Alternatively, when the session runs in
    the Claude desktop app, use the app's CI monitor for the PR: end your turn and continue

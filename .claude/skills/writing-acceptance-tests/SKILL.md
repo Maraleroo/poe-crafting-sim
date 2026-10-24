@@ -50,6 +50,8 @@ verification task from the tech lead's plan, not by `cargo test`.
   If N differs from the PO's example, explain why in the test or in the PR.
 
 ## Before committing
-- Run the tests and confirm each one fails because the feature is missing. If none of the
-  criteria needs a permanent test, there is nothing to run.
-- Commit with `test(core): add acceptance tests for AB#<id>`.
+- Run the new tests and confirm each one fails because the feature is missing. If none of the
+  criteria needs a permanent test, there is no new test and no red check. The tests that the PO
+  confirmed as replaced are adapted in the same commit; the red check does not cover them.
+- Commit with `test(core): add acceptance tests for AB#<id>`. If there are only adapted tests,
+  the commit has the same type and scope.
