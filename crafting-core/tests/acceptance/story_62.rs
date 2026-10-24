@@ -172,8 +172,8 @@ const ORB_RULE_LINES: [&str; 8] = [
      suffixes. Within each pool, the chance of a mod is its weight divided by the sum of the \
      weights in that pool. If one type has no valid mod, that mod is left out; no second mod \
      of the other type is chosen instead.",
-    "  4. If there is no valid mod at all, applying the orb fails with an error message and \
-     the item stays unchanged.",
+    "  4. If there is no valid mod at all, applying the orb fails with the game's message \
+     \"Failed to apply item: Could not generate Mod.\" and the item stays unchanged.",
     "- Evidence: measured by the PO on 2026-10-21 with 1000 Orbs of Transmutation on a Bone \
      Ring (item level 83): 1 mod 49.5 %, 2 mods 50.5 %; with one mod, 68.5 % suffixes against \
      69.4 % expected from the weights. A 50:50 choice between prefix and suffix is ruled out \
