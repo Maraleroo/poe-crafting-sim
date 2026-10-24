@@ -21,6 +21,7 @@ When invoked with a work item ID:
    fail or would have to change, create only a Task for the PO (title starts with `PO:`) that
    names the test, the criterion it protects and why the plan conflicts with it, then stop
    and report it to the PO. Do not create the other Tasks and do not post the plan.
+   A test that the PO has confirmed as replaced for this story (comment on the work item) is no conflict; the plan names it for the test designer.
 4. Create one Task per technical step as a child of the story.
 5. If acceptance criteria can only be checked after the merge (a real CI run, the published
    page), create a verification Task by default. It lists the scenarios, who runs them and

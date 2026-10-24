@@ -23,9 +23,15 @@ description: How to turn acceptance criteria into Rust acceptance tests that fai
   If it does not exist yet, the test failing to compile is the expected red state.
 - Test behaviour, never implementation details.
 
+## What permanent tests check
+- Permanent acceptance tests check behaviour and structure: game mechanics and statistics, privacy, the security of the workflows, and that texts come from translation or game data files and are not hard-coded.
+- They do not check the exact wording of game rules, UI texts, game texts or team files. That wording is checked at the acceptance: rules byte for byte in step 2 of the `story` skill, everything else in the review against the criteria in the PR and by the PO in the preview.
+- Exception: legal texts (disclaimer, privacy policy, Impressum) are checked word for word.
+- A criterion that only checks wording is checked at the acceptance and gets no permanent test.
+- Existing wording tests are not cleaned up in advance. If a story runs into one, the exception in the hard rules of `CLAUDE.md` applies.
+
 ## CI and process stories
-Stories that change workflows, skills, agents or other team files get only lean
-text-level checks (ADR 0004): a file exists, contains or does not contain a given string,
+For stories that change workflows, skills, agents or other team files, permanent tests check only behaviour and structure, for example workflow triggers and permissions, with lean text-level checks (ADR 0004): a file exists, contains or does not contain a given string,
 a line with a given text exists. No parsers for YAML, Markdown or JSON, no structural
 models of the file.
 Tests check formats and contracts, never concrete versions, tags or SHAs: for example
@@ -44,5 +50,8 @@ verification task from the tech lead's plan, not by `cargo test`.
   If N differs from the PO's example, explain why in the test or in the PR.
 
 ## Before committing
-- Run the tests and confirm each one fails because the feature is missing.
-- Commit with `test(core): add acceptance tests for AB#<id>`.
+- Run the new tests and confirm each one fails because the feature is missing. If none of the
+  criteria needs a permanent test, there is no new test and no red check. The tests that the PO
+  confirmed as replaced are adapted in the same commit; the red check does not cover them.
+- Commit with `test(core): add acceptance tests for AB#<id>`. If there are only adapted tests,
+  the commit has the same type and scope.
