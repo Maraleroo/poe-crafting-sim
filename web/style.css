@@ -1,3 +1,8 @@
+html {
+  /* Keeps the width of the page, and so the wrapping of the buttons, when a scrollbar appears. */
+  scrollbar-gutter: stable;
+}
+
 body {
   display: flex;
   flex-direction: column;
@@ -25,9 +30,19 @@ article {
   max-width: 50rem;
 }
 
+/* Fixed height, so the buttons below keep their place whatever the item looks like. The value
+   fits the tallest item the data can produce on a narrow screen; it must not be a minimum,
+   because that grows with the item. */
+.item-area {
+  height: 28rem;
+  overflow-y: auto;
+}
+
 .item {
   display: inline-block;
+  box-sizing: border-box;
   min-width: 16rem;
+  max-width: 100%;
   padding: 0.5rem 1rem;
   border: 1px solid #888;
 }

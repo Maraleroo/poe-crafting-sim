@@ -125,6 +125,7 @@ impl StartPage {
         seed: u64,
     ) -> Result<(), JsValue> {
         let item_host = element(document, "div", None)?;
+        item_host.set_class_name("item-area");
         let currencies = vec![
             (
                 Currency::OrbOfTransmutation,
