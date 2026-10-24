@@ -73,8 +73,11 @@ Copy this checklist into your reply and tick it off as you go:
    the PO.
 7. Report to the PO: what changed, the PR link, open questions. Start the local preview (configuration `web` in
    `.claude/launch.json`).
-8. After the PO has merged, write a short retrospective: what went wrong, which skill
-   or instruction should change. Propose the change; do not apply it yourself.
+8. After the PO has merged, write a short retrospective: what went well and what went
+   wrong. Propose a change to a skill or instruction only for a problem that actually
+   occurred in this story and cost time, caused a wrong result or needed an avoidable
+   question to the PO. The proposal names that problem. If nothing needs to change, say so;
+   that is a valid result. Propose the change; do not apply it yourself.
    Try a proposed change to tools or configuration before proposing it. The proposal names
    what was tried and the result.
    If the story has criteria that can only be checked after the merge, its PR says
