@@ -59,6 +59,7 @@ Copy this checklist into your reply and tick it off as you go:
    the PO, get the answers before step 4.
    Prompts to subagents name the work item and new decisions. For conventions, such as
    commit types and scopes, they refer to the skills instead of repeating them.
+   The prompt to the tech lead does not set criteria of earlier stories as fixed constraints.
 4. Run the `test-designer` subagent. It adapts the existing tests that the PO confirmed as
    replaced in the story's `test(...)` commit. Run the new tests yourself and confirm they fail
    because the feature is missing; the red check covers only the new tests. If none of the

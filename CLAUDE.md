@@ -18,7 +18,9 @@ the human is the Product Owner (PO).
 - Lint: `cargo clippy --all-targets -- -D warnings`
 - Test: `cargo test --all`
 - Local preview: `trunk serve --open` in `web/` (needs Trunk and the `wasm32-unknown-unknown` target, see README)
-- Pages build: `trunk build --release --public-url /poe-crafting-sim/` in `web/`.
+- Pages build: `trunk build --release --public-url /poe-crafting-sim/ --dist ../target/pages` in `web/`.
+  It writes to `target/pages`, which Git ignores, not to `web/dist`, so a running `trunk serve`
+  keeps its preview.
   In Git Bash on Windows, run it as `MSYS_NO_PATHCONV=1 trunk build ...`; otherwise Git Bash
   rewrites `/poe-crafting-sim/` into a Windows path.
 
