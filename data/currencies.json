@@ -1,5 +1,13 @@
 {
   "currencies": [
-    { "id": "orb_of_transmutation", "name": "Orb of Transmutation" }
+    {
+      "id": "orb_of_transmutation",
+      "name": "Orb of Transmutation",
+      "description": "Upgrades a normal item to a magic item",
+      "messages": {
+        "item_not_normal": "Failed to apply item: Target is not Normal Rarity.",
+        "no_valid_mod": "Failed to apply item: Could not generate Mod."
+      }
+    }
   ]
 }

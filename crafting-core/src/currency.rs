@@ -1,7 +1,10 @@
 //! Currencies: the game data entries and the currencies the crafting rules implement.
 
+use std::collections::BTreeMap;
+
 use serde::Deserialize;
 
+use crate::craft::CraftError;
 use crate::data::currencies;
 
 /// A currency in the game data (ADR 0011).
@@ -11,6 +14,11 @@ pub struct CurrencyDefinition {
     pub id: String,
     /// English game text, passed through unchanged.
     pub name: String,
+    /// English game description, passed through unchanged (ADR 0012).
+    pub description: String,
+    /// The game's failure message for each reason code (`CraftError::code`), passed through
+    /// unchanged (ADR 0012).
+    pub messages: BTreeMap<String, String>,
 }
 
 /// A currency with crafting rules in this crate.
@@ -33,12 +41,38 @@ impl Currency {
     /// If the game data has no entry for the currency. That is a programming error, caught
     /// by the unit tests.
     pub fn name(self) -> String {
+        self.definition().name
+    }
+
+    /// The description of the currency from the game data.
+    ///
+    /// # Panics
+    /// If the game data has no entry for the currency. That is a programming error, caught
+    /// by the unit tests.
+    pub fn description(self) -> String {
+        self.definition().description
+    }
+
+    /// The game's message for a failure of this currency, from the game data.
+    ///
+    /// # Panics
+    /// If the game data has no entry for the currency or no message for the reason. That is
+    /// a programming error, caught by the unit tests.
+    pub fn failure_message(self, error: CraftError) -> String {
+        let id = self.id();
+        let code = error.code();
+        self.definition()
+            .messages
+            .remove(code)
+            .unwrap_or_else(|| panic!("the game data has no message of {id:?} for {code:?}"))
+    }
+
+    fn definition(self) -> CurrencyDefinition {
         let id = self.id();
         currencies()
             .into_iter()
             .find(|currency| currency.id == id)
             .unwrap_or_else(|| panic!("the game data has no currency {id:?}"))
-            .name
     }
 }
 
@@ -68,6 +102,24 @@ mod tests {
                 .unwrap_or_else(|| panic!("no data entry for {currency:?}"));
             assert!(!entry.name.is_empty());
             assert_eq!(currency.name(), entry.name);
+        }
+    }
+
+    #[test]
+    fn every_currency_has_a_description_and_a_message_for_every_reason() {
+        let entries = currencies();
+        for currency in all() {
+            let entry = entries
+                .iter()
+                .find(|entry| entry.id == currency.id())
+                .unwrap_or_else(|| panic!("no data entry for {currency:?}"));
+            assert!(!entry.description.is_empty());
+            assert_eq!(currency.description(), entry.description);
+            for error in CraftError::ALL {
+                let message = currency.failure_message(error);
+                assert!(!message.is_empty(), "{currency:?} {error:?}");
+                assert_eq!(Some(&message), entry.messages.get(error.code()));
+            }
         }
     }
 
