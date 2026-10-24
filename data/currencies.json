@@ -8,6 +8,15 @@
         "item_not_normal": "Failed to apply item: Target is not Normal Rarity.",
         "no_valid_mod": "Failed to apply item: Could not generate Mod."
       }
+    },
+    {
+      "id": "orb_of_alteration",
+      "name": "Orb of Alteration",
+      "description": "Reforges a magic item with new random modifiers",
+      "messages": {
+        "item_not_magic": "Failed to apply item: Target is not Magic.",
+        "no_valid_mod": "Failed to apply item: Could not generate Mod."
+      }
     }
   ]
 }

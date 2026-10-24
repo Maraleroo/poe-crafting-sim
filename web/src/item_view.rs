@@ -62,7 +62,9 @@ mod tests {
 
     use super::*;
     use crate::workbench::Workbench;
-    use crafting_core::{AffixType, ExplicitModDefinition, ModDefinition, StatDefinition};
+    use crafting_core::{
+        AffixType, Currency, ExplicitModDefinition, ModDefinition, StatDefinition,
+    };
 
     #[test]
     fn every_rarity_has_a_translation() {
@@ -101,7 +103,7 @@ mod tests {
         let t = Translations::english();
         let mut workbench = Workbench::new(1);
         let implicits = ItemView::new(&t, workbench.item()).implicits;
-        workbench.transmute().unwrap();
+        workbench.apply(Currency::OrbOfTransmutation).unwrap();
         let item = workbench.item();
         let view = ItemView::new(&t, item);
 
@@ -153,7 +155,7 @@ second {b}"
             },
         }];
         let mut workbench = Workbench::with_pool(1, pool);
-        workbench.transmute().unwrap();
+        workbench.apply(Currency::OrbOfTransmutation).unwrap();
         let view = ItemView::new(&Translations::english(), workbench.item());
         assert_eq!(view.explicits, ["first 1", "second 2"]);
     }

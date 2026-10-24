@@ -25,6 +25,7 @@ pub struct CurrencyDefinition {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Currency {
     OrbOfTransmutation,
+    OrbOfAlteration,
 }
 
 impl Currency {
@@ -32,6 +33,7 @@ impl Currency {
     pub fn id(self) -> &'static str {
         match self {
             Currency::OrbOfTransmutation => "orb_of_transmutation",
+            Currency::OrbOfAlteration => "orb_of_alteration",
         }
     }
 
@@ -83,13 +85,23 @@ mod tests {
     /// Every variant of [`Currency`]. The exhaustive match makes a new variant a compile
     /// error here until it is added to the list.
     fn all() -> Vec<Currency> {
-        let variants = [Currency::OrbOfTransmutation];
+        let variants = [Currency::OrbOfTransmutation, Currency::OrbOfAlteration];
         for variant in variants {
             match variant {
-                Currency::OrbOfTransmutation => {}
+                Currency::OrbOfTransmutation | Currency::OrbOfAlteration => {}
             }
         }
         variants.to_vec()
+    }
+
+    /// The reasons with which the currency can fail (ADR 0012). Each has a game message.
+    fn failure_reasons(currency: Currency) -> Vec<CraftError> {
+        match currency {
+            Currency::OrbOfTransmutation => {
+                vec![CraftError::ItemNotNormal, CraftError::NoValidMod]
+            }
+            Currency::OrbOfAlteration => vec![CraftError::ItemNotMagic, CraftError::NoValidMod],
+        }
     }
 
     #[test]
@@ -115,11 +127,13 @@ mod tests {
                 .unwrap_or_else(|| panic!("no data entry for {currency:?}"));
             assert!(!entry.description.is_empty());
             assert_eq!(currency.description(), entry.description);
-            for error in CraftError::ALL {
-                let message = currency.failure_message(error);
+            let reasons = failure_reasons(currency);
+            for error in &reasons {
+                let message = currency.failure_message(*error);
                 assert!(!message.is_empty(), "{currency:?} {error:?}");
                 assert_eq!(Some(&message), entry.messages.get(error.code()));
             }
+            assert_eq!(entry.messages.len(), reasons.len(), "{currency:?}");
         }
     }
 

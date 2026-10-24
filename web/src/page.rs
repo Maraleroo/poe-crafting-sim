@@ -13,8 +13,9 @@ pub struct PageText {
     pub privacy_title: String,
     pub german_version_link: String,
     pub english_version_link: String,
-    /// Label of the orb button: the currency's name, a game text from `crafting-core`.
-    pub orb_button: String,
+    /// Labels of the currency buttons: the currencies' names, game texts from `crafting-core`.
+    pub transmutation_button: String,
+    pub alteration_button: String,
     pub reset_button: String,
 }
 
@@ -29,7 +30,8 @@ impl PageText {
             privacy_title: translations.text("privacy.title").to_owned(),
             german_version_link: translations.text("privacy.german_version").to_owned(),
             english_version_link: translations.text("privacy.english_version").to_owned(),
-            orb_button: Currency::OrbOfTransmutation.name(),
+            transmutation_button: Currency::OrbOfTransmutation.name(),
+            alteration_button: Currency::OrbOfAlteration.name(),
             reset_button: translations.text("craft.reset").to_owned(),
         }
     }
@@ -60,8 +62,12 @@ mod tests {
     }
 
     #[test]
-    fn orb_button_is_labelled_with_the_name_of_the_currency() {
+    fn currency_buttons_are_labelled_with_the_names_of_the_currencies() {
         let text = PageText::new(&Translations::english(), "0.1.0");
-        assert_eq!(text.orb_button, Currency::OrbOfTransmutation.name());
+        assert_eq!(
+            text.transmutation_button,
+            Currency::OrbOfTransmutation.name()
+        );
+        assert_eq!(text.alteration_button, Currency::OrbOfAlteration.name());
     }
 }

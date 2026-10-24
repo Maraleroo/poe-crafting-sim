@@ -15,7 +15,8 @@ Rarities: Normal, Magic, Rare, Unique. A normal item has no prefixes or suffixes
 A magic item has at most one prefix and one suffix. Its name is "<prefix name> <base name> <suffix name>"; a missing prefix or suffix leaves its part out.
 
 ## Item level
-TODO (PO): how item level restricts which mods can roll. Default in the UI: 100.
+A mod can roll on an item only if the item level is at least the mod's level. Example: a mod with level 60 needs an item level of 60 or higher. Default in the UI: 100.
+- Evidence: the PO's knowledge of the game. Consistent with the PO's measurement on 2026-10-21 (3000 Orbs of Transmutation and Alteration on a Bone Ring of item level 83): mods with level 82 rolled 63 times, mods with level 84 or 85 never.
 
 ## Mod pools and weights
 TODO (PO): which mods belong to a base, how weights turn into probabilities,
@@ -29,6 +30,7 @@ One file per currency, linked here, e.g. `currencies/orb-of-transmutation.md`:
 
 Currency rules:
 - [Orb of Transmutation](currencies/orb-of-transmutation.md)
+- [Orb of Alteration](currencies/orb-of-alteration.md)
 
 ## Sources
 - https://www.poewiki.net/
