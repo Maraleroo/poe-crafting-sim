@@ -10,7 +10,10 @@ mod data;
 mod model;
 mod rng;
 
-pub use craft::{apply_orb_of_transmutation, can_apply_orb_of_transmutation, CraftError};
+pub use craft::{
+    apply_orb_of_alteration, apply_orb_of_transmutation, can_apply_orb_of_alteration,
+    can_apply_orb_of_transmutation, valid_mods, CraftError,
+};
 pub use currency::{Currency, CurrencyDefinition};
 pub use data::{base_item, base_items, currencies, explicit_mods};
 pub use model::{

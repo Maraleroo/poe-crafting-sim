@@ -8,22 +8,38 @@ use crate::rng::{choose_weighted, roll_below, Rng};
 pub enum CraftError {
     /// The currency needs a normal item.
     ItemNotNormal,
+    /// The currency needs a magic item.
+    ItemNotMagic,
     /// There is no valid mod to add.
     NoValidMod,
 }
 
 impl CraftError {
     /// Every reason code.
-    pub(crate) const ALL: [CraftError; 2] = [CraftError::ItemNotNormal, CraftError::NoValidMod];
+    pub(crate) const ALL: [CraftError; 3] = [
+        CraftError::ItemNotNormal,
+        CraftError::ItemNotMagic,
+        CraftError::NoValidMod,
+    ];
 
     /// The identifier of the reason in lower snake case. It is the key of the failure
     /// messages in the game data (ADR 0012).
     pub fn code(self) -> &'static str {
         match self {
             CraftError::ItemNotNormal => "item_not_normal",
+            CraftError::ItemNotMagic => "item_not_magic",
             CraftError::NoValidMod => "no_valid_mod",
         }
     }
+}
+
+/// The mods of `mods` that can roll on an item of the given level: the mods whose level is at
+/// most `item_level`, in their order (ADR 0013). This is the only place of the item level rule.
+pub fn valid_mods(mods: &[ExplicitModDefinition], item_level: u32) -> Vec<ExplicitModDefinition> {
+    mods.iter()
+        .filter(|definition| definition.level <= item_level)
+        .cloned()
+        .collect()
 }
 
 /// Whether the orb can be applied to `item`, without looking at any mod pool.
@@ -51,6 +67,56 @@ pub fn apply_orb_of_transmutation(
     rng: &mut impl Rng,
 ) -> Result<(), CraftError> {
     can_apply_orb_of_transmutation(item)?;
+    let (prefix, suffix) = roll_new_mods(pool, rng)?;
+
+    item.rarity = Rarity::Magic;
+    item.prefix = prefix;
+    item.suffix = suffix;
+    Ok(())
+}
+
+/// Whether the orb can be applied to `item`, without looking at any mod pool.
+pub fn can_apply_orb_of_alteration(item: &Item) -> Result<(), CraftError> {
+    if item.rarity == Rarity::Magic {
+        Ok(())
+    } else {
+        Err(CraftError::ItemNotMagic)
+    }
+}
+
+/// Replaces all prefixes and suffixes of a magic item with new mods from `pool`, the valid
+/// mods. The new mods are rolled exactly as when a normal item becomes magic; by chance they
+/// can be the same as the old ones.
+///
+/// On an error the item stays unchanged.
+///
+/// # Panics
+/// If a mod of `pool` has weight zero.
+pub fn apply_orb_of_alteration(
+    item: &mut Item,
+    pool: &[ExplicitModDefinition],
+    rng: &mut impl Rng,
+) -> Result<(), CraftError> {
+    can_apply_orb_of_alteration(item)?;
+    let (prefix, suffix) = roll_new_mods(pool, rng)?;
+
+    item.prefix = prefix;
+    item.suffix = suffix;
+    Ok(())
+}
+
+/// The rolled prefix and suffix of a currency that gives an item new mods.
+type NewMods = (Option<ExplicitMod>, Option<ExplicitMod>);
+
+/// Rolls one or two mods from `pool`, each with a chance of 50 %. One mod is chosen by weight
+/// from the whole pool. Two mods are a prefix chosen by weight from the prefixes and a suffix
+/// chosen by weight from the suffixes; if a type has no mod, its mod is left out.
+///
+/// Fails with `NoValidMod` if the pool is empty.
+fn roll_new_mods(
+    pool: &[ExplicitModDefinition],
+    rng: &mut impl Rng,
+) -> Result<NewMods, CraftError> {
     if pool.is_empty() {
         return Err(CraftError::NoValidMod);
     }
@@ -68,10 +134,10 @@ pub fn apply_orb_of_transmutation(
         suffix = choose_of_type(rng, pool, AffixType::Suffix);
     }
 
-    item.rarity = Rarity::Magic;
-    item.prefix = prefix.map(|definition| roll_explicit(definition, rng));
-    item.suffix = suffix.map(|definition| roll_explicit(definition, rng));
-    Ok(())
+    Ok((
+        prefix.map(|definition| roll_explicit(definition, rng)),
+        suffix.map(|definition| roll_explicit(definition, rng)),
+    ))
 }
 
 /// One mod of the given type chosen by weight, or `None` if there is none.
@@ -155,7 +221,7 @@ mod tests {
         // The exhaustive match makes a new variant a compile error until it is listed.
         for error in CraftError::ALL {
             match error {
-                CraftError::ItemNotNormal | CraftError::NoValidMod => {}
+                CraftError::ItemNotNormal | CraftError::ItemNotMagic | CraftError::NoValidMod => {}
             }
         }
         let codes: std::collections::BTreeSet<&str> =
@@ -251,6 +317,94 @@ mod tests {
             item
         };
         assert_eq!(make(9), make(9));
+    }
+
+    fn magic_item(rng: &mut SeededRng) -> Item {
+        let mut item = normal_item(rng);
+        item.rarity = Rarity::Magic;
+        item
+    }
+
+    #[test]
+    fn valid_mods_keep_the_mods_up_to_the_item_level_in_their_order() {
+        let mut low = mod_of("low", AffixType::Prefix, 1);
+        low.level = 59;
+        let mut equal = mod_of("equal", AffixType::Suffix, 1);
+        equal.level = 60;
+        let mut high = mod_of("high", AffixType::Prefix, 1);
+        high.level = 61;
+        let mods = [high.clone(), equal.clone(), low.clone()];
+        assert_eq!(valid_mods(&mods, 60), vec![equal, low]);
+        assert_eq!(valid_mods(&mods, 61).len(), 3);
+        assert_eq!(valid_mods(&mods, 58), Vec::new());
+        assert_eq!(valid_mods(&[], 100), Vec::new());
+    }
+
+    #[test]
+    fn a_magic_item_can_take_the_orb_of_alteration() {
+        let item = magic_item(&mut SeededRng::new(1));
+        assert_eq!(can_apply_orb_of_alteration(&item), Ok(()));
+    }
+
+    #[test]
+    fn items_of_other_rarities_cannot_take_the_orb_of_alteration() {
+        for rarity in [Rarity::Normal, Rarity::Rare, Rarity::Unique] {
+            let mut item = magic_item(&mut SeededRng::new(1));
+            item.rarity = rarity;
+            assert_eq!(
+                can_apply_orb_of_alteration(&item),
+                Err(CraftError::ItemNotMagic)
+            );
+        }
+    }
+
+    #[test]
+    fn a_failed_orb_of_alteration_leaves_the_item_unchanged() {
+        let mut rng = SeededRng::new(1);
+        let mut normal = normal_item(&mut rng);
+        let before = normal.clone();
+        let pool = [mod_of("a", AffixType::Prefix, 1)];
+        assert_eq!(
+            apply_orb_of_alteration(&mut normal, &pool, &mut rng),
+            Err(CraftError::ItemNotMagic)
+        );
+        assert_eq!(normal, before);
+
+        let mut magic = normal_item(&mut rng);
+        apply_orb_of_transmutation(&mut magic, &pool, &mut rng).unwrap();
+        let before = magic.clone();
+        assert_eq!(
+            apply_orb_of_alteration(&mut magic, &[], &mut rng),
+            Err(CraftError::NoValidMod)
+        );
+        assert_eq!(magic, before);
+    }
+
+    #[test]
+    fn a_non_magic_item_is_reported_before_an_empty_pool_by_the_orb_of_alteration() {
+        let mut rng = SeededRng::new(1);
+        let mut item = normal_item(&mut rng);
+        assert_eq!(
+            apply_orb_of_alteration(&mut item, &[], &mut rng),
+            Err(CraftError::ItemNotMagic)
+        );
+    }
+
+    #[test]
+    fn the_orb_of_alteration_replaces_the_old_mods_and_keeps_the_rarity() {
+        let mut rng = SeededRng::new(5);
+        let old_prefix = mod_of("old prefix", AffixType::Prefix, 1);
+        let old_suffix = mod_of("old suffix", AffixType::Suffix, 1);
+        let pool = [mod_of("new", AffixType::Suffix, 7)];
+        for _ in 0..50 {
+            let mut item = magic_item(&mut rng);
+            item.prefix = Some(roll_explicit(&old_prefix, &mut rng));
+            item.suffix = Some(roll_explicit(&old_suffix, &mut rng));
+            apply_orb_of_alteration(&mut item, &pool, &mut rng).unwrap();
+            assert_eq!(item.rarity, Rarity::Magic);
+            assert_eq!(item.prefix, None);
+            assert_eq!(item.suffix.as_ref().map(|m| m.name.as_str()), Some("new"));
+        }
     }
 
     #[test]
