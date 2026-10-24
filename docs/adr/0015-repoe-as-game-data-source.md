@@ -38,7 +38,8 @@ The spike AB#162 checked the RePoE export for Path of Exile 1 that the PO suppli
 - Weights: with the rules for item level and the Orbs of Transmutation and Alteration, the
   Bone Ring weights from RePoE fit the PO's 3000 measured items (item level 83). No mod above
   level 83 rolled; the tier numbers and value ranges in all item texts match RePoE; the
-  frequencies of the groups and tiers show no significant deviation.
+  frequencies of the groups and tiers show no significant deviation (figures in the
+  appendix).
 - Further differences to the current `data/` files: RePoE writes stat identifiers with
   underscores (`base_maximum_life`), poedb with spaces; mod tags are lower case; there is no
   "Global" flag per stat; `requirements` of the rings is empty, and the Iron Ring's
@@ -112,3 +113,77 @@ The spike AB#162 checked the RePoE export for Path of Exile 1 that the PO suppli
   data source; if this ADR is accepted, the PO updates it.
 - The website does not change through this decision; it keeps embedding the data at build
   time (ADR 0008) and loads nothing from other servers.
+
+## Appendix: Bone Ring weights against the PO's measurement
+Data: the PO's 3000 Bone Rings of item level 83 (1000 Orbs of Transmutation, 2000 Orbs of
+Alteration) and the RePoE weights. All 6 tiers above level 83 (level 84 and 85) are
+excluded; 224 tiers in 40 mod groups remain, and none of the excluded tiers rolled. Expected
+counts are 3000 x (0.5 x w / W_all + 0.5 x w / W_type), with w the weight of the tier, W_all
+the sum of the weights of all 224 tiers and W_type the sum for its affix type. The table sums
+observed and expected counts of the tiers of each group.
+
+| Mod group | Type | Tiers | Observed | Expected |
+|---|---|---|---|---|
+| IncreasedLife | prefix | 8 | 244 | 260.2 |
+| IncreasedMana | prefix | 12 | 388 | 390.2 |
+| EnergyShield | prefix | 11 | 353 | 357.7 |
+| PhysicalDamage | prefix | 6 | 195 | 195.1 |
+| FireDamage | prefix | 9 | 117 | 105.7 |
+| ColdDamage | prefix | 9 | 102 | 105.7 |
+| LightningDamage | prefix | 9 | 110 | 105.7 |
+| EvasionRating | prefix | 6 | 196 | 195.1 |
+| IncreasedWeaponElementalDamagePercent | prefix | 5 | 40 | 48.8 |
+| ItemFoundRarityIncreasePrefix | prefix | 3 | 93 | 97.6 |
+| MinionDamage | prefix | 5 | 126 | 97.6 |
+| Strength | suffix | 9 | 150 | 167.4 |
+| Dexterity | suffix | 9 | 192 | 167.4 |
+| Intelligence | suffix | 9 | 169 | 167.4 |
+| AllAttributes | suffix | 4 | 39 | 29.8 |
+| LifeLeechPermyriad | suffix | 1 | 13 | 18.6 |
+| ManaLeechPermyriad | suffix | 1 | 16 | 18.6 |
+| ItemFoundRarityIncrease | suffix | 4 | 75 | 74.4 |
+| IncreasedCastSpeed | suffix | 3 | 53 | 44.6 |
+| IncreasedAttackSpeed | suffix | 1 | 10 | 9.3 |
+| IncreasedAccuracy | suffix | 5 | 82 | 85.6 |
+| LifeRegeneration | suffix | 7 | 107 | 130.2 |
+| ManaRegeneration | suffix | 6 | 117 | 111.6 |
+| FireResistance | suffix | 7 | 130 | 130.2 |
+| ColdResistance | suffix | 7 | 133 | 130.2 |
+| LightningResistance | suffix | 7 | 126 | 130.2 |
+| ChaosResistance | suffix | 6 | 41 | 27.9 |
+| AllResistances | suffix | 5 | 93 | 93.0 |
+| LifeGainPerTarget | suffix | 1 | 21 | 18.6 |
+| FireDamagePercentage | suffix | 4 | 43 | 37.2 |
+| ColdDamagePercentage | suffix | 4 | 33 | 37.2 |
+| LightningDamagePercentage | suffix | 4 | 36 | 37.2 |
+| LifeGainedFromEnemyDeath | suffix | 6 | 57 | 55.8 |
+| ManaGainedFromEnemyDeath | suffix | 6 | 50 | 55.8 |
+| LightRadiusAndAccuracyPercent | suffix | 3 | 59 | 55.8 |
+| DamageTakenGainedAsLife | suffix | 4 | 36 | 37.2 |
+| MinionAttackSpeedAndCastSpeed | suffix | 4 | 133 | 148.8 |
+| MinionLife | suffix | 4 | 158 | 148.8 |
+| MinionMovementSpeed | suffix | 5 | 206 | 186.0 |
+| MinionElementalResistance | suffix | 5 | 176 | 186.0 |
+| Prefixes in total | | 83 | 1964 | 1959.3 |
+| Suffixes in total | | 141 | 2554 | 2540.8 |
+
+Tests (`compare_weights.py` of the spike, not part of the repository): chi-square goodness-of-fit
+test, the sum of (observed - expected)^2 / expected with degrees of freedom = bins - 1. For
+the test, the expected counts of each affix type are scaled to the observed total of that
+type; tiers with an expected count below 5 are pooled into one bin.
+
+| Test | Result |
+|---|---|
+| Groups, prefixes (11 groups) | p = 0.24 |
+| Groups, suffixes (29 groups) | p = 0.36 |
+| Tiers, prefixes | p = 0.53 |
+| Tiers, suffixes | p = 0.67 |
+
+Share of suffixes among the items with one mod: 69.9 % observed, 69.4 % expected.
+
+The largest deviations are not significant:
+- MinionDamage: 126 observed against 97.8 expected (scaled as in the test), z = 2.85. The
+  chance that at least one of 40 groups deviates this much is about p = 0.17.
+- "Discharging" (level 64, weight 100): 0 observed against 3.25 expected, p of about 0.04 for
+  this tier alone. With 224 tiers, about 0.9 tiers are expected to have no hit at this
+  expectation.
