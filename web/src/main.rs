@@ -104,7 +104,7 @@ fn random_seed(window: &Window) -> Result<u64, JsValue> {
     Ok(u64::from_le_bytes(bytes))
 }
 
-/// The start page: the item on the workbench and the buttons that change it.
+/// The start page: the buttons that change the item, the message and the item on the workbench.
 struct StartPage {
     document: Document,
     translations: Translations,
@@ -116,7 +116,7 @@ struct StartPage {
 }
 
 impl StartPage {
-    /// Adds the item, the buttons and the message area to `parent` and registers the click
+    /// Adds the buttons, the message area and the item to `parent` and registers the click
     /// listeners. The listeners live as long as the page.
     fn mount(
         document: &Document,
@@ -144,9 +144,9 @@ impl StartPage {
         append(&buttons, reset.clone().into())?;
         let message = element(document, "p", None)?;
         message.set_class_name("message");
-        append(parent, item_host.clone())?;
         append(parent, buttons)?;
         append(parent, message.clone())?;
+        append(parent, item_host.clone())?;
 
         let page = Rc::new(StartPage {
             document: document.clone(),

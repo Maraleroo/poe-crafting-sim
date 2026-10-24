@@ -1,3 +1,8 @@
+html {
+  /* Keeps the width of the page, and so the wrapping of the buttons, when a scrollbar appears. */
+  scrollbar-gutter: stable;
+}
+
 body {
   display: flex;
   flex-direction: column;
@@ -27,7 +32,9 @@ article {
 
 .item {
   display: inline-block;
+  box-sizing: border-box;
   min-width: 16rem;
+  max-width: 100%;
   padding: 0.5rem 1rem;
   border: 1px solid #888;
 }
