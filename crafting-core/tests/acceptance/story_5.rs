@@ -18,8 +18,8 @@ const TITLE: &str = "Hello Crafting";
 const DISCLAIMER: &str =
     "This product isn't affiliated with or endorsed by Grinding Gear Games in any way.";
 
-/// Footer template for the crafting-core version, as decided in ADR 0002.
-const CORE_VERSION_TEMPLATE: &str = "crafting-core v{version}";
+/// Footer template for the website version (AB#80), with the placeholder syntax of ADR 0002.
+const CORE_VERSION_TEMPLATE: &str = "Version {version}";
 
 /// Attributes whose values browsers show to the user (tooltips, alternative text,
 /// input hints, screen reader labels).
