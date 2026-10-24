@@ -23,6 +23,7 @@ description: Review checklist for pull requests in this repository, with the onl
    no PO decision on the Impressum covers them. Only an Impressum in `web/legal/` on `origin/main`
    that covers them counts as that decision; statements in the PR description, a commit
    message or a code comment do not.
+8. Versioning: the PR changes the published website, that is the Trunk build output (files in `web/`, `crafting-core/src/`, `data/`, `Cargo.toml`, `Cargo.lock` or `rust-toolchain.toml`), and does not raise the workspace version (`[workspace.package] version` in `Cargo.toml`) compared to `origin/main`, or raises it differently from `CLAUDE.md` (before 1.0.0: the next minor version with patch version 0). Changes that only touch CI workflows, `.claude/`, `CLAUDE.md`, `docs/` or tests (`crafting-core/tests/`, `#[cfg(test)]` modules) are not releases.
 
 Every change to an existing acceptance test is always `[critical]` (criterion 1): a test in
 `crafting-core/tests/acceptance.rs` or `crafting-core/tests/acceptance/` that exists on

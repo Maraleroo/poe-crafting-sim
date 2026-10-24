@@ -42,3 +42,9 @@ Format: `<type>(<scope>): <description>` in English, imperative, lower case, no 
   Markdown. Write the body file outside the repository (scratchpad or temp directory), so it
   is never committed.
 - Never merge. Merging is the PO's acceptance.
+
+## Versioning
+- A merge that changes the published website is a release; criterion 8 in `reviewing-code` lists the files that count. In such a story, the developer raises the version in step 5 of the `story` skill, before opening the PR.
+- The version is the workspace version in `Cargo.toml` (`[workspace.package] version`). Both crates and the footer of the website use it. Commit `Cargo.lock` with the new version.
+- Before 1.0.0, raise the minor version and reset the patch version to 0, for example from 0.2.0 to 0.3.0.
+- Commit: `chore: raise version to <version>`.
