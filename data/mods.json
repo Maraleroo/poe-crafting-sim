@@ -1,90 +1,5349 @@
 {
   "mods": [
     {
+      "id": "AddedColdDamage1",
+      "name": "Frosted",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "ColdDamage",
+      "level": 2,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 2,
+          "max": 2
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedColdDamage2",
+      "name": "Chilled",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "ColdDamage",
+      "level": 13,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 3,
+          "max": 4
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 7,
+          "max": 8
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedColdDamage3",
+      "name": "Icy",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "ColdDamage",
+      "level": 21,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 5,
+          "max": 7
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 10,
+          "max": 12
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedColdDamage4",
+      "name": "Frigid",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "ColdDamage",
+      "level": 29,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 13,
+          "max": 16
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedColdDamage5",
+      "name": "Freezing",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "ColdDamage",
+      "level": 36,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 8,
+          "max": 11
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 16,
+          "max": 19
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedColdDamage6",
+      "name": "Frozen",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "ColdDamage",
+      "level": 45,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 10,
+          "max": 13
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 20,
+          "max": 24
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedColdDamage7",
+      "name": "Glaciated",
+      "affix_type": "prefix",
+      "weight": 100,
+      "family": "ColdDamage",
+      "level": 53,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 12,
+          "max": 16
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 24,
+          "max": 28
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedColdDamage8",
+      "name": "Polar",
+      "affix_type": "prefix",
+      "weight": 100,
+      "family": "ColdDamage",
+      "level": 65,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 14,
+          "max": 19
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 29,
+          "max": 34
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedColdDamage9",
+      "name": "Entombing",
+      "affix_type": "prefix",
+      "weight": 50,
+      "family": "ColdDamage",
+      "level": 77,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_cold_damage",
+          "min": 17,
+          "max": 22
+        },
+        {
+          "id": "attack_maximum_added_cold_damage",
+          "min": 34,
+          "max": 40
+        }
+      ],
+      "text": "Adds {attack_minimum_added_cold_damage} to {attack_maximum_added_cold_damage} Cold Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_cold_damage": "attack_maximum_added_cold_damage",
+        "attack_minimum_added_cold_damage": "attack_minimum_added_cold_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage1",
+      "name": "Heated",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "FireDamage",
+      "level": 1,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 2,
+          "max": 2
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage2",
+      "name": "Smouldering",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "FireDamage",
+      "level": 12,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 3,
+          "max": 5
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 7,
+          "max": 8
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage3",
+      "name": "Smoking",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "FireDamage",
+      "level": 20,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 5,
+          "max": 7
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 11,
+          "max": 13
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage4",
+      "name": "Burning",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "FireDamage",
+      "level": 28,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 7,
+          "max": 10
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 15,
+          "max": 18
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage5",
+      "name": "Flaming",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "FireDamage",
+      "level": 35,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 9,
+          "max": 12
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 19,
+          "max": 22
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage6",
+      "name": "Scorching",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "FireDamage",
+      "level": 44,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 11,
+          "max": 15
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 23,
+          "max": 27
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage7",
+      "name": "Incinerating",
+      "affix_type": "prefix",
+      "weight": 100,
+      "family": "FireDamage",
+      "level": 52,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 13,
+          "max": 18
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 27,
+          "max": 31
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage8",
+      "name": "Blasting",
+      "affix_type": "prefix",
+      "weight": 100,
+      "family": "FireDamage",
+      "level": 64,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 16,
+          "max": 22
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 32,
+          "max": 38
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedFireDamage9",
+      "name": "Cremating",
+      "affix_type": "prefix",
+      "weight": 50,
+      "family": "FireDamage",
+      "level": 76,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_fire_damage",
+          "min": 19,
+          "max": 25
+        },
+        {
+          "id": "attack_maximum_added_fire_damage",
+          "min": 39,
+          "max": 45
+        }
+      ],
+      "text": "Adds {attack_minimum_added_fire_damage} to {attack_maximum_added_fire_damage} Fire Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_fire_damage": "attack_maximum_added_fire_damage",
+        "attack_minimum_added_fire_damage": "attack_minimum_added_fire_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield1",
+      "name": "Shining",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 3,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield2",
+      "name": "Glimmering",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 11,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 4,
+          "max": 8
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield3",
+      "name": "Glittering",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 17,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 9,
+          "max": 12
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield4",
+      "name": "Glowing",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 23,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 13,
+          "max": 15
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield5",
+      "name": "Radiating",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 29,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 16,
+          "max": 19
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield6",
+      "name": "Pulsing",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 35,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 20,
+          "max": 22
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield7",
+      "name": "Seething",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 42,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 23,
+          "max": 26
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield8",
+      "name": "Blazing",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 50,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 27,
+          "max": 31
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield9",
+      "name": "Scintillating",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 59,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 32,
+          "max": 37
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield10",
+      "name": "Incandescent",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 68,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 38,
+          "max": 43
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEnergyShield11",
+      "name": "Resplendent",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEnergyShield",
+      "level": 74,
+      "tags": [
+        "defences",
+        "energy_shield"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_energy_shield",
+          "min": 44,
+          "max": 47
+        }
+      ],
+      "text": "+{base_maximum_energy_shield} to maximum Energy Shield",
+      "placeholders": {
+        "base_maximum_energy_shield": "base_maximum_energy_shield"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEvasionRating1",
+      "name": "Agile",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEvasionRating",
+      "level": 1,
+      "tags": [
+        "defences",
+        "evasion"
+      ],
+      "stats": [
+        {
+          "id": "base_evasion_rating",
+          "min": 3,
+          "max": 10
+        }
+      ],
+      "text": "+{base_evasion_rating} to Evasion Rating",
+      "placeholders": {
+        "base_evasion_rating": "base_evasion_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEvasionRating2",
+      "name": "Dancer's",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEvasionRating",
+      "level": 18,
+      "tags": [
+        "defences",
+        "evasion"
+      ],
+      "stats": [
+        {
+          "id": "base_evasion_rating",
+          "min": 11,
+          "max": 35
+        }
+      ],
+      "text": "+{base_evasion_rating} to Evasion Rating",
+      "placeholders": {
+        "base_evasion_rating": "base_evasion_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEvasionRating3",
+      "name": "Acrobat's",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEvasionRating",
+      "level": 29,
+      "tags": [
+        "defences",
+        "evasion"
+      ],
+      "stats": [
+        {
+          "id": "base_evasion_rating",
+          "min": 36,
+          "max": 60
+        }
+      ],
+      "text": "+{base_evasion_rating} to Evasion Rating",
+      "placeholders": {
+        "base_evasion_rating": "base_evasion_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEvasionRating4",
+      "name": "Fleet",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEvasionRating",
+      "level": 42,
+      "tags": [
+        "defences",
+        "evasion"
+      ],
+      "stats": [
+        {
+          "id": "base_evasion_rating",
+          "min": 61,
+          "max": 80
+        }
+      ],
+      "text": "+{base_evasion_rating} to Evasion Rating",
+      "placeholders": {
+        "base_evasion_rating": "base_evasion_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEvasionRating5",
+      "name": "Blurred",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEvasionRating",
+      "level": 58,
+      "tags": [
+        "defences",
+        "evasion"
+      ],
+      "stats": [
+        {
+          "id": "base_evasion_rating",
+          "min": 81,
+          "max": 120
+        }
+      ],
+      "text": "+{base_evasion_rating} to Evasion Rating",
+      "placeholders": {
+        "base_evasion_rating": "base_evasion_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEvasionRating6",
+      "name": "Phased",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEvasionRating",
+      "level": 72,
+      "tags": [
+        "defences",
+        "evasion"
+      ],
+      "stats": [
+        {
+          "id": "base_evasion_rating",
+          "min": 121,
+          "max": 150
+        }
+      ],
+      "text": "+{base_evasion_rating} to Evasion Rating",
+      "placeholders": {
+        "base_evasion_rating": "base_evasion_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedEvasionRating7",
+      "name": "Vaporous",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedEvasionRating",
+      "level": 84,
+      "tags": [
+        "defences",
+        "evasion"
+      ],
+      "stats": [
+        {
+          "id": "base_evasion_rating",
+          "min": 151,
+          "max": 170
+        }
+      ],
+      "text": "+{base_evasion_rating} to Evasion Rating",
+      "placeholders": {
+        "base_evasion_rating": "base_evasion_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedLife0",
       "name": "Hale",
       "affix_type": "prefix",
+      "weight": 1000,
       "family": "IncreasedLife",
       "level": 1,
-      "weight": 1000,
-      "tags": ["resource", "Life"],
-      "stats": [
-        { "id": "base maximum life", "min": 3, "max": 9, "global": true }
+      "tags": [
+        "resource",
+        "life"
       ],
-      "text": "+{value} to maximum Life",
-      "placeholders": { "value": "base maximum life" }
+      "stats": [
+        {
+          "id": "base_maximum_life",
+          "min": 3,
+          "max": 9
+        }
+      ],
+      "text": "+{base_maximum_life} to maximum Life",
+      "placeholders": {
+        "base_maximum_life": "base_maximum_life"
+      },
+      "conversions": {}
     },
     {
+      "id": "IncreasedLife1",
+      "name": "Healthy",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedLife",
+      "level": 5,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_life",
+          "min": 10,
+          "max": 24
+        }
+      ],
+      "text": "+{base_maximum_life} to maximum Life",
+      "placeholders": {
+        "base_maximum_life": "base_maximum_life"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedLife2",
+      "name": "Sanguine",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedLife",
+      "level": 11,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_life",
+          "min": 25,
+          "max": 39
+        }
+      ],
+      "text": "+{base_maximum_life} to maximum Life",
+      "placeholders": {
+        "base_maximum_life": "base_maximum_life"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedLife3",
+      "name": "Stalwart",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedLife",
+      "level": 18,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_life",
+          "min": 40,
+          "max": 54
+        }
+      ],
+      "text": "+{base_maximum_life} to maximum Life",
+      "placeholders": {
+        "base_maximum_life": "base_maximum_life"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedLife4",
+      "name": "Stout",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedLife",
+      "level": 24,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_life",
+          "min": 55,
+          "max": 69
+        }
+      ],
+      "text": "+{base_maximum_life} to maximum Life",
+      "placeholders": {
+        "base_maximum_life": "base_maximum_life"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedLife5",
+      "name": "Robust",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedLife",
+      "level": 30,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_life",
+          "min": 70,
+          "max": 84
+        }
+      ],
+      "text": "+{base_maximum_life} to maximum Life",
+      "placeholders": {
+        "base_maximum_life": "base_maximum_life"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedLife6",
+      "name": "Rotund",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedLife",
+      "level": 36,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_life",
+          "min": 85,
+          "max": 99
+        }
+      ],
+      "text": "+{base_maximum_life} to maximum Life",
+      "placeholders": {
+        "base_maximum_life": "base_maximum_life"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedLife7",
+      "name": "Virile",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedLife",
+      "level": 44,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_life",
+          "min": 100,
+          "max": 114
+        }
+      ],
+      "text": "+{base_maximum_life} to maximum Life",
+      "placeholders": {
+        "base_maximum_life": "base_maximum_life"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana1",
       "name": "Beryl",
       "affix_type": "prefix",
+      "weight": 1000,
       "family": "IncreasedMana",
       "level": 1,
-      "weight": 1000,
-      "tags": ["resource", "Mana"],
-      "stats": [
-        { "id": "base maximum mana", "min": 15, "max": 19, "global": true }
+      "tags": [
+        "resource",
+        "mana"
       ],
-      "text": "+{value} to maximum Mana",
-      "placeholders": { "value": "base maximum mana" }
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 15,
+          "max": 19
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
     },
     {
+      "id": "IncreasedMana2",
+      "name": "Cobalt",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 11,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 20,
+          "max": 24
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana3",
+      "name": "Azure",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 17,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 25,
+          "max": 29
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana4",
+      "name": "Sapphire",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 23,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 30,
+          "max": 34
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana5",
+      "name": "Cerulean",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 29,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 35,
+          "max": 39
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana6",
+      "name": "Aqua",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 35,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 40,
+          "max": 44
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana7",
+      "name": "Opalescent",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 42,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 45,
+          "max": 49
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana8",
+      "name": "Gentian",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 51,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 50,
+          "max": 54
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana9",
+      "name": "Chalybeous",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 60,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 55,
+          "max": 59
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana10",
+      "name": "Mazarine",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 69,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 60,
+          "max": 64
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana11",
+      "name": "Blue",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 75,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 65,
+          "max": 68
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana12",
+      "name": "Zaffre",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 81,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 69,
+          "max": 73
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedMana13",
+      "name": "Ultramarine",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreasedMana",
+      "level": 85,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_maximum_mana",
+          "min": 74,
+          "max": 78
+        }
+      ],
+      "text": "+{base_maximum_mana} to maximum Mana",
+      "placeholders": {
+        "base_maximum_mana": "base_maximum_mana"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "WeaponElementalDamage1",
+      "name": "Catalysing",
+      "affix_type": "prefix",
+      "weight": 300,
+      "family": "IncreasedWeaponElementalDamagePercent",
+      "level": 4,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "elemental_damage_with_attack_skills_+%",
+          "min": 5,
+          "max": 10
+        }
+      ],
+      "text": "{elemental_damage_with_attack_skills_+%}% increased Elemental Damage with Attack Skills",
+      "placeholders": {
+        "elemental_damage_with_attack_skills_+%": "elemental_damage_with_attack_skills_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "WeaponElementalDamage2",
+      "name": "Infusing",
+      "affix_type": "prefix",
+      "weight": 300,
+      "family": "IncreasedWeaponElementalDamagePercent",
+      "level": 15,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "elemental_damage_with_attack_skills_+%",
+          "min": 11,
+          "max": 20
+        }
+      ],
+      "text": "{elemental_damage_with_attack_skills_+%}% increased Elemental Damage with Attack Skills",
+      "placeholders": {
+        "elemental_damage_with_attack_skills_+%": "elemental_damage_with_attack_skills_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "WeaponElementalDamage3",
+      "name": "Empowering",
+      "affix_type": "prefix",
+      "weight": 300,
+      "family": "IncreasedWeaponElementalDamagePercent",
+      "level": 30,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "elemental_damage_with_attack_skills_+%",
+          "min": 21,
+          "max": 30
+        }
+      ],
+      "text": "{elemental_damage_with_attack_skills_+%}% increased Elemental Damage with Attack Skills",
+      "placeholders": {
+        "elemental_damage_with_attack_skills_+%": "elemental_damage_with_attack_skills_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "WeaponElementalDamage4",
+      "name": "Unleashed",
+      "affix_type": "prefix",
+      "weight": 300,
+      "family": "IncreasedWeaponElementalDamagePercent",
+      "level": 60,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "elemental_damage_with_attack_skills_+%",
+          "min": 31,
+          "max": 36
+        }
+      ],
+      "text": "{elemental_damage_with_attack_skills_+%}% increased Elemental Damage with Attack Skills",
+      "placeholders": {
+        "elemental_damage_with_attack_skills_+%": "elemental_damage_with_attack_skills_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "WeaponElementalDamage5",
+      "name": "Overpowering",
+      "affix_type": "prefix",
+      "weight": 300,
+      "family": "IncreasedWeaponElementalDamagePercent",
+      "level": 81,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "elemental_damage_with_attack_skills_+%",
+          "min": 37,
+          "max": 42
+        }
+      ],
+      "text": "{elemental_damage_with_attack_skills_+%}% increased Elemental Damage with Attack Skills",
+      "placeholders": {
+        "elemental_damage_with_attack_skills_+%": "elemental_damage_with_attack_skills_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ItemFoundRarityIncreasePrefix1",
+      "name": "Magpie's",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "ItemFoundRarityIncreasePrefix",
+      "level": 20,
+      "tags": [
+        "drop"
+      ],
+      "stats": [
+        {
+          "id": "base_item_found_rarity_+%",
+          "min": 8,
+          "max": 12
+        }
+      ],
+      "text": "{base_item_found_rarity_+%}% increased Rarity of Items found",
+      "placeholders": {
+        "base_item_found_rarity_+%": "base_item_found_rarity_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ItemFoundRarityIncreasePrefix2",
+      "name": "Pirate's",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "ItemFoundRarityIncreasePrefix",
+      "level": 39,
+      "tags": [
+        "drop"
+      ],
+      "stats": [
+        {
+          "id": "base_item_found_rarity_+%",
+          "min": 13,
+          "max": 18
+        }
+      ],
+      "text": "{base_item_found_rarity_+%}% increased Rarity of Items found",
+      "placeholders": {
+        "base_item_found_rarity_+%": "base_item_found_rarity_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ItemFoundRarityIncreasePrefix3",
+      "name": "Dragon's",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "ItemFoundRarityIncreasePrefix",
+      "level": 62,
+      "tags": [
+        "drop"
+      ],
+      "stats": [
+        {
+          "id": "base_item_found_rarity_+%",
+          "min": 19,
+          "max": 24
+        }
+      ],
+      "text": "{base_item_found_rarity_+%}% increased Rarity of Items found",
+      "placeholders": {
+        "base_item_found_rarity_+%": "base_item_found_rarity_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ItemFoundRarityIncreasePrefix4_",
+      "name": "Perandus'",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "ItemFoundRarityIncreasePrefix",
+      "level": 84,
+      "tags": [
+        "drop"
+      ],
+      "stats": [
+        {
+          "id": "base_item_found_rarity_+%",
+          "min": 25,
+          "max": 28
+        }
+      ],
+      "text": "{base_item_found_rarity_+%}% increased Rarity of Items found",
+      "placeholders": {
+        "base_item_found_rarity_+%": "base_item_found_rarity_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedLightningDamage1",
       "name": "Humming",
       "affix_type": "prefix",
+      "weight": 500,
       "family": "LightningDamage",
       "level": 3,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 5,
+          "max": 5
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedLightningDamage2",
+      "name": "Buzzing",
+      "affix_type": "prefix",
       "weight": 500,
-      "tags": ["elemental_damage", "Damage", "Elemental", "Lightning", "Attack"],
-      "stats": [
-        { "id": "attack maximum added lightning damage", "min": 5, "max": 5, "global": true },
-        { "id": "attack minimum added lightning damage", "min": 1, "max": 1, "global": true }
+      "family": "LightningDamage",
+      "level": 13,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
       ],
-      "text": "Adds {minimum} to {maximum} Lightning Damage to Attacks",
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 14,
+          "max": 15
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
       "placeholders": {
-        "minimum": "attack minimum added lightning damage",
-        "maximum": "attack maximum added lightning damage"
-      }
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
     },
     {
-      "name": "of the Pupil",
+      "id": "AddedLightningDamage3",
+      "name": "Snapping",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "LightningDamage",
+      "level": 22,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 1,
+          "max": 2
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 22,
+          "max": 23
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedLightningDamage4",
+      "name": "Crackling",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "LightningDamage",
+      "level": 28,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 1,
+          "max": 2
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 27,
+          "max": 28
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedLightningDamage5",
+      "name": "Sparking",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "LightningDamage",
+      "level": 35,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 33,
+          "max": 34
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedLightningDamage6",
+      "name": "Arcing",
+      "affix_type": "prefix",
+      "weight": 500,
+      "family": "LightningDamage",
+      "level": 44,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 1,
+          "max": 4
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 40,
+          "max": 43
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedLightningDamage7",
+      "name": "Shocking",
+      "affix_type": "prefix",
+      "weight": 100,
+      "family": "LightningDamage",
+      "level": 52,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 2,
+          "max": 5
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 47,
+          "max": 50
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedLightningDamage8",
+      "name": "Discharging",
+      "affix_type": "prefix",
+      "weight": 100,
+      "family": "LightningDamage",
+      "level": 64,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 3,
+          "max": 6
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 57,
+          "max": 61
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedLightningDamage9",
+      "name": "Electrocuting",
+      "affix_type": "prefix",
+      "weight": 50,
+      "family": "LightningDamage",
+      "level": 76,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_lightning_damage",
+          "min": 3,
+          "max": 7
+        },
+        {
+          "id": "attack_maximum_added_lightning_damage",
+          "min": 68,
+          "max": 72
+        }
+      ],
+      "text": "Adds {attack_minimum_added_lightning_damage} to {attack_maximum_added_lightning_damage} Lightning Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
+        "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedPhysicalDamage1",
+      "name": "Glinting",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "PhysicalDamage",
+      "level": 5,
+      "tags": [
+        "physical_damage",
+        "damage",
+        "physical",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_physical_damage",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "id": "attack_maximum_added_physical_damage",
+          "min": 2,
+          "max": 2
+        }
+      ],
+      "text": "Adds {attack_minimum_added_physical_damage} to {attack_maximum_added_physical_damage} Physical Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_physical_damage": "attack_maximum_added_physical_damage",
+        "attack_minimum_added_physical_damage": "attack_minimum_added_physical_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedPhysicalDamage2",
+      "name": "Burnished",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "PhysicalDamage",
+      "level": 13,
+      "tags": [
+        "physical_damage",
+        "damage",
+        "physical",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_physical_damage",
+          "min": 2,
+          "max": 3
+        },
+        {
+          "id": "attack_maximum_added_physical_damage",
+          "min": 4,
+          "max": 5
+        }
+      ],
+      "text": "Adds {attack_minimum_added_physical_damage} to {attack_maximum_added_physical_damage} Physical Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_physical_damage": "attack_maximum_added_physical_damage",
+        "attack_minimum_added_physical_damage": "attack_minimum_added_physical_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedPhysicalDamage3",
+      "name": "Polished",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "PhysicalDamage",
+      "level": 19,
+      "tags": [
+        "physical_damage",
+        "damage",
+        "physical",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_physical_damage",
+          "min": 3,
+          "max": 4
+        },
+        {
+          "id": "attack_maximum_added_physical_damage",
+          "min": 6,
+          "max": 7
+        }
+      ],
+      "text": "Adds {attack_minimum_added_physical_damage} to {attack_maximum_added_physical_damage} Physical Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_physical_damage": "attack_maximum_added_physical_damage",
+        "attack_minimum_added_physical_damage": "attack_minimum_added_physical_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedPhysicalDamage4",
+      "name": "Honed",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "PhysicalDamage",
+      "level": 28,
+      "tags": [
+        "physical_damage",
+        "damage",
+        "physical",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_physical_damage",
+          "min": 4,
+          "max": 6
+        },
+        {
+          "id": "attack_maximum_added_physical_damage",
+          "min": 9,
+          "max": 10
+        }
+      ],
+      "text": "Adds {attack_minimum_added_physical_damage} to {attack_maximum_added_physical_damage} Physical Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_physical_damage": "attack_maximum_added_physical_damage",
+        "attack_minimum_added_physical_damage": "attack_minimum_added_physical_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedPhysicalDamage5",
+      "name": "Gleaming",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "PhysicalDamage",
+      "level": 35,
+      "tags": [
+        "physical_damage",
+        "damage",
+        "physical",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_physical_damage",
+          "min": 5,
+          "max": 7
+        },
+        {
+          "id": "attack_maximum_added_physical_damage",
+          "min": 11,
+          "max": 12
+        }
+      ],
+      "text": "Adds {attack_minimum_added_physical_damage} to {attack_maximum_added_physical_damage} Physical Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_physical_damage": "attack_maximum_added_physical_damage",
+        "attack_minimum_added_physical_damage": "attack_minimum_added_physical_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AddedPhysicalDamage6",
+      "name": "Annealed",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "PhysicalDamage",
+      "level": 44,
+      "tags": [
+        "physical_damage",
+        "damage",
+        "physical",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "attack_minimum_added_physical_damage",
+          "min": 6,
+          "max": 9
+        },
+        {
+          "id": "attack_maximum_added_physical_damage",
+          "min": 13,
+          "max": 15
+        }
+      ],
+      "text": "Adds {attack_minimum_added_physical_damage} to {attack_maximum_added_physical_damage} Physical Damage to Attacks",
+      "placeholders": {
+        "attack_maximum_added_physical_damage": "attack_maximum_added_physical_damage",
+        "attack_minimum_added_physical_damage": "attack_minimum_added_physical_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AllAttributes1",
+      "name": "of the Clouds",
       "affix_type": "suffix",
-      "family": "Intelligence",
+      "weight": 400,
+      "family": "AllAttributes",
       "level": 1,
-      "weight": 1000,
-      "tags": ["Attribute"],
-      "stats": [
-        { "id": "additional intelligence", "min": 8, "max": 12, "global": true }
+      "tags": [
+        "attribute"
       ],
-      "text": "+{value} to Intelligence",
-      "placeholders": { "value": "additional intelligence" }
-    },
-    {
-      "name": "of Shining",
-      "affix_type": "suffix",
-      "family": "LightRadiusAndAccuracy",
-      "level": 8,
-      "weight": 1000,
-      "tags": ["Attack"],
       "stats": [
-        { "id": "light radius +%", "min": 5, "max": 5, "global": true },
-        { "id": "accuracy rating +%", "min": 9, "max": 11, "global": true }
+        {
+          "id": "additional_all_attributes",
+          "min": 1,
+          "max": 4
+        }
       ],
-      "text": "{accuracy}% increased Global Accuracy Rating\n{light}% increased Light Radius",
+      "text": "+{additional_all_attributes} to all Attributes",
       "placeholders": {
-        "accuracy": "accuracy rating +%",
-        "light": "light radius +%"
-      }
+        "additional_all_attributes": "additional_all_attributes"
+      },
+      "conversions": {}
     },
     {
+      "id": "AllAttributes2",
+      "name": "of the Sky",
+      "affix_type": "suffix",
+      "weight": 400,
+      "family": "AllAttributes",
+      "level": 11,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_all_attributes",
+          "min": 5,
+          "max": 8
+        }
+      ],
+      "text": "+{additional_all_attributes} to all Attributes",
+      "placeholders": {
+        "additional_all_attributes": "additional_all_attributes"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AllAttributes3",
+      "name": "of the Meteor",
+      "affix_type": "suffix",
+      "weight": 400,
+      "family": "AllAttributes",
+      "level": 22,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_all_attributes",
+          "min": 9,
+          "max": 12
+        }
+      ],
+      "text": "+{additional_all_attributes} to all Attributes",
+      "placeholders": {
+        "additional_all_attributes": "additional_all_attributes"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AllAttributes4",
+      "name": "of the Comet",
+      "affix_type": "suffix",
+      "weight": 400,
+      "family": "AllAttributes",
+      "level": 33,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_all_attributes",
+          "min": 13,
+          "max": 16
+        }
+      ],
+      "text": "+{additional_all_attributes} to all Attributes",
+      "placeholders": {
+        "additional_all_attributes": "additional_all_attributes"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AllResistances1",
+      "name": "of the Crystal",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "AllResistances",
+      "level": 12,
+      "tags": [
+        "elemental",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_resist_all_elements_%",
+          "min": 3,
+          "max": 5
+        }
+      ],
+      "text": "+{base_resist_all_elements_%}% to all Elemental Resistances",
+      "placeholders": {
+        "base_resist_all_elements_%": "base_resist_all_elements_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AllResistances2",
+      "name": "of the Prism",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "AllResistances",
+      "level": 24,
+      "tags": [
+        "elemental",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_resist_all_elements_%",
+          "min": 6,
+          "max": 8
+        }
+      ],
+      "text": "+{base_resist_all_elements_%}% to all Elemental Resistances",
+      "placeholders": {
+        "base_resist_all_elements_%": "base_resist_all_elements_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AllResistances3",
+      "name": "of the Kaleidoscope",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "AllResistances",
+      "level": 36,
+      "tags": [
+        "elemental",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_resist_all_elements_%",
+          "min": 9,
+          "max": 11
+        }
+      ],
+      "text": "+{base_resist_all_elements_%}% to all Elemental Resistances",
+      "placeholders": {
+        "base_resist_all_elements_%": "base_resist_all_elements_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AllResistances4",
+      "name": "of Variegation",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "AllResistances",
+      "level": 48,
+      "tags": [
+        "elemental",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_resist_all_elements_%",
+          "min": 12,
+          "max": 14
+        }
+      ],
+      "text": "+{base_resist_all_elements_%}% to all Elemental Resistances",
+      "placeholders": {
+        "base_resist_all_elements_%": "base_resist_all_elements_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "AllResistances5",
+      "name": "of the Rainbow",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "AllResistances",
+      "level": 60,
+      "tags": [
+        "elemental",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_resist_all_elements_%",
+          "min": 15,
+          "max": 16
+        }
+      ],
+      "text": "+{base_resist_all_elements_%}% to all Elemental Resistances",
+      "placeholders": {
+        "base_resist_all_elements_%": "base_resist_all_elements_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ChaosResist1",
       "name": "of the Lost",
       "affix_type": "suffix",
+      "weight": 250,
       "family": "ChaosResistance",
       "level": 16,
-      "weight": 250,
-      "tags": ["Chaos", "Resistance"],
-      "stats": [
-        { "id": "base chaos damage resistance %", "min": 5, "max": 10, "global": true }
+      "tags": [
+        "chaos",
+        "resistance"
       ],
-      "text": "+{value}% to Chaos Resistance",
-      "placeholders": { "value": "base chaos damage resistance %" }
+      "stats": [
+        {
+          "id": "base_chaos_damage_resistance_%",
+          "min": 5,
+          "max": 10
+        }
+      ],
+      "text": "+{base_chaos_damage_resistance_%}% to Chaos Resistance",
+      "placeholders": {
+        "base_chaos_damage_resistance_%": "base_chaos_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ChaosResist2",
+      "name": "of Banishment",
+      "affix_type": "suffix",
+      "weight": 250,
+      "family": "ChaosResistance",
+      "level": 30,
+      "tags": [
+        "chaos",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_chaos_damage_resistance_%",
+          "min": 11,
+          "max": 15
+        }
+      ],
+      "text": "+{base_chaos_damage_resistance_%}% to Chaos Resistance",
+      "placeholders": {
+        "base_chaos_damage_resistance_%": "base_chaos_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ChaosResist3",
+      "name": "of Eviction",
+      "affix_type": "suffix",
+      "weight": 250,
+      "family": "ChaosResistance",
+      "level": 44,
+      "tags": [
+        "chaos",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_chaos_damage_resistance_%",
+          "min": 16,
+          "max": 20
+        }
+      ],
+      "text": "+{base_chaos_damage_resistance_%}% to Chaos Resistance",
+      "placeholders": {
+        "base_chaos_damage_resistance_%": "base_chaos_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ChaosResist4",
+      "name": "of Expulsion",
+      "affix_type": "suffix",
+      "weight": 250,
+      "family": "ChaosResistance",
+      "level": 56,
+      "tags": [
+        "chaos",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_chaos_damage_resistance_%",
+          "min": 21,
+          "max": 25
+        }
+      ],
+      "text": "+{base_chaos_damage_resistance_%}% to Chaos Resistance",
+      "placeholders": {
+        "base_chaos_damage_resistance_%": "base_chaos_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ChaosResist5",
+      "name": "of Exile",
+      "affix_type": "suffix",
+      "weight": 250,
+      "family": "ChaosResistance",
+      "level": 65,
+      "tags": [
+        "chaos",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_chaos_damage_resistance_%",
+          "min": 26,
+          "max": 30
+        }
+      ],
+      "text": "+{base_chaos_damage_resistance_%}% to Chaos Resistance",
+      "placeholders": {
+        "base_chaos_damage_resistance_%": "base_chaos_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ChaosResist6",
+      "name": "of Bameth",
+      "affix_type": "suffix",
+      "weight": 250,
+      "family": "ChaosResistance",
+      "level": 81,
+      "tags": [
+        "chaos",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_chaos_damage_resistance_%",
+          "min": 31,
+          "max": 35
+        }
+      ],
+      "text": "+{base_chaos_damage_resistance_%}% to Chaos Resistance",
+      "placeholders": {
+        "base_chaos_damage_resistance_%": "base_chaos_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdDamagePercent1",
+      "name": "of Snow",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ColdDamagePercentage",
+      "level": 12,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold"
+      ],
+      "stats": [
+        {
+          "id": "cold_damage_+%",
+          "min": 10,
+          "max": 12
+        }
+      ],
+      "text": "{cold_damage_+%}% increased Cold Damage",
+      "placeholders": {
+        "cold_damage_+%": "cold_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdDamagePercent2",
+      "name": "of Sleet",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ColdDamagePercentage",
+      "level": 24,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold"
+      ],
+      "stats": [
+        {
+          "id": "cold_damage_+%",
+          "min": 13,
+          "max": 15
+        }
+      ],
+      "text": "{cold_damage_+%}% increased Cold Damage",
+      "placeholders": {
+        "cold_damage_+%": "cold_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdDamagePercent3",
+      "name": "of Ice",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ColdDamagePercentage",
+      "level": 36,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold"
+      ],
+      "stats": [
+        {
+          "id": "cold_damage_+%",
+          "min": 16,
+          "max": 18
+        }
+      ],
+      "text": "{cold_damage_+%}% increased Cold Damage",
+      "placeholders": {
+        "cold_damage_+%": "cold_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdDamagePercent4",
+      "name": "of Rime",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ColdDamagePercentage",
+      "level": 50,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "cold"
+      ],
+      "stats": [
+        {
+          "id": "cold_damage_+%",
+          "min": 19,
+          "max": 22
+        }
+      ],
+      "text": "{cold_damage_+%}% increased Cold Damage",
+      "placeholders": {
+        "cold_damage_+%": "cold_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdResist1",
+      "name": "of the Inuit",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ColdResistance",
+      "level": 1,
+      "tags": [
+        "elemental",
+        "cold",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_cold_damage_resistance_%",
+          "min": 6,
+          "max": 11
+        }
+      ],
+      "text": "+{base_cold_damage_resistance_%}% to Cold Resistance",
+      "placeholders": {
+        "base_cold_damage_resistance_%": "base_cold_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdResist2",
+      "name": "of the Seal",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ColdResistance",
+      "level": 14,
+      "tags": [
+        "elemental",
+        "cold",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_cold_damage_resistance_%",
+          "min": 12,
+          "max": 17
+        }
+      ],
+      "text": "+{base_cold_damage_resistance_%}% to Cold Resistance",
+      "placeholders": {
+        "base_cold_damage_resistance_%": "base_cold_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdResist3",
+      "name": "of the Penguin",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ColdResistance",
+      "level": 26,
+      "tags": [
+        "elemental",
+        "cold",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_cold_damage_resistance_%",
+          "min": 18,
+          "max": 23
+        }
+      ],
+      "text": "+{base_cold_damage_resistance_%}% to Cold Resistance",
+      "placeholders": {
+        "base_cold_damage_resistance_%": "base_cold_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdResist4",
+      "name": "of the Yeti",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ColdResistance",
+      "level": 38,
+      "tags": [
+        "elemental",
+        "cold",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_cold_damage_resistance_%",
+          "min": 24,
+          "max": 29
+        }
+      ],
+      "text": "+{base_cold_damage_resistance_%}% to Cold Resistance",
+      "placeholders": {
+        "base_cold_damage_resistance_%": "base_cold_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdResist5",
+      "name": "of the Walrus",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ColdResistance",
+      "level": 50,
+      "tags": [
+        "elemental",
+        "cold",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_cold_damage_resistance_%",
+          "min": 30,
+          "max": 35
+        }
+      ],
+      "text": "+{base_cold_damage_resistance_%}% to Cold Resistance",
+      "placeholders": {
+        "base_cold_damage_resistance_%": "base_cold_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdResist6",
+      "name": "of the Polar Bear",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ColdResistance",
+      "level": 60,
+      "tags": [
+        "elemental",
+        "cold",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_cold_damage_resistance_%",
+          "min": 36,
+          "max": 41
+        }
+      ],
+      "text": "+{base_cold_damage_resistance_%}% to Cold Resistance",
+      "placeholders": {
+        "base_cold_damage_resistance_%": "base_cold_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdResist7",
+      "name": "of the Ice",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ColdResistance",
+      "level": 72,
+      "tags": [
+        "elemental",
+        "cold",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_cold_damage_resistance_%",
+          "min": 42,
+          "max": 45
+        }
+      ],
+      "text": "+{base_cold_damage_resistance_%}% to Cold Resistance",
+      "placeholders": {
+        "base_cold_damage_resistance_%": "base_cold_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ColdResist8",
+      "name": "of Haast",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ColdResistance",
+      "level": 84,
+      "tags": [
+        "elemental",
+        "cold",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_cold_damage_resistance_%",
+          "min": 46,
+          "max": 48
+        }
+      ],
+      "text": "+{base_cold_damage_resistance_%}% to Cold Resistance",
+      "placeholders": {
+        "base_cold_damage_resistance_%": "base_cold_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "DamageTakenGainedAsLife1___",
+      "name": "of Bandaging",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "DamageTakenGainedAsLife",
+      "level": 44,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "damage_taken_goes_to_life_over_4_seconds_%",
+          "min": 4,
+          "max": 6
+        }
+      ],
+      "text": "{damage_taken_goes_to_life_over_4_seconds_%}% of Damage taken Recouped as Life",
+      "placeholders": {
+        "damage_taken_goes_to_life_over_4_seconds_%": "damage_taken_goes_to_life_over_4_seconds_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "DamageTakenGainedAsLife2",
+      "name": "of Stitching",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "DamageTakenGainedAsLife",
+      "level": 56,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "damage_taken_goes_to_life_over_4_seconds_%",
+          "min": 7,
+          "max": 9
+        }
+      ],
+      "text": "{damage_taken_goes_to_life_over_4_seconds_%}% of Damage taken Recouped as Life",
+      "placeholders": {
+        "damage_taken_goes_to_life_over_4_seconds_%": "damage_taken_goes_to_life_over_4_seconds_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "DamageTakenGainedAsLife3",
+      "name": "of Suturing",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "DamageTakenGainedAsLife",
+      "level": 68,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "damage_taken_goes_to_life_over_4_seconds_%",
+          "min": 10,
+          "max": 12
+        }
+      ],
+      "text": "{damage_taken_goes_to_life_over_4_seconds_%}% of Damage taken Recouped as Life",
+      "placeholders": {
+        "damage_taken_goes_to_life_over_4_seconds_%": "damage_taken_goes_to_life_over_4_seconds_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "DamageTakenGainedAsLife4_",
+      "name": "of Fleshbinding",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "DamageTakenGainedAsLife",
+      "level": 79,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "damage_taken_goes_to_life_over_4_seconds_%",
+          "min": 13,
+          "max": 15
+        }
+      ],
+      "text": "{damage_taken_goes_to_life_over_4_seconds_%}% of Damage taken Recouped as Life",
+      "placeholders": {
+        "damage_taken_goes_to_life_over_4_seconds_%": "damage_taken_goes_to_life_over_4_seconds_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity1",
+      "name": "of the Mongoose",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 1,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 8,
+          "max": 12
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity2",
+      "name": "of the Lynx",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 11,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 13,
+          "max": 17
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity3",
+      "name": "of the Fox",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 22,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 18,
+          "max": 22
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity4",
+      "name": "of the Falcon",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 33,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 23,
+          "max": 27
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity5",
+      "name": "of the Panther",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 44,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 28,
+          "max": 32
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity6",
+      "name": "of the Leopard",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 55,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 33,
+          "max": 37
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity7",
+      "name": "of the Jaguar",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 66,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 38,
+          "max": 42
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity8",
+      "name": "of the Phantom",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 74,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 43,
+          "max": 50
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Dexterity9",
+      "name": "of the Wind",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Dexterity",
+      "level": 82,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_dexterity",
+          "min": 51,
+          "max": 55
+        }
+      ],
+      "text": "+{additional_dexterity} to Dexterity",
+      "placeholders": {
+        "additional_dexterity": "additional_dexterity"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireDamagePercent1",
+      "name": "of Embers",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "FireDamagePercentage",
+      "level": 8,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire"
+      ],
+      "stats": [
+        {
+          "id": "fire_damage_+%",
+          "min": 10,
+          "max": 12
+        }
+      ],
+      "text": "{fire_damage_+%}% increased Fire Damage",
+      "placeholders": {
+        "fire_damage_+%": "fire_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireDamagePercent2",
+      "name": "of Coals",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "FireDamagePercentage",
+      "level": 22,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire"
+      ],
+      "stats": [
+        {
+          "id": "fire_damage_+%",
+          "min": 13,
+          "max": 15
+        }
+      ],
+      "text": "{fire_damage_+%}% increased Fire Damage",
+      "placeholders": {
+        "fire_damage_+%": "fire_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireDamagePercent3",
+      "name": "of Cinders",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "FireDamagePercentage",
+      "level": 36,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire"
+      ],
+      "stats": [
+        {
+          "id": "fire_damage_+%",
+          "min": 16,
+          "max": 18
+        }
+      ],
+      "text": "{fire_damage_+%}% increased Fire Damage",
+      "placeholders": {
+        "fire_damage_+%": "fire_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireDamagePercent4",
+      "name": "of Flames",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "FireDamagePercentage",
+      "level": 50,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "fire"
+      ],
+      "stats": [
+        {
+          "id": "fire_damage_+%",
+          "min": 19,
+          "max": 22
+        }
+      ],
+      "text": "{fire_damage_+%}% increased Fire Damage",
+      "placeholders": {
+        "fire_damage_+%": "fire_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireResist1",
+      "name": "of the Whelpling",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "FireResistance",
+      "level": 1,
+      "tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_fire_damage_resistance_%",
+          "min": 6,
+          "max": 11
+        }
+      ],
+      "text": "+{base_fire_damage_resistance_%}% to Fire Resistance",
+      "placeholders": {
+        "base_fire_damage_resistance_%": "base_fire_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireResist2",
+      "name": "of the Salamander",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "FireResistance",
+      "level": 12,
+      "tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_fire_damage_resistance_%",
+          "min": 12,
+          "max": 17
+        }
+      ],
+      "text": "+{base_fire_damage_resistance_%}% to Fire Resistance",
+      "placeholders": {
+        "base_fire_damage_resistance_%": "base_fire_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireResist3",
+      "name": "of the Drake",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "FireResistance",
+      "level": 24,
+      "tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_fire_damage_resistance_%",
+          "min": 18,
+          "max": 23
+        }
+      ],
+      "text": "+{base_fire_damage_resistance_%}% to Fire Resistance",
+      "placeholders": {
+        "base_fire_damage_resistance_%": "base_fire_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireResist4",
+      "name": "of the Kiln",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "FireResistance",
+      "level": 36,
+      "tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_fire_damage_resistance_%",
+          "min": 24,
+          "max": 29
+        }
+      ],
+      "text": "+{base_fire_damage_resistance_%}% to Fire Resistance",
+      "placeholders": {
+        "base_fire_damage_resistance_%": "base_fire_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireResist5",
+      "name": "of the Furnace",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "FireResistance",
+      "level": 48,
+      "tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_fire_damage_resistance_%",
+          "min": 30,
+          "max": 35
+        }
+      ],
+      "text": "+{base_fire_damage_resistance_%}% to Fire Resistance",
+      "placeholders": {
+        "base_fire_damage_resistance_%": "base_fire_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireResist6",
+      "name": "of the Volcano",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "FireResistance",
+      "level": 60,
+      "tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_fire_damage_resistance_%",
+          "min": 36,
+          "max": 41
+        }
+      ],
+      "text": "+{base_fire_damage_resistance_%}% to Fire Resistance",
+      "placeholders": {
+        "base_fire_damage_resistance_%": "base_fire_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireResist7",
+      "name": "of the Magma",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "FireResistance",
+      "level": 72,
+      "tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_fire_damage_resistance_%",
+          "min": 42,
+          "max": 45
+        }
+      ],
+      "text": "+{base_fire_damage_resistance_%}% to Fire Resistance",
+      "placeholders": {
+        "base_fire_damage_resistance_%": "base_fire_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "FireResist8",
+      "name": "of Tzteosh",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "FireResistance",
+      "level": 84,
+      "tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_fire_damage_resistance_%",
+          "min": 46,
+          "max": 48
+        }
+      ],
+      "text": "+{base_fire_damage_resistance_%}% to Fire Resistance",
+      "placeholders": {
+        "base_fire_damage_resistance_%": "base_fire_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedAccuracyNew1_",
+      "name": "of Steadiness",
+      "affix_type": "suffix",
+      "weight": 600,
+      "family": "IncreasedAccuracy",
+      "level": 1,
+      "tags": [
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "accuracy_rating",
+          "min": 50,
+          "max": 100
+        }
+      ],
+      "text": "+{accuracy_rating} to Accuracy Rating",
+      "placeholders": {
+        "accuracy_rating": "accuracy_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedAccuracyNew2",
+      "name": "of Precision",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "IncreasedAccuracy",
+      "level": 20,
+      "tags": [
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "accuracy_rating",
+          "min": 100,
+          "max": 165
+        }
+      ],
+      "text": "+{accuracy_rating} to Accuracy Rating",
+      "placeholders": {
+        "accuracy_rating": "accuracy_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedAccuracyNew3",
+      "name": "of the Sniper",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "IncreasedAccuracy",
+      "level": 40,
+      "tags": [
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "accuracy_rating",
+          "min": 166,
+          "max": 250
+        }
+      ],
+      "text": "+{accuracy_rating} to Accuracy Rating",
+      "placeholders": {
+        "accuracy_rating": "accuracy_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedAccuracyNew4",
+      "name": "of the Marksman",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "IncreasedAccuracy",
+      "level": 60,
+      "tags": [
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "accuracy_rating",
+          "min": 251,
+          "max": 350
+        }
+      ],
+      "text": "+{accuracy_rating} to Accuracy Rating",
+      "placeholders": {
+        "accuracy_rating": "accuracy_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedAccuracyNew5_",
+      "name": "of the Ranger",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "IncreasedAccuracy",
+      "level": 75,
+      "tags": [
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "accuracy_rating",
+          "min": 351,
+          "max": 480
+        }
+      ],
+      "text": "+{accuracy_rating} to Accuracy Rating",
+      "placeholders": {
+        "accuracy_rating": "accuracy_rating"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedAttackSpeed1",
+      "name": "of Skill",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "IncreasedAttackSpeed",
+      "level": 1,
+      "tags": [
+        "attack",
+        "speed"
+      ],
+      "stats": [
+        {
+          "id": "attack_speed_+%",
+          "min": 5,
+          "max": 7
+        }
+      ],
+      "text": "{attack_speed_+%}% increased Attack Speed",
+      "placeholders": {
+        "attack_speed_+%": "attack_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedCastSpeed1",
+      "name": "of Talent",
+      "affix_type": "suffix",
+      "weight": 800,
+      "family": "IncreasedCastSpeed",
+      "level": 2,
+      "tags": [
+        "caster",
+        "speed"
+      ],
+      "stats": [
+        {
+          "id": "base_cast_speed_+%",
+          "min": 5,
+          "max": 8
+        }
+      ],
+      "text": "{base_cast_speed_+%}% increased Cast Speed",
+      "placeholders": {
+        "base_cast_speed_+%": "base_cast_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedCastSpeed2",
+      "name": "of Nimbleness",
+      "affix_type": "suffix",
+      "weight": 800,
+      "family": "IncreasedCastSpeed",
+      "level": 15,
+      "tags": [
+        "caster",
+        "speed"
+      ],
+      "stats": [
+        {
+          "id": "base_cast_speed_+%",
+          "min": 9,
+          "max": 12
+        }
+      ],
+      "text": "{base_cast_speed_+%}% increased Cast Speed",
+      "placeholders": {
+        "base_cast_speed_+%": "base_cast_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "IncreasedCastSpeed3",
+      "name": "of Expertise",
+      "affix_type": "suffix",
+      "weight": 800,
+      "family": "IncreasedCastSpeed",
+      "level": 30,
+      "tags": [
+        "caster",
+        "speed"
+      ],
+      "stats": [
+        {
+          "id": "base_cast_speed_+%",
+          "min": 13,
+          "max": 16
+        }
+      ],
+      "text": "{base_cast_speed_+%}% increased Cast Speed",
+      "placeholders": {
+        "base_cast_speed_+%": "base_cast_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence1",
+      "name": "of the Pupil",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 1,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 8,
+          "max": 12
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence2",
+      "name": "of the Student",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 11,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 13,
+          "max": 17
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence3",
+      "name": "of the Prodigy",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 22,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 18,
+          "max": 22
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence4",
+      "name": "of the Augur",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 33,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 23,
+          "max": 27
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence5",
+      "name": "of the Philosopher",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 44,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 28,
+          "max": 32
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence6",
+      "name": "of the Sage",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 55,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 33,
+          "max": 37
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence7",
+      "name": "of the Savant",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 66,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 38,
+          "max": 42
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence8",
+      "name": "of the Virtuoso",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 74,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 43,
+          "max": 50
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Intelligence9",
+      "name": "of the Genius",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Intelligence",
+      "level": 82,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_intelligence",
+          "min": 51,
+          "max": 55
+        }
+      ],
+      "text": "+{additional_intelligence} to Intelligence",
+      "placeholders": {
+        "additional_intelligence": "additional_intelligence"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ItemFoundRarityIncrease1",
+      "name": "of Plunder",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ItemFoundRarityIncrease",
+      "level": 3,
+      "tags": [
+        "drop"
+      ],
+      "stats": [
+        {
+          "id": "base_item_found_rarity_+%",
+          "min": 6,
+          "max": 10
+        }
+      ],
+      "text": "{base_item_found_rarity_+%}% increased Rarity of Items found",
+      "placeholders": {
+        "base_item_found_rarity_+%": "base_item_found_rarity_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ItemFoundRarityIncrease2",
+      "name": "of Raiding",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ItemFoundRarityIncrease",
+      "level": 30,
+      "tags": [
+        "drop"
+      ],
+      "stats": [
+        {
+          "id": "base_item_found_rarity_+%",
+          "min": 11,
+          "max": 14
+        }
+      ],
+      "text": "{base_item_found_rarity_+%}% increased Rarity of Items found",
+      "placeholders": {
+        "base_item_found_rarity_+%": "base_item_found_rarity_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ItemFoundRarityIncrease3",
+      "name": "of Archaeology",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ItemFoundRarityIncrease",
+      "level": 53,
+      "tags": [
+        "drop"
+      ],
+      "stats": [
+        {
+          "id": "base_item_found_rarity_+%",
+          "min": 15,
+          "max": 20
+        }
+      ],
+      "text": "{base_item_found_rarity_+%}% increased Rarity of Items found",
+      "placeholders": {
+        "base_item_found_rarity_+%": "base_item_found_rarity_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ItemFoundRarityIncrease4",
+      "name": "of Excavation",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ItemFoundRarityIncrease",
+      "level": 75,
+      "tags": [
+        "drop"
+      ],
+      "stats": [
+        {
+          "id": "base_item_found_rarity_+%",
+          "min": 21,
+          "max": 26
+        }
+      ],
+      "text": "{base_item_found_rarity_+%}% increased Rarity of Items found",
+      "placeholders": {
+        "base_item_found_rarity_+%": "base_item_found_rarity_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LifeGainPerTarget1",
+      "name": "of Rejuvenation",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeGainPerTarget",
+      "level": 8,
+      "tags": [
+        "resource",
+        "life",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "base_life_gain_per_target",
+          "min": 2,
+          "max": 2
+        }
+      ],
+      "text": "Gain {base_life_gain_per_target} Life per Enemy Hit with Attacks",
+      "placeholders": {
+        "base_life_gain_per_target": "base_life_gain_per_target"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LifeGainedFromEnemyDeath1",
+      "name": "of Success",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LifeGainedFromEnemyDeath",
+      "level": 1,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_gained_on_enemy_death",
+          "min": 7,
+          "max": 10
+        }
+      ],
+      "text": "Gain {base_life_gained_on_enemy_death} Life per Enemy Killed",
+      "placeholders": {
+        "base_life_gained_on_enemy_death": "base_life_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LifeGainedFromEnemyDeath2",
+      "name": "of Victory",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LifeGainedFromEnemyDeath",
+      "level": 23,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_gained_on_enemy_death",
+          "min": 12,
+          "max": 18
+        }
+      ],
+      "text": "Gain {base_life_gained_on_enemy_death} Life per Enemy Killed",
+      "placeholders": {
+        "base_life_gained_on_enemy_death": "base_life_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LifeGainedFromEnemyDeath3",
+      "name": "of Triumph",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LifeGainedFromEnemyDeath",
+      "level": 40,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_gained_on_enemy_death",
+          "min": 24,
+          "max": 32
+        }
+      ],
+      "text": "Gain {base_life_gained_on_enemy_death} Life per Enemy Killed",
+      "placeholders": {
+        "base_life_gained_on_enemy_death": "base_life_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LifeGainedFromEnemyDeath4",
+      "name": "of Conquest",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LifeGainedFromEnemyDeath",
+      "level": 52,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_gained_on_enemy_death",
+          "min": 35,
+          "max": 44
+        }
+      ],
+      "text": "Gain {base_life_gained_on_enemy_death} Life per Enemy Killed",
+      "placeholders": {
+        "base_life_gained_on_enemy_death": "base_life_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LifeGainedFromEnemyDeath5",
+      "name": "of Feat",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LifeGainedFromEnemyDeath",
+      "level": 66,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_gained_on_enemy_death",
+          "min": 56,
+          "max": 72
+        }
+      ],
+      "text": "Gain {base_life_gained_on_enemy_death} Life per Enemy Killed",
+      "placeholders": {
+        "base_life_gained_on_enemy_death": "base_life_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LifeGainedFromEnemyDeath6",
+      "name": "of Masterstroke",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LifeGainedFromEnemyDeath",
+      "level": 81,
+      "tags": [
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_gained_on_enemy_death",
+          "min": 84,
+          "max": 110
+        }
+      ],
+      "text": "Gain {base_life_gained_on_enemy_death} Life per Enemy Killed",
+      "placeholders": {
+        "base_life_gained_on_enemy_death": "base_life_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LifeLeechPermyriadSuffix1",
+      "name": "of the Remora",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeLeech",
+      "level": 50,
+      "tags": [
+        "resource",
+        "life",
+        "physical",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "life_leech_from_physical_attack_damage_permyriad",
+          "min": 20,
+          "max": 40
+        }
+      ],
+      "text": "{life_leech_from_physical_attack_damage_permyriad}% of Physical Attack Damage Leeched as Life",
+      "placeholders": {
+        "life_leech_from_physical_attack_damage_permyriad": "life_leech_from_physical_attack_damage_permyriad"
+      },
+      "conversions": {
+        "life_leech_from_physical_attack_damage_permyriad": {
+          "divisor": 100,
+          "precision": null
+        }
+      }
+    },
+    {
+      "id": "LifeRegeneration1",
+      "name": "of the Newt",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeRegeneration",
+      "level": 1,
+      "tags": [
+        "flat_life_regen",
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_regeneration_rate_per_minute",
+          "min": 60,
+          "max": 120
+        }
+      ],
+      "text": "Regenerate {base_life_regeneration_rate_per_minute} Life per second",
+      "placeholders": {
+        "base_life_regeneration_rate_per_minute": "base_life_regeneration_rate_per_minute"
+      },
+      "conversions": {
+        "base_life_regeneration_rate_per_minute": {
+          "divisor": 60,
+          "precision": 1
+        }
+      }
+    },
+    {
+      "id": "LifeRegeneration2",
+      "name": "of the Lizard",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeRegeneration",
+      "level": 7,
+      "tags": [
+        "flat_life_regen",
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_regeneration_rate_per_minute",
+          "min": 126,
+          "max": 480
+        }
+      ],
+      "text": "Regenerate {base_life_regeneration_rate_per_minute} Life per second",
+      "placeholders": {
+        "base_life_regeneration_rate_per_minute": "base_life_regeneration_rate_per_minute"
+      },
+      "conversions": {
+        "base_life_regeneration_rate_per_minute": {
+          "divisor": 60,
+          "precision": 1
+        }
+      }
+    },
+    {
+      "id": "LifeRegeneration3",
+      "name": "of the Flatworm",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeRegeneration",
+      "level": 19,
+      "tags": [
+        "flat_life_regen",
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_regeneration_rate_per_minute",
+          "min": 486,
+          "max": 960
+        }
+      ],
+      "text": "Regenerate {base_life_regeneration_rate_per_minute} Life per second",
+      "placeholders": {
+        "base_life_regeneration_rate_per_minute": "base_life_regeneration_rate_per_minute"
+      },
+      "conversions": {
+        "base_life_regeneration_rate_per_minute": {
+          "divisor": 60,
+          "precision": 1
+        }
+      }
+    },
+    {
+      "id": "LifeRegeneration4",
+      "name": "of the Starfish",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeRegeneration",
+      "level": 31,
+      "tags": [
+        "flat_life_regen",
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_regeneration_rate_per_minute",
+          "min": 966,
+          "max": 1440
+        }
+      ],
+      "text": "Regenerate {base_life_regeneration_rate_per_minute} Life per second",
+      "placeholders": {
+        "base_life_regeneration_rate_per_minute": "base_life_regeneration_rate_per_minute"
+      },
+      "conversions": {
+        "base_life_regeneration_rate_per_minute": {
+          "divisor": 60,
+          "precision": 1
+        }
+      }
+    },
+    {
+      "id": "LifeRegeneration5",
+      "name": "of the Hydra",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeRegeneration",
+      "level": 44,
+      "tags": [
+        "flat_life_regen",
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_regeneration_rate_per_minute",
+          "min": 1446,
+          "max": 1920
+        }
+      ],
+      "text": "Regenerate {base_life_regeneration_rate_per_minute} Life per second",
+      "placeholders": {
+        "base_life_regeneration_rate_per_minute": "base_life_regeneration_rate_per_minute"
+      },
+      "conversions": {
+        "base_life_regeneration_rate_per_minute": {
+          "divisor": 60,
+          "precision": 1
+        }
+      }
+    },
+    {
+      "id": "LifeRegeneration6",
+      "name": "of the Troll",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeRegeneration",
+      "level": 55,
+      "tags": [
+        "flat_life_regen",
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_regeneration_rate_per_minute",
+          "min": 1926,
+          "max": 2880
+        }
+      ],
+      "text": "Regenerate {base_life_regeneration_rate_per_minute} Life per second",
+      "placeholders": {
+        "base_life_regeneration_rate_per_minute": "base_life_regeneration_rate_per_minute"
+      },
+      "conversions": {
+        "base_life_regeneration_rate_per_minute": {
+          "divisor": 60,
+          "precision": 1
+        }
+      }
+    },
+    {
+      "id": "LifeRegeneration7",
+      "name": "of Ryslatha",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LifeRegeneration",
+      "level": 68,
+      "tags": [
+        "flat_life_regen",
+        "resource",
+        "life"
+      ],
+      "stats": [
+        {
+          "id": "base_life_regeneration_rate_per_minute",
+          "min": 2886,
+          "max": 3840
+        }
+      ],
+      "text": "Regenerate {base_life_regeneration_rate_per_minute} Life per second",
+      "placeholders": {
+        "base_life_regeneration_rate_per_minute": "base_life_regeneration_rate_per_minute"
+      },
+      "conversions": {
+        "base_life_regeneration_rate_per_minute": {
+          "divisor": 60,
+          "precision": 1
+        }
+      }
+    },
+    {
+      "id": "LightRadiusAndAccuracyNew1",
+      "name": "of Shining",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightRadiusAndAccuracy",
+      "level": 8,
+      "tags": [
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "light_radius_+%",
+          "min": 5,
+          "max": 5
+        },
+        {
+          "id": "accuracy_rating_+%",
+          "min": 9,
+          "max": 11
+        }
+      ],
+      "text": "{accuracy_rating_+%}% increased Global Accuracy Rating\n{light_radius_+%}% increased Light Radius",
+      "placeholders": {
+        "accuracy_rating_+%": "accuracy_rating_+%",
+        "light_radius_+%": "light_radius_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightRadiusAndAccuracyNew2",
+      "name": "of Light",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightRadiusAndAccuracy",
+      "level": 15,
+      "tags": [
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "light_radius_+%",
+          "min": 10,
+          "max": 10
+        },
+        {
+          "id": "accuracy_rating_+%",
+          "min": 12,
+          "max": 15
+        }
+      ],
+      "text": "{accuracy_rating_+%}% increased Global Accuracy Rating\n{light_radius_+%}% increased Light Radius",
+      "placeholders": {
+        "accuracy_rating_+%": "accuracy_rating_+%",
+        "light_radius_+%": "light_radius_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightRadiusAndAccuracy3",
+      "name": "of Radiance",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightRadiusAndAccuracy",
+      "level": 30,
+      "tags": [
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "light_radius_+%",
+          "min": 15,
+          "max": 15
+        },
+        {
+          "id": "accuracy_rating_+%",
+          "min": 16,
+          "max": 20
+        }
+      ],
+      "text": "{accuracy_rating_+%}% increased Global Accuracy Rating\n{light_radius_+%}% increased Light Radius",
+      "placeholders": {
+        "accuracy_rating_+%": "accuracy_rating_+%",
+        "light_radius_+%": "light_radius_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningDamagePercent1",
+      "name": "of Sparks",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LightningDamagePercentage",
+      "level": 10,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning"
+      ],
+      "stats": [
+        {
+          "id": "lightning_damage_+%",
+          "min": 10,
+          "max": 12
+        }
+      ],
+      "text": "{lightning_damage_+%}% increased Lightning Damage",
+      "placeholders": {
+        "lightning_damage_+%": "lightning_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningDamagePercent2",
+      "name": "of Static",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LightningDamagePercentage",
+      "level": 23,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning"
+      ],
+      "stats": [
+        {
+          "id": "lightning_damage_+%",
+          "min": 13,
+          "max": 15
+        }
+      ],
+      "text": "{lightning_damage_+%}% increased Lightning Damage",
+      "placeholders": {
+        "lightning_damage_+%": "lightning_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningDamagePercent3",
+      "name": "of Electricity",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LightningDamagePercentage",
+      "level": 36,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning"
+      ],
+      "stats": [
+        {
+          "id": "lightning_damage_+%",
+          "min": 16,
+          "max": 18
+        }
+      ],
+      "text": "{lightning_damage_+%}% increased Lightning Damage",
+      "placeholders": {
+        "lightning_damage_+%": "lightning_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningDamagePercent4",
+      "name": "of Voltage",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "LightningDamagePercentage",
+      "level": 50,
+      "tags": [
+        "elemental_damage",
+        "damage",
+        "elemental",
+        "lightning"
+      ],
+      "stats": [
+        {
+          "id": "lightning_damage_+%",
+          "min": 19,
+          "max": 22
+        }
+      ],
+      "text": "{lightning_damage_+%}% increased Lightning Damage",
+      "placeholders": {
+        "lightning_damage_+%": "lightning_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningResist1",
+      "name": "of the Cloud",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightningResistance",
+      "level": 1,
+      "tags": [
+        "elemental",
+        "lightning",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_lightning_damage_resistance_%",
+          "min": 6,
+          "max": 11
+        }
+      ],
+      "text": "+{base_lightning_damage_resistance_%}% to Lightning Resistance",
+      "placeholders": {
+        "base_lightning_damage_resistance_%": "base_lightning_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningResist2",
+      "name": "of the Squall",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightningResistance",
+      "level": 13,
+      "tags": [
+        "elemental",
+        "lightning",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_lightning_damage_resistance_%",
+          "min": 12,
+          "max": 17
+        }
+      ],
+      "text": "+{base_lightning_damage_resistance_%}% to Lightning Resistance",
+      "placeholders": {
+        "base_lightning_damage_resistance_%": "base_lightning_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningResist3",
+      "name": "of the Storm",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightningResistance",
+      "level": 25,
+      "tags": [
+        "elemental",
+        "lightning",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_lightning_damage_resistance_%",
+          "min": 18,
+          "max": 23
+        }
+      ],
+      "text": "+{base_lightning_damage_resistance_%}% to Lightning Resistance",
+      "placeholders": {
+        "base_lightning_damage_resistance_%": "base_lightning_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningResist4",
+      "name": "of the Thunderhead",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightningResistance",
+      "level": 37,
+      "tags": [
+        "elemental",
+        "lightning",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_lightning_damage_resistance_%",
+          "min": 24,
+          "max": 29
+        }
+      ],
+      "text": "+{base_lightning_damage_resistance_%}% to Lightning Resistance",
+      "placeholders": {
+        "base_lightning_damage_resistance_%": "base_lightning_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningResist5",
+      "name": "of the Tempest",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightningResistance",
+      "level": 49,
+      "tags": [
+        "elemental",
+        "lightning",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_lightning_damage_resistance_%",
+          "min": 30,
+          "max": 35
+        }
+      ],
+      "text": "+{base_lightning_damage_resistance_%}% to Lightning Resistance",
+      "placeholders": {
+        "base_lightning_damage_resistance_%": "base_lightning_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningResist6",
+      "name": "of the Maelstrom",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightningResistance",
+      "level": 60,
+      "tags": [
+        "elemental",
+        "lightning",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_lightning_damage_resistance_%",
+          "min": 36,
+          "max": 41
+        }
+      ],
+      "text": "+{base_lightning_damage_resistance_%}% to Lightning Resistance",
+      "placeholders": {
+        "base_lightning_damage_resistance_%": "base_lightning_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningResist7",
+      "name": "of the Lightning",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightningResistance",
+      "level": 72,
+      "tags": [
+        "elemental",
+        "lightning",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_lightning_damage_resistance_%",
+          "min": 42,
+          "max": 45
+        }
+      ],
+      "text": "+{base_lightning_damage_resistance_%}% to Lightning Resistance",
+      "placeholders": {
+        "base_lightning_damage_resistance_%": "base_lightning_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LightningResist8",
+      "name": "of Ephij",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "LightningResistance",
+      "level": 84,
+      "tags": [
+        "elemental",
+        "lightning",
+        "resistance"
+      ],
+      "stats": [
+        {
+          "id": "base_lightning_damage_resistance_%",
+          "min": 46,
+          "max": 48
+        }
+      ],
+      "text": "+{base_lightning_damage_resistance_%}% to Lightning Resistance",
+      "placeholders": {
+        "base_lightning_damage_resistance_%": "base_lightning_damage_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaGainedFromEnemyDeath1",
+      "name": "of Absorption",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ManaGainedFromEnemyDeath",
+      "level": 1,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_mana_gained_on_enemy_death",
+          "min": 4,
+          "max": 6
+        }
+      ],
+      "text": "Gain {base_mana_gained_on_enemy_death} Mana per Enemy Killed",
+      "placeholders": {
+        "base_mana_gained_on_enemy_death": "base_mana_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaGainedFromEnemyDeath2",
+      "name": "of Osmosis",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ManaGainedFromEnemyDeath",
+      "level": 24,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_mana_gained_on_enemy_death",
+          "min": 7,
+          "max": 10
+        }
+      ],
+      "text": "Gain {base_mana_gained_on_enemy_death} Mana per Enemy Killed",
+      "placeholders": {
+        "base_mana_gained_on_enemy_death": "base_mana_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaGainedFromEnemyDeath3",
+      "name": "of Consumption",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ManaGainedFromEnemyDeath",
+      "level": 40,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_mana_gained_on_enemy_death",
+          "min": 11,
+          "max": 15
+        }
+      ],
+      "text": "Gain {base_mana_gained_on_enemy_death} Mana per Enemy Killed",
+      "placeholders": {
+        "base_mana_gained_on_enemy_death": "base_mana_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaGainedFromEnemyDeath4",
+      "name": "of Diffusion",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ManaGainedFromEnemyDeath",
+      "level": 52,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_mana_gained_on_enemy_death",
+          "min": 16,
+          "max": 25
+        }
+      ],
+      "text": "Gain {base_mana_gained_on_enemy_death} Mana per Enemy Killed",
+      "placeholders": {
+        "base_mana_gained_on_enemy_death": "base_mana_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaGainedFromEnemyDeath5",
+      "name": "of Permeation",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ManaGainedFromEnemyDeath",
+      "level": 66,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_mana_gained_on_enemy_death",
+          "min": 26,
+          "max": 37
+        }
+      ],
+      "text": "Gain {base_mana_gained_on_enemy_death} Mana per Enemy Killed",
+      "placeholders": {
+        "base_mana_gained_on_enemy_death": "base_mana_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaGainedFromEnemyDeath6",
+      "name": "of Retention",
+      "affix_type": "suffix",
+      "weight": 500,
+      "family": "ManaGainedFromEnemyDeath",
+      "level": 81,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "base_mana_gained_on_enemy_death",
+          "min": 38,
+          "max": 50
+        }
+      ],
+      "text": "Gain {base_mana_gained_on_enemy_death} Mana per Enemy Killed",
+      "placeholders": {
+        "base_mana_gained_on_enemy_death": "base_mana_gained_on_enemy_death"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaLeechPermyriadSuffix1",
+      "name": "of Thirst",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ManaLeech",
+      "level": 50,
+      "tags": [
+        "resource",
+        "mana",
+        "physical",
+        "attack"
+      ],
+      "stats": [
+        {
+          "id": "mana_leech_from_physical_attack_damage_permyriad",
+          "min": 20,
+          "max": 40
+        }
+      ],
+      "text": "{mana_leech_from_physical_attack_damage_permyriad}% of Physical Attack Damage Leeched as Mana",
+      "placeholders": {
+        "mana_leech_from_physical_attack_damage_permyriad": "mana_leech_from_physical_attack_damage_permyriad"
+      },
+      "conversions": {
+        "mana_leech_from_physical_attack_damage_permyriad": {
+          "divisor": 100,
+          "precision": null
+        }
+      }
+    },
+    {
+      "id": "ManaRegeneration1",
+      "name": "of Excitement",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ManaRegeneration",
+      "level": 2,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "mana_regeneration_rate_+%",
+          "min": 10,
+          "max": 19
+        }
+      ],
+      "text": "{mana_regeneration_rate_+%}% increased Mana Regeneration Rate",
+      "placeholders": {
+        "mana_regeneration_rate_+%": "mana_regeneration_rate_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaRegeneration2",
+      "name": "of Joy",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ManaRegeneration",
+      "level": 18,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "mana_regeneration_rate_+%",
+          "min": 20,
+          "max": 29
+        }
+      ],
+      "text": "{mana_regeneration_rate_+%}% increased Mana Regeneration Rate",
+      "placeholders": {
+        "mana_regeneration_rate_+%": "mana_regeneration_rate_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaRegeneration3",
+      "name": "of Elation",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ManaRegeneration",
+      "level": 29,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "mana_regeneration_rate_+%",
+          "min": 30,
+          "max": 39
+        }
+      ],
+      "text": "{mana_regeneration_rate_+%}% increased Mana Regeneration Rate",
+      "placeholders": {
+        "mana_regeneration_rate_+%": "mana_regeneration_rate_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaRegeneration4",
+      "name": "of Bliss",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ManaRegeneration",
+      "level": 42,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "mana_regeneration_rate_+%",
+          "min": 40,
+          "max": 49
+        }
+      ],
+      "text": "{mana_regeneration_rate_+%}% increased Mana Regeneration Rate",
+      "placeholders": {
+        "mana_regeneration_rate_+%": "mana_regeneration_rate_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaRegeneration5",
+      "name": "of Euphoria",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ManaRegeneration",
+      "level": 55,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "mana_regeneration_rate_+%",
+          "min": 50,
+          "max": 59
+        }
+      ],
+      "text": "{mana_regeneration_rate_+%}% increased Mana Regeneration Rate",
+      "placeholders": {
+        "mana_regeneration_rate_+%": "mana_regeneration_rate_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "ManaRegeneration6",
+      "name": "of Nirvana",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "ManaRegeneration",
+      "level": 79,
+      "tags": [
+        "resource",
+        "mana"
+      ],
+      "stats": [
+        {
+          "id": "mana_regeneration_rate_+%",
+          "min": 60,
+          "max": 69
+        }
+      ],
+      "text": "{mana_regeneration_rate_+%}% increased Mana Regeneration Rate",
+      "placeholders": {
+        "mana_regeneration_rate_+%": "mana_regeneration_rate_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength1",
+      "name": "of the Brute",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 1,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 8,
+          "max": 12
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength2",
+      "name": "of the Wrestler",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 11,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 13,
+          "max": 17
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength3",
+      "name": "of the Bear",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 22,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 18,
+          "max": 22
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength4",
+      "name": "of the Lion",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 33,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 23,
+          "max": 27
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength5",
+      "name": "of the Gorilla",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 44,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 28,
+          "max": 32
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength6",
+      "name": "of the Goliath",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 55,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 33,
+          "max": 37
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength7",
+      "name": "of the Leviathan",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 66,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 38,
+          "max": 42
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength8",
+      "name": "of the Titan",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 74,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 43,
+          "max": 50
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "Strength9",
+      "name": "of the Gods",
+      "affix_type": "suffix",
+      "weight": 1000,
+      "family": "Strength",
+      "level": 82,
+      "tags": [
+        "attribute"
+      ],
+      "stats": [
+        {
+          "id": "additional_strength",
+          "min": 51,
+          "max": 55
+        }
+      ],
+      "text": "+{additional_strength} to Strength",
+      "placeholders": {
+        "additional_strength": "additional_strength"
+      },
+      "conversions": {}
     }
   ]
 }

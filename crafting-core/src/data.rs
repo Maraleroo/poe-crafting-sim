@@ -132,6 +132,15 @@ fn validate_mod(owner: &str, definition: &ModDefinition) {
             "{owner}: placeholder {name:?} does not occur in the mod text"
         );
     }
+    for (stat_id, conversion) in &definition.conversions {
+        assert!(
+            definition.stats.iter().any(|stat| stat.id == *stat_id),
+            "{owner}: the conversion names the unknown stat {stat_id:?}"
+        );
+        if let Err(message) = conversion.check() {
+            panic!("{owner}: invalid conversion of stat {stat_id:?}: {message}");
+        }
+    }
     let mut rest = definition.text.as_str();
     while let Some(start) = rest.find('{') {
         let length = rest[start..]
@@ -149,22 +158,23 @@ fn validate_mod(owner: &str, definition: &ModDefinition) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::conversion::Conversion;
     use crate::model::AffixType;
 
     const VALID: &str = r#"{"base_items": [{
         "id": "a", "name": "A", "item_class": "C", "required_level": 1, "tags": [],
         "implicits": [{
-            "family": "F", "tags": [],
-            "stats": [{"id": "s", "min": 1, "max": 2, "global": false}],
-            "text": "+{v}", "placeholders": {"v": "s"}
+            "family": "F", "level": 2, "tags": [],
+            "stats": [{"id": "s", "min": 1, "max": 2}],
+            "text": "+{v}", "placeholders": {"v": "s"}, "conversions": {}
         }]
     }]}"#;
 
     const VALID_MODS: &str = r#"{"mods": [{
-        "name": "Invented", "affix_type": "suffix", "level": 1, "weight": 10,
-        "family": "F", "tags": [],
-        "stats": [{"id": "s", "min": 1, "max": 2, "global": false}],
-        "text": "+{v}", "placeholders": {"v": "s"}
+        "name": "Invented", "affix_type": "suffix", "weight": 10,
+        "family": "F", "level": 1, "tags": [],
+        "stats": [{"id": "s", "min": 1, "max": 2}],
+        "text": "+{v}", "placeholders": {"v": "s"}, "conversions": {}
     }]}"#;
 
     const VALID_CURRENCIES: &str = r#"{"currencies": [{
@@ -204,6 +214,54 @@ mod tests {
     #[should_panic(expected = "unknown stat")]
     fn mod_placeholder_of_an_unknown_stat_is_rejected() {
         parse_mods(&VALID_MODS.replace(r#""v": "s""#, r#""v": "other""#));
+    }
+
+    #[test]
+    fn conversions_are_read_with_and_without_a_precision() {
+        let json = VALID_MODS.replace(
+            r#""conversions": {}"#,
+            r#""conversions": {"s": {"divisor": 60, "precision": 1}}"#,
+        );
+        let mods = parse_mods(&json);
+        assert_eq!(
+            mods[0].definition.conversions["s"],
+            Conversion {
+                divisor: 60,
+                precision: Some(1)
+            }
+        );
+        let json = VALID_MODS.replace(
+            r#""conversions": {}"#,
+            r#""conversions": {"s": {"divisor": 100, "precision": null}}"#,
+        );
+        assert_eq!(
+            parse_mods(&json)[0].definition.conversions["s"].precision,
+            None
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "unknown stat")]
+    fn conversion_of_an_unknown_stat_is_rejected() {
+        parse_mods(&VALID_MODS.replace(
+            r#""conversions": {}"#,
+            r#""conversions": {"other": {"divisor": 100, "precision": null}}"#,
+        ));
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid conversion")]
+    fn conversion_without_an_exact_decimal_form_is_rejected() {
+        parse_mods(&VALID_MODS.replace(
+            r#""conversions": {}"#,
+            r#""conversions": {"s": {"divisor": 60, "precision": null}}"#,
+        ));
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid mod data")]
+    fn mod_without_a_level_is_rejected() {
+        parse_mods(&VALID_MODS.replace(r#""level": 1, "#, ""));
     }
 
     #[test]
@@ -289,9 +347,6 @@ mod tests {
     #[test]
     #[should_panic(expected = "at least one stat")]
     fn mod_without_stats_is_rejected() {
-        parse_base_items(&VALID.replace(
-            r#"[{"id": "s", "min": 1, "max": 2, "global": false}]"#,
-            "[]",
-        ));
+        parse_base_items(&VALID.replace(r#"[{"id": "s", "min": 1, "max": 2}]"#, "[]"));
     }
 }

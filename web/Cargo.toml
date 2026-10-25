@@ -1,6 +1,6 @@
 [package]
 name = "crafting-web"
-description = "Web user interface of the Path of Exile 1 crafting simulator"
+description = "Web user interface of the crafting simulator"
 version.workspace = true
 edition.workspace = true
 

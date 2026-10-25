@@ -14,13 +14,23 @@ Rarities: Normal, Magic, Rare, Unique. A normal item has no prefixes or suffixes
 
 A magic item has at most one prefix and one suffix. Its name is "<prefix name> <base name> <suffix name>"; a missing prefix or suffix leaves its part out.
 
+The level requirement of an item is the higher of two values: the level requirement of the base item itself, and 80 % of the highest level of all its mods (implicit and explicit), rounded down. A base item without its own level requirement (for example rings) counts as 0; its implicit mods still count as mods. The drop level of a base is not a requirement. An item whose level requirement is 1 or lower shows no level requirement.
+- Evidence: 3000 magic Bone Rings of item level 83 measured by the PO (poe_orb_test): the rule gives the shown requirement for all 2656 items whose mods could be identified, with no contradiction. A normal Bone Ring (implicit level 32) shows "Level: 25" in the game; poedb.tw shows the drop level 30 instead. Two rare Blasting Blades (base requirement 50): with a highest mod level of 74 the game shows "Level: 59", with a highest mod level of 35 it shows "Level: 50". A normal Iron Ring (implicit level 2) shows no requirement; an Iron Ring of the Gorilla (mod level 44) shows "Level: 35".
+
+Where the game converts a stat value for display, it computes the converted value as a 32-bit floating-point number and rounds it to the nearest value at the precision given in the game data; a value exactly halfway rounds to the even digit. Trailing zeros are dropped (1.0 is shown as 1). Because of the 32-bit computation, most halves are not exact: 123/60 = 2.05 is shown as 2 and 129/60 = 2.15 as 2.2, while 135/60 = 2.25 is exact and shown as 2.2.
+- Evidence: 3500 Blessed Orbs on a Coral Amulet (implicit raw 120-240 life per minute, shown per second), measured by the PO on 2026-10-25 in three runs of 1000, 500 and 2000 (poe_orb_test, blessed_coral*.jsonl). Rounding without the 32-bit computation does not fit (last run alone: p = 0.00001; all runs: p < 0.000000001), nor do rounding down or up. The 32-bit computation fits (all runs: p = 0.98). That exact halves (2.25, 3.25) round to the even digit rather than up is the better fit over all runs (about 750 times more likely), but it rests on only two raw values, and the first run pointed slightly the other way. The shown ranges equal RePoE's raw ranges divided by 60.
+
+Where the game data gives no precision for a conversion, the converted value is shown exactly, without trailing zeros (for example a raw leech value of 21 divided by 100 is shown as 0.21).
+- Evidence: all 100 leech lines in the PO's Bone Ring item texts (poe_orb_test) show values with at most two decimals that equal RePoE's raw values divided by 100, with trailing zeros dropped (0.2, 0.21 … 0.4).
+
 ## Item level
 A mod can roll on an item only if the item level is at least the mod's level. Example: a mod with level 60 needs an item level of 60 or higher. Default in the UI: 100.
 - Evidence: the PO's knowledge of the game. Consistent with the PO's measurement on 2026-10-21 (3000 Orbs of Transmutation and Alteration on a Bone Ring of item level 83): mods with level 82 rolled 63 times, mods with level 84 or 85 never.
 
 ## Mod pools and weights
-TODO (PO): which mods belong to a base, how weights turn into probabilities,
-which mod groups exclude each other. Data source: poedb.tw, imported into `data/`.
+The mods that can roll on a base and their weights come from the game data (RePoE, ADR 0015), already resolved per base. How weights turn into probabilities is defined by each currency's rule.
+
+TODO (PO): which mod groups exclude each other.
 
 ## Currencies
 One file per currency, linked here, e.g. `currencies/orb-of-transmutation.md`:

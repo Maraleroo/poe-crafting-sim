@@ -37,7 +37,7 @@ impl CraftError {
 /// most `item_level`, in their order (ADR 0013). This is the only place of the item level rule.
 pub fn valid_mods(mods: &[ExplicitModDefinition], item_level: u32) -> Vec<ExplicitModDefinition> {
     mods.iter()
-        .filter(|definition| definition.level <= item_level)
+        .filter(|definition| definition.definition.level <= item_level)
         .cloned()
         .collect()
 }
@@ -187,19 +187,19 @@ mod tests {
         ExplicitModDefinition {
             name: name.to_owned(),
             affix_type,
-            level: 1,
             weight,
             definition: ModDefinition {
                 family: name.to_owned(),
+                level: 1,
                 tags: Vec::new(),
                 stats: vec![StatDefinition {
                     id: "stat".to_owned(),
                     min: 1,
                     max: 5,
-                    global: false,
                 }],
                 text: "+{value}".to_owned(),
                 placeholders: BTreeMap::from([("value".to_owned(), "stat".to_owned())]),
+                conversions: BTreeMap::new(),
             },
         }
     }
@@ -328,11 +328,11 @@ mod tests {
     #[test]
     fn valid_mods_keep_the_mods_up_to_the_item_level_in_their_order() {
         let mut low = mod_of("low", AffixType::Prefix, 1);
-        low.level = 59;
+        low.definition.level = 59;
         let mut equal = mod_of("equal", AffixType::Suffix, 1);
-        equal.level = 60;
+        equal.definition.level = 60;
         let mut high = mod_of("high", AffixType::Prefix, 1);
-        high.level = 61;
+        high.definition.level = 61;
         let mods = [high.clone(), equal.clone(), low.clone()];
         assert_eq!(valid_mods(&mods, 60), vec![equal, low]);
         assert_eq!(valid_mods(&mods, 61).len(), 3);

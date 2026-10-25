@@ -19,6 +19,10 @@
 //! to `poe-crafting-rules` before these tests (39f87c4); it passes as soon as the module
 //! compiles.
 //!
+//! Adapted for AB#167 (PO-confirmed): the Iron Ring's full pool from RePoE replaces the mini
+//! pool (AC4, AC7), mod texts show converted values (AC1), and the test data follows the model
+//! of ADR 0016 (`test_mod`, AC8).
+//!
 //! What is checked outside `cargo test`, by the PO in the local preview:
 //! - AC1 to AC3: the rendering of the buttons and the magic item on the start page.
 //! - AC6: different results after reloading the page, and the network and storage tabs of
@@ -30,8 +34,9 @@ use std::path::{Path, PathBuf};
 
 use crafting_core::{
     apply_orb_of_transmutation, base_item, can_apply_orb_of_transmutation, currencies,
-    explicit_mods, AffixType, BaseItem, CraftError, Currency, CurrencyDefinition, ExplicitMod,
-    ExplicitModDefinition, Item, Mod, ModDefinition, Rarity, SeededRng, StatDefinition,
+    explicit_mods, AffixType, BaseItem, Conversion, CraftError, Currency, CurrencyDefinition,
+    ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition, Rarity, SeededRng,
+    StatDefinition,
 };
 use serde_json::{Map, Value};
 
@@ -53,104 +58,113 @@ const MAGIC_TEXT: &str = "Magic";
 const RESET_KEY: &str = "craft.reset";
 const RESET_TEXT: &str = "Reset";
 
-/// One row of the PO's mini mod pool on AB#62.
+/// One mod of the former mini mod pool on AB#62, with its values from RePoE.
 struct TableMod {
+    /// The RePoE mod identifier.
+    id: &'static str,
     affix_type: &'static str,
     name: &'static str,
     family: &'static str,
     level: u32,
-    /// The display text, one entry per line.
+    /// The display text, one entry per line. `<stat id>` stands for the placeholder that
+    /// names this stat; the placeholder's own name does not matter.
     text_lines: &'static [&'static str],
-    /// Placeholder, stat identifier, min, max.
-    stats: &'static [(&'static str, &'static str, i32, i32)],
+    /// Stat identifier, min, max.
+    stats: &'static [(&'static str, i32, i32)],
     tags: &'static [&'static str],
     weight: u32,
 }
 
-/// The PO's table, byte for byte from the description of AB#62. All stats are "Global".
+/// The six mods of the PO's table on AB#62. Adapted for AB#167 (PO-confirmed): the full pool
+/// from RePoE replaces the mini pool, so the values are RePoE's (stat identifiers with
+/// underscores, tags in lower case, no Global flag), as in the export 3.29.3.3.
 const TABLE: [TableMod; 6] = [
     TableMod {
+        id: "IncreasedLife0",
         affix_type: "prefix",
         name: "Hale",
         family: "IncreasedLife",
         level: 1,
-        text_lines: &["+{value} to maximum Life"],
-        stats: &[("value", "base maximum life", 3, 9)],
-        tags: &["resource", "Life"],
+        text_lines: &["+<base_maximum_life> to maximum Life"],
+        stats: &[("base_maximum_life", 3, 9)],
+        tags: &["resource", "life"],
         weight: 1000,
     },
     TableMod {
+        id: "IncreasedMana1",
         affix_type: "prefix",
         name: "Beryl",
         family: "IncreasedMana",
         level: 1,
-        text_lines: &["+{value} to maximum Mana"],
-        stats: &[("value", "base maximum mana", 15, 19)],
-        tags: &["resource", "Mana"],
+        text_lines: &["+<base_maximum_mana> to maximum Mana"],
+        stats: &[("base_maximum_mana", 15, 19)],
+        tags: &["resource", "mana"],
         weight: 1000,
     },
     TableMod {
+        id: "AddedLightningDamage1",
         affix_type: "prefix",
         name: "Humming",
         family: "LightningDamage",
         level: 3,
-        text_lines: &["Adds {minimum} to {maximum} Lightning Damage to Attacks"],
+        text_lines: &["Adds <attack_minimum_added_lightning_damage> to \
+                       <attack_maximum_added_lightning_damage> Lightning Damage to Attacks"],
         stats: &[
-            ("minimum", "attack minimum added lightning damage", 1, 1),
-            ("maximum", "attack maximum added lightning damage", 5, 5),
+            ("attack_minimum_added_lightning_damage", 1, 1),
+            ("attack_maximum_added_lightning_damage", 5, 5),
         ],
         tags: &[
             "elemental_damage",
-            "Damage",
-            "Elemental",
-            "Lightning",
-            "Attack",
+            "damage",
+            "elemental",
+            "lightning",
+            "attack",
         ],
         weight: 500,
     },
     TableMod {
+        id: "Intelligence1",
         affix_type: "suffix",
         name: "of the Pupil",
         family: "Intelligence",
         level: 1,
-        text_lines: &["+{value} to Intelligence"],
-        stats: &[("value", "additional intelligence", 8, 12)],
-        tags: &["Attribute"],
+        text_lines: &["+<additional_intelligence> to Intelligence"],
+        stats: &[("additional_intelligence", 8, 12)],
+        tags: &["attribute"],
         weight: 1000,
     },
     TableMod {
+        id: "LightRadiusAndAccuracyNew1",
         affix_type: "suffix",
         name: "of Shining",
         family: "LightRadiusAndAccuracy",
         level: 8,
         text_lines: &[
-            "{accuracy}% increased Global Accuracy Rating",
-            "{light}% increased Light Radius",
+            "<accuracy_rating_+%>% increased Global Accuracy Rating",
+            "<light_radius_+%>% increased Light Radius",
         ],
-        stats: &[
-            ("accuracy", "accuracy rating +%", 9, 11),
-            ("light", "light radius +%", 5, 5),
-        ],
-        tags: &["Attack"],
+        stats: &[("accuracy_rating_+%", 9, 11), ("light_radius_+%", 5, 5)],
+        tags: &["attack"],
         weight: 1000,
     },
     TableMod {
+        id: "ChaosResist1",
         affix_type: "suffix",
         name: "of the Lost",
         family: "ChaosResistance",
         level: 16,
-        text_lines: &["+{value}% to Chaos Resistance"],
-        stats: &[("value", "base chaos damage resistance %", 5, 10)],
-        tags: &["Chaos", "Resistance"],
+        text_lines: &["+<base_chaos_damage_resistance_%>% to Chaos Resistance"],
+        stats: &[("base_chaos_damage_resistance_%", 5, 10)],
+        tags: &["chaos", "resistance"],
         weight: 250,
     },
 ];
 
-/// Rounded shares quoted in AC7, used to cross-check the shares computed from the weights.
+/// Number of mods in the Iron Ring's pool from RePoE (AB#167): 81 prefixes, 126 suffixes.
+const POOL_SIZE: usize = 207;
+
+/// Share quoted in AC7 for 1 mod.
 const AC7_ONE_MOD_SHARE: f64 = 0.5;
-const AC7_SINGLE_PREFIX_SHARE: f64 = 0.526;
-const AC7_HUMMING_SHARE_OF_PREFIXES: f64 = 0.20;
-const AC7_LOST_SHARE_OF_SUFFIXES: f64 = 0.11;
 /// Rounded share quoted in AC8 for the unbalanced pool.
 const AC8_SINGLE_PREFIX_SHARE: f64 = 0.90;
 
@@ -182,6 +196,7 @@ const ORB_RULE_LINES: [&str; 8] = [
 ];
 
 const MODS_JSON: &str = "data/mods.json";
+const BASE_ITEMS_JSON: &str = "data/base_items.json";
 const CURRENCIES_JSON: &str = "data/currencies.json";
 const EN_JSON: &str = "web/i18n/en.json";
 const WEB_CARGO_TOML: &str = "web/Cargo.toml";
@@ -196,8 +211,9 @@ const TEST_POOL_SEED: u64 = 6208;
 
 /// Items for invariant checks over many seeds.
 const ITEMS: u64 = 2_000;
-/// Trials for AC7: large enough that a 50:50 choice between prefix and suffix (50 % instead
-/// of 52.6 %) lies far outside 5 standard deviations, and still done in a few seconds.
+/// Trials for AC7: large enough that a 50:50 choice between prefix and suffix lies far
+/// outside 5 standard deviations, and that every mod of the full pool (AB#167) is compared
+/// with its weight, and still done in a few seconds.
 const AC7_TRIALS: u64 = 100_000;
 /// Trials per test pool in AC8.
 const AC8_TRIALS: u64 = 20_000;
@@ -465,14 +481,63 @@ fn stat_value(rolled: &Mod, id: &str) -> i32 {
         .value
 }
 
+/// `scaled / scale` as a decimal number without trailing zeros; `scale` is a power of ten.
+fn decimal(scaled: i64, scale: i64) -> String {
+    let sign = if scaled < 0 { "-" } else { "" };
+    let whole = scaled.abs() / scale;
+    let digits = scale.to_string().len() - 1;
+    if digits == 0 {
+        return format!("{sign}{whole}");
+    }
+    let fraction = format!("{:0digits$}", scaled.abs() % scale);
+    let fraction = fraction.trim_end_matches('0');
+    if fraction.is_empty() {
+        format!("{sign}{whole}")
+    } else {
+        format!("{sign}{whole}.{fraction}")
+    }
+}
+
+/// The value the game shows for a raw stat value (AB#167, "Item basics" in
+/// `poe-crafting-rules`): without a conversion the raw value; with a precision the value
+/// computed as a 32-bit floating-point number, rounded to the precision, exact halves to the
+/// even digit; without a precision the exact value. Trailing zeros are dropped.
+fn shown_value(raw: i32, conversion: Option<&Conversion>) -> String {
+    let Some(conversion) = conversion else {
+        return raw.to_string();
+    };
+    match conversion.precision {
+        Some(precision) => {
+            let converted = raw as f32 / conversion.divisor as f32;
+            let scale = 10_i64.pow(precision);
+            // The f32 value is exact in f64; scaling by a power of ten keeps exact halves exact.
+            let scaled = (f64::from(converted) * scale as f64).round_ties_even() as i64;
+            decimal(scaled, scale)
+        }
+        None => {
+            let divisor = i64::from(conversion.divisor);
+            let mut scale = 1_i64;
+            while scale % divisor != 0 {
+                scale *= 10;
+                assert!(
+                    scale <= 1_000_000_000,
+                    "the test only knows exact values for divisors made of 2 and 5"
+                );
+            }
+            decimal(i64::from(raw) * (scale / divisor), scale)
+        }
+    }
+}
+
 /// The text the PO's rule expects for a rolled mod: every placeholder replaced by the rolled
-/// value of the stat it names, looked up by identifier.
+/// value of the stat it names, looked up by identifier. Adapted for AB#167 (PO-confirmed): the
+/// value is shown converted where the mod has a conversion for the stat.
 fn expected_display_text(rolled: &Mod) -> String {
     let mut text = rolled.text.clone();
     for (placeholder, stat_id) in &rolled.placeholders {
         text = text.replace(
             &format!("{{{placeholder}}}"),
-            &stat_value(rolled, stat_id).to_string(),
+            &shown_value(stat_value(rolled, stat_id), rolled.conversions.get(stat_id)),
         );
     }
     assert!(
@@ -562,25 +627,27 @@ fn assert_rolled_from_pool(
     }
 }
 
-/// A test mod with one stat (AC8). The stat's range is real, so values are rolled.
+/// A test mod with one stat (AC8). The stat's range is real, so values are rolled. Adapted
+/// for AB#167 (PO-confirmed): no Global flag; the level is part of the mod definition, which
+/// has no conversion.
 fn test_mod(name: &str, affix_type: AffixType, weight: u32) -> ExplicitModDefinition {
     let stat_id = format!("{name} stat");
     ExplicitModDefinition {
         name: name.to_owned(),
         affix_type,
-        level: 1,
         weight,
         definition: ModDefinition {
             family: format!("{name} family"),
+            level: 1,
             tags: vec!["test".to_owned()],
             stats: vec![StatDefinition {
                 id: stat_id.clone(),
                 min: 1,
                 max: 10,
-                global: true,
             }],
             text: format!("+{{value}} to {name}"),
             placeholders: BTreeMap::from([("value".to_owned(), stat_id)]),
+            conversions: BTreeMap::new(),
         },
     }
 }
@@ -792,6 +859,8 @@ fn assert_one_sided_shares(pool: &[ExplicitModDefinition], tally: &Tally, label:
 // ihren gewürfelten Werten."
 // (The rendering is checked by the PO in the local preview. Here: the result of the orb, the
 // texts the page shows, the button label from the game data (ADR 0011) and that web uses it.)
+// (Adapted for AB#167, PO-confirmed: AC4 of AB#167 adds the conversion; the expected texts
+// show converted values where the game converts.)
 #[test]
 fn ac1_orb_of_transmutation_makes_the_iron_ring_magic_with_rolled_mod_texts() {
     // Given the Iron Ring, the mod pool from crafting-core and the English translations
@@ -979,36 +1048,51 @@ fn ac3_reset_restores_the_normal_ring_and_the_orb_is_disabled_on_a_magic_item() 
 
 // AC4: „Die Mods aus der Tabelle liegen in einer Datendatei im Repo mit allen Werten aus der
 // Tabelle, auch wenn noch keine Funktion sie nutzt (z. B. Tags, Family)."
+// (Adapted for AB#167, PO-confirmed: AC1 of AB#167 replaces the mini pool by the Iron Ring's
+// full pool from RePoE. The data file holds every mod of the pool; the six mods of the table
+// are checked with their values from RePoE.)
 #[test]
 fn ac4_mod_pool_lives_in_a_data_file_with_all_table_values() {
-    // Given the data file, the mods from crafting-core and the crafting-core sources
+    // Given the data files, the mods from crafting-core and the crafting-core sources
     let data = load_json(MODS_JSON);
+    let base_items = load_json(BASE_ITEMS_JSON);
     let pool = explicit_mods();
     let core_files = core_src_files();
 
-    // When reading all mods of the data file
+    // When reading all mods of the data file and the Iron Ring's pool
     let entries = json_array(&data, "mods", MODS_JSON);
-
-    // Then the file holds exactly the six mods of the table
-    let file_names: BTreeSet<&str> = entries
+    let ring = json_array(&base_items, "base_items", BASE_ITEMS_JSON)
         .iter()
-        .map(|entry| json_str(entry, "name", "every mod in mods.json"))
+        .find(|entry| entry.get("id").and_then(Value::as_str) == Some(IRON_RING_ID))
+        .unwrap_or_else(|| panic!("{BASE_ITEMS_JSON} must contain {IRON_RING_ID}"));
+    let pool_ids = json_strings(ring, "mod_pool", BASE_ITEMS_JSON);
+
+    // Then the file holds every mod of the Iron Ring's pool
+    let file_ids: BTreeSet<&str> = entries
+        .iter()
+        .map(|entry| json_str(entry, "id", "every mod in mods.json"))
         .collect();
-    let table_names: BTreeSet<&str> = TABLE.iter().map(|row| row.name).collect();
-    assert_eq!(
-        entries.len(),
-        TABLE.len(),
-        "{MODS_JSON} has one entry per table row"
-    );
-    assert_eq!(file_names, table_names);
+    assert_eq!(file_ids.len(), entries.len(), "{MODS_JSON}: ids are unique");
+    assert_eq!(pool_ids.len(), POOL_SIZE, "the Iron Ring's pool from RePoE");
+    for id in &pool_ids {
+        assert!(
+            file_ids.contains(id.as_str()),
+            "{MODS_JSON} must contain the pool mod {id:?}"
+        );
+    }
 
     for row in &TABLE {
-        // And each mod in the file has every value of its table row
+        // And each mod of the table is in the pool, with every value from RePoE
         let what = format!("{MODS_JSON}: {:?}", row.name);
+        assert!(
+            pool_ids.iter().any(|id| id == row.id),
+            "{what} is in the pool"
+        );
         let entry = entries
             .iter()
-            .find(|entry| entry.get("name").and_then(Value::as_str) == Some(row.name))
-            .unwrap_or_else(|| panic!("{MODS_JSON} must contain {:?}", row.name));
+            .find(|entry| entry.get("id").and_then(Value::as_str) == Some(row.id))
+            .unwrap_or_else(|| panic!("{MODS_JSON} must contain {:?}", row.id));
+        assert_eq!(json_str(entry, "name", &what), row.name, "{what}");
         assert_eq!(
             json_str(entry, "affix_type", &what),
             row.affix_type,
@@ -1030,20 +1114,22 @@ fn ac4_mod_pool_lives_in_a_data_file_with_all_table_values() {
             strings(row.tags),
             "{what}"
         );
-        assert_eq!(
-            json_str(entry, "text", &what),
-            row.text_lines.join("\n"),
-            "{what}"
-        );
         let placeholders = json_field(entry, "placeholders", &what);
+        let mut text_by_stat = json_str(entry, "text", &what).to_owned();
+        for (placeholder, stat_id) in placeholders
+            .as_object()
+            .unwrap_or_else(|| panic!("{what}: the placeholders must be an object"))
+        {
+            let stat_id = stat_id
+                .as_str()
+                .unwrap_or_else(|| panic!("{what}: placeholder {placeholder:?} names a stat"));
+            text_by_stat =
+                text_by_stat.replace(&format!("{{{placeholder}}}"), &format!("<{stat_id}>"));
+        }
+        assert_eq!(text_by_stat, row.text_lines.join("\n"), "{what}: text");
         let stats = json_array(entry, "stats", &what);
         assert_eq!(stats.len(), row.stats.len(), "{what}: number of stats");
-        for (placeholder, stat_id, min, max) in row.stats {
-            assert_eq!(
-                json_str(placeholders, placeholder, &what),
-                *stat_id,
-                "{what}: placeholder {placeholder:?}"
-            );
+        for (stat_id, min, max) in row.stats {
             let stat = stats
                 .iter()
                 .find(|stat| stat.get("id").and_then(Value::as_str) == Some(*stat_id))
@@ -1058,10 +1144,9 @@ fn ac4_mod_pool_lives_in_a_data_file_with_all_table_values() {
                 i64::from(*max),
                 "{what}: max"
             );
-            assert_eq!(
-                json_field(stat, "global", stat_id).as_bool(),
-                Some(true),
-                "{what}: {stat_id:?} is global"
+            assert!(
+                stat.get("global").is_none(),
+                "{what}: {stat_id:?} has no Global flag in RePoE"
             );
         }
         assert_eq!(
@@ -1069,39 +1154,46 @@ fn ac4_mod_pool_lives_in_a_data_file_with_all_table_values() {
             Some(row.stats.len()),
             "{what}: one placeholder per stat"
         );
+        assert!(
+            entry
+                .get("conversions")
+                .and_then(Value::as_object)
+                .is_none_or(Map::is_empty),
+            "{what}: the game shows these values as rolled"
+        );
 
         // And crafting-core offers the same values
         let definition = find_definition(&pool, row.name);
         assert_eq!(definition.affix_type, affix_type(row.affix_type), "{what}");
-        assert_eq!(definition.level, row.level, "{what}");
         assert_eq!(definition.weight, row.weight, "{what}");
         let modifier = &definition.definition;
+        assert_eq!(modifier.level, row.level, "{what}");
         assert_eq!(modifier.family, row.family, "{what}");
         assert_eq!(modifier.tags, strings(row.tags), "{what}");
-        assert_eq!(modifier.text, row.text_lines.join("\n"), "{what}");
-        let expected_placeholders: BTreeMap<String, String> = row
+        let mut core_text = modifier.text.clone();
+        for (placeholder, stat_id) in &modifier.placeholders {
+            core_text = core_text.replace(&format!("{{{placeholder}}}"), &format!("<{stat_id}>"));
+        }
+        assert_eq!(core_text, row.text_lines.join("\n"), "{what}");
+        let expected_stats: BTreeMap<String, (i32, i32)> = row
             .stats
             .iter()
-            .map(|(placeholder, stat_id, _, _)| ((*placeholder).to_owned(), (*stat_id).to_owned()))
+            .map(|(stat_id, min, max)| ((*stat_id).to_owned(), (*min, *max)))
             .collect();
-        assert_eq!(modifier.placeholders, expected_placeholders, "{what}");
-        let expected_stats: BTreeMap<String, (i32, i32, bool)> = row
+        let core_stats: BTreeMap<String, (i32, i32)> = modifier
             .stats
             .iter()
-            .map(|(_, stat_id, min, max)| ((*stat_id).to_owned(), (*min, *max, true)))
-            .collect();
-        let core_stats: BTreeMap<String, (i32, i32, bool)> = modifier
-            .stats
-            .iter()
-            .map(|stat| (stat.id.clone(), (stat.min, stat.max, stat.global)))
+            .map(|stat| (stat.id.clone(), (stat.min, stat.max)))
             .collect();
         assert_eq!(modifier.stats.len(), row.stats.len(), "{what}");
         assert_eq!(core_stats, expected_stats, "{what}");
+        assert!(modifier.conversions.is_empty(), "{what}");
     }
+    // And crafting-core offers every mod of the data file
     assert_eq!(
         pool.len(),
-        TABLE.len(),
-        "explicit_mods() offers the six mods"
+        entries.len(),
+        "explicit_mods() offers every mod of {MODS_JSON}"
     );
 
     // And crafting-core embeds the data file at build time
@@ -1245,21 +1337,23 @@ fn ac6_each_click_and_each_page_load_can_give_a_different_result() {
 // Prefixe, of the Lost etwa 11 % der Suffixe)."
 // (100 000 trials instead of 10 000, so that a 50:50 choice between prefix and suffix
 // cannot pass within 5 standard deviations.)
+// (Adapted for AB#167, PO-confirmed: AC3 of AB#167 replaces the mini pool by the Iron Ring's
+// full pool from RePoE. The rounded shares of the mini pool no longer apply; the expected
+// shares follow from the weights of the full pool. Renamed from
+// `ac7_frequencies_with_the_mini_pool_follow_the_rule`.)
 #[test]
-fn ac7_frequencies_with_the_mini_pool_follow_the_rule() {
-    // Given the mini mod pool from crafting-core
+fn ac7_frequencies_with_the_full_pool_follow_the_rule() {
+    // Given the Iron Ring's full mod pool from crafting-core
     let pool = explicit_mods();
-    let prefixes = of_type(&pool, AffixType::Prefix);
-    let suffixes = of_type(&pool, AffixType::Suffix);
-    // And the expected shares from its weights match the rounded figures of the criterion
-    let prefix_share = weight_sum(prefixes.iter().copied()) / weight_sum(&pool);
-    let humming_share =
-        f64::from(find_definition(&pool, "Humming").weight) / weight_sum(prefixes.iter().copied());
-    let lost_share = f64::from(find_definition(&pool, "of the Lost").weight)
-        / weight_sum(suffixes.iter().copied());
-    assert!((prefix_share - AC7_SINGLE_PREFIX_SHARE).abs() < 0.001);
-    assert!((humming_share - AC7_HUMMING_SHARE_OF_PREFIXES).abs() < 0.005);
-    assert!((lost_share - AC7_LOST_SHARE_OF_SUFFIXES).abs() < 0.005);
+    assert_eq!(pool.len(), POOL_SIZE, "the Iron Ring's pool from RePoE");
+    // And with one mod, the share of prefixes from its weights is far from a coin flip, so a
+    // 50:50 choice between prefix and suffix fails clearly
+    let prefix_share = weight_sum(of_type(&pool, AffixType::Prefix)) / weight_sum(&pool);
+    let one_mod_items = AC7_TRIALS as f64 * AC7_ONE_MOD_SHARE;
+    assert!(
+        (prefix_share - 0.5).abs() > 10.0 * (0.25 / one_mod_items).sqrt(),
+        "the prefix share {prefix_share:.4} must differ clearly from 0.5"
+    );
 
     // When the orb is applied many times with a fixed seed
     let tally = transmute_many(&pool, STATISTICS_SEED, AC7_TRIALS);
@@ -1273,7 +1367,7 @@ fn ac7_frequencies_with_the_mini_pool_follow_the_rule() {
     );
     // And with one mod, each mod and the prefixes as a whole occur by weight in the whole pool,
     // and with two mods, each mod occurs by weight within its own type
-    assert_rule_shares(&pool, &tally, "mini pool");
+    assert_rule_shares(&pool, &tally, "full pool");
 }
 
 // AC8: „Mit eigenen Testdaten abgedeckt: ein stark unausgeglichener Pool (z. B. Prefixe
@@ -1284,6 +1378,8 @@ fn ac7_frequencies_with_the_mini_pool_follow_the_rule() {
 // missing mod is left out. With 20 000 trials, both cases of rule 1 occur. The empty pools
 // are covered with one and with two mods of the other type. The error message is the PO's
 // text behind the key `craft.error.no_valid_mod`.)
+// (Adapted for AB#167, PO-confirmed: only the test data of `test_mod` changes, without the
+// Global flag and with the level in the mod definition.)
 #[test]
 fn ac8_own_test_pools_cover_unbalanced_and_empty_pools() {
     let prefix_a = test_mod("Test Prefix A", AffixType::Prefix, 6000);
