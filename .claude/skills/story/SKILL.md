@@ -76,6 +76,9 @@ Copy this checklist into your reply and tick it off as you go:
    The review runs in CI too (`.github/workflows/review.yml`): claude[bot] posts
    the review as a PR comment and the check `Claude review` follows its verdict. If the review
    blocks, send the critical findings to the developer and wait for the review of the new push.
+   If the check `Claude review` fails without a new comment, read the log of the job.
+   If Claude stopped there without model usage (for example because of the usage limit), do not
+   re-run the job; tell the PO that the review failed at the usage limit and must be re-run.
    After the second blocked round, stop and escalate to the PO. A PR that changes `review.yml`
    cannot be reviewed in CI and its check is red: run the `reviewer` subagent locally on it
    instead, and tell the PO that only the label `review-override` (set by the PO, followed by a
