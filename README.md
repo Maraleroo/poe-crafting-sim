@@ -8,6 +8,7 @@ Live page: https://maraleroo.github.io/poe-crafting-sim/ (published automaticall
 - `web/`: user interface, compiled to WebAssembly with Trunk. All visible text lives in
   `web/i18n/en.json`.
 - `data/`: imported game data (JSON files, embedded into `crafting-core` at build time, see `data/README.md`).
+- `data-import/`: converter from the RePoE export to the files in `data/` (not part of the website), see `data/README.md`.
 - `docs/adr/`: architecture decision records.
 
 ## Local preview
