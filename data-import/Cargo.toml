@@ -1,0 +1,9 @@
+[package]
+name = "data-import"
+description = "Converts the RePoE export for Path of Exile 1 into the game data files of the simulator"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
