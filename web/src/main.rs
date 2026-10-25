@@ -229,10 +229,9 @@ fn item_section(document: &Document, item: &ItemView) -> Result<Element, JsValue
     append(&section, element(document, "h2", Some(&item.name))?)?;
     append(&section, element(document, "p", Some(&item.item_class))?)?;
     append(&section, element(document, "p", Some(&item.rarity))?)?;
-    append(
-        &section,
-        element(document, "p", Some(&item.requires_level))?,
-    )?;
+    if let Some(requires_level) = &item.requires_level {
+        append(&section, element(document, "p", Some(requires_level))?)?;
+    }
     append(&section, mod_list(document, &item.implicits)?)?;
     if !item.explicits.is_empty() {
         append(&section, mod_list(document, &item.explicits)?)?;
