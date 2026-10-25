@@ -4,12 +4,14 @@
 //! never user-facing text. Game texts (item names, mod texts) are game data and pass
 //! through unchanged (ADR 0008).
 
+mod conversion;
 mod craft;
 mod currency;
 mod data;
 mod model;
 mod rng;
 
+pub use conversion::Conversion;
 pub use craft::{
     apply_orb_of_alteration, apply_orb_of_transmutation, can_apply_orb_of_alteration,
     can_apply_orb_of_transmutation, valid_mods, CraftError,

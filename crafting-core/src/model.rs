@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use serde::Deserialize;
 
+use crate::conversion::Conversion;
 use crate::rng::{roll_in_range, Rng};
 
 /// Rarity of an item.
@@ -18,18 +19,19 @@ pub enum Rarity {
 /// A stat of a mod in the game data: its identifier and the range it rolls in.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct StatDefinition {
-    /// Identifier as shown by poedb, e.g. `attack minimum added physical damage`.
+    /// Identifier as in the game data, e.g. `attack_minimum_added_physical_damage`.
     pub id: String,
     pub min: i32,
     pub max: i32,
-    /// The "Global" flag of the stat.
-    pub global: bool,
 }
 
 /// A mod in the game data.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct ModDefinition {
     pub family: String,
+    /// Level of the mod. For an explicit mod it decides whether the mod can roll on an item
+    /// (item level rule); for every mod it counts in the level requirement of the item.
+    pub level: u32,
     pub tags: Vec<String>,
     /// One or more stats.
     pub stats: Vec<StatDefinition>,
@@ -37,6 +39,9 @@ pub struct ModDefinition {
     pub text: String,
     /// Maps each placeholder name of `text` to the identifier of a stat.
     pub placeholders: BTreeMap<String, String>,
+    /// Maps a stat identifier to the conversion the game applies for display. A stat that is
+    /// not in the map is shown as rolled.
+    pub conversions: BTreeMap<String, Conversion>,
 }
 
 /// Whether a mod is a prefix or a suffix.
@@ -54,7 +59,6 @@ pub struct ExplicitModDefinition {
     /// Name shown in the item name: before the base name for a prefix, after it for a suffix.
     pub name: String,
     pub affix_type: AffixType,
-    pub level: u32,
     /// Spawn weight, greater than zero.
     pub weight: u32,
     #[serde(flatten)]
@@ -79,7 +83,6 @@ pub struct Stat {
     pub id: String,
     pub min: i32,
     pub max: i32,
-    pub global: bool,
     /// Rolled value, within `min..=max`.
     pub value: i32,
 }
@@ -88,10 +91,12 @@ pub struct Stat {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Mod {
     pub family: String,
+    pub level: u32,
     pub tags: Vec<String>,
     pub stats: Vec<Stat>,
     pub text: String,
     pub placeholders: BTreeMap<String, String>,
+    pub conversions: BTreeMap<String, Conversion>,
 }
 
 impl Mod {
@@ -104,21 +109,23 @@ impl Mod {
                 id: stat.id.clone(),
                 min: stat.min,
                 max: stat.max,
-                global: stat.global,
                 value: roll_in_range(rng, stat.min, stat.max),
             })
             .collect();
         Mod {
             family: definition.family.clone(),
+            level: definition.level,
             tags: definition.tags.clone(),
             stats,
             text: definition.text.clone(),
             placeholders: definition.placeholders.clone(),
+            conversions: definition.conversions.clone(),
         }
     }
 
-    /// The display text with every placeholder replaced by the rolled value of the stat
-    /// it names. Stats are found by identifier, never by their position.
+    /// The display text with every placeholder replaced by the value of the stat it names,
+    /// converted as the game does where the mod has a conversion for the stat. Stats are found
+    /// by identifier, never by their position.
     ///
     /// # Panics
     /// If a placeholder names a stat the mod does not have. That is an error in the data.
@@ -133,7 +140,11 @@ impl Mod {
                     .unwrap_or_else(|| {
                         panic!("placeholder {name:?} names the missing stat {stat_id:?}")
                     });
-                text.replace(&format!("{{{name}}}"), &stat.value.to_string())
+                let shown = match self.conversions.get(stat_id) {
+                    Some(conversion) => conversion.show(stat.value),
+                    None => stat.value.to_string(),
+                };
+                text.replace(&format!("{{{name}}}"), &shown)
             })
     }
 }
@@ -173,6 +184,22 @@ impl Item {
         }
     }
 
+    /// The level requirement the item shows: the higher of the base item's own requirement
+    /// and 80 % of the highest level of all its mods (implicit and explicit), rounded down.
+    /// None if it is 1 or lower.
+    pub fn required_level(&self) -> Option<u32> {
+        let highest_mod_level = self
+            .implicits
+            .iter()
+            .chain(self.prefix.iter().map(|explicit| &explicit.modifier))
+            .chain(self.suffix.iter().map(|explicit| &explicit.modifier))
+            .map(|modifier| modifier.level)
+            .max()
+            .unwrap_or(0);
+        let requirement = self.base.required_level.max(highest_mod_level * 4 / 5);
+        (requirement > 1).then_some(requirement)
+    }
+
     /// The name of the item: `<prefix name> <base name> <suffix name>`. A missing prefix or
     /// suffix leaves its part out.
     pub fn name(&self) -> String {
@@ -201,13 +228,13 @@ mod tests {
             id: id.to_owned(),
             min: value,
             max: value,
-            global: false,
         }
     }
 
     fn definition(stats: Vec<StatDefinition>) -> ModDefinition {
         ModDefinition {
             family: "Invented".to_owned(),
+            level: 1,
             tags: Vec::new(),
             stats,
             text: "Adds {low} to {high} Physical Damage to Attacks".to_owned(),
@@ -215,6 +242,7 @@ mod tests {
                 ("low".to_owned(), LOW.to_owned()),
                 ("high".to_owned(), HIGH.to_owned()),
             ]),
+            conversions: BTreeMap::new(),
         }
     }
 
@@ -328,5 +356,89 @@ mod tests {
             item_with(None, Some("of Suffix")).name(),
             "Invented Base of Suffix"
         );
+    }
+
+    #[test]
+    fn text_converts_only_the_stats_with_a_conversion() {
+        let mut converted = definition(vec![stat(LOW, 135), stat(HIGH, 135)]);
+        converted.conversions.insert(
+            HIGH.to_owned(),
+            Conversion {
+                divisor: 60,
+                precision: Some(1),
+            },
+        );
+        assert_eq!(
+            text_of(&converted),
+            "Adds 135 to 2.2 Physical Damage to Attacks"
+        );
+    }
+
+    #[test]
+    fn a_rolled_mod_keeps_the_level_and_the_conversions_of_its_definition() {
+        let mut converted = definition(vec![stat(LOW, 1), stat(HIGH, 2)]);
+        converted.level = 44;
+        converted.conversions.insert(
+            LOW.to_owned(),
+            Conversion {
+                divisor: 100,
+                precision: None,
+            },
+        );
+        let rolled = Mod::roll(&converted, &mut SeededRng::new(1));
+        assert_eq!(rolled.level, 44);
+        assert_eq!(rolled.conversions, converted.conversions);
+    }
+
+    /// A magic item of a base with the given own requirement; the implicit and the prefix
+    /// have the given levels.
+    fn leveled_item(base_requirement: u32, implicit: Option<u32>, prefix: Option<u32>) -> Item {
+        let at_level = |level: u32| {
+            let mut level_definition = definition(vec![stat(LOW, 3), stat(HIGH, 12)]);
+            level_definition.level = level;
+            level_definition
+        };
+        let base = BaseItem {
+            id: "invented/base".to_owned(),
+            name: "Invented Base".to_owned(),
+            item_class: "Inventeds".to_owned(),
+            required_level: base_requirement,
+            tags: Vec::new(),
+            implicits: implicit.map(at_level).into_iter().collect(),
+        };
+        let mut rng = SeededRng::new(1);
+        let mut item = Item::new(&base, &mut rng);
+        item.prefix = prefix.map(|level| ExplicitMod {
+            name: "Prefix".to_owned(),
+            affix_type: AffixType::Prefix,
+            modifier: Mod::roll(&at_level(level), &mut rng),
+        });
+        item
+    }
+
+    #[test]
+    fn requirement_is_the_higher_of_the_base_and_80_percent_of_the_highest_mod_level() {
+        assert_eq!(
+            leveled_item(50, Some(1), Some(74)).required_level(),
+            Some(59)
+        );
+        assert_eq!(
+            leveled_item(50, Some(1), Some(35)).required_level(),
+            Some(50)
+        );
+        assert_eq!(leveled_item(0, Some(32), None).required_level(), Some(25));
+        assert_eq!(
+            leveled_item(0, Some(2), Some(44)).required_level(),
+            Some(35)
+        );
+    }
+
+    #[test]
+    fn requirement_rounds_down_and_is_hidden_at_1_or_lower() {
+        assert_eq!(leveled_item(0, None, Some(51)).required_level(), Some(40));
+        assert_eq!(leveled_item(0, Some(3), None).required_level(), Some(2));
+        assert_eq!(leveled_item(0, Some(2), None).required_level(), None);
+        assert_eq!(leveled_item(1, None, None).required_level(), None);
+        assert_eq!(leveled_item(0, None, None).required_level(), None);
     }
 }
