@@ -27,17 +27,25 @@ use crafting_core::{
 };
 use serde_json::{Map, Value};
 
-/// Values from the PO's table on AB#52 (source: poedb.tw, page "Iron Ring").
+/// Values from the PO's table on AB#52 (source: poedb.tw, page "Iron Ring"). Adapted for
+/// AB#167 (PO-confirmed): the data comes from RePoE, so the stat identifiers have
+/// underscores and the Iron Ring has no own level requirement (0); the 2 of the table was
+/// the drop level.
 const IRON_RING_ID: &str = "Metadata/Items/Rings/Ring1";
 const IRON_RING_NAME: &str = "Iron Ring";
 const IRON_RING_CLASS: &str = "Rings";
-const IRON_RING_REQUIRED_LEVEL: u32 = 2;
+const IRON_RING_REQUIRED_LEVEL: u32 = 0;
 const IRON_RING_TAGS: [&str; 2] = ["default", "ring"];
 const IMPLICIT_FAMILY: &str = "PhysicalDamage";
+const IMPLICIT_LEVEL: u32 = 2;
 const IMPLICIT_TAGS: [&str; 4] = ["physical_damage", "damage", "physical", "attack"];
-const MINIMUM_STAT: &str = "attack minimum added physical damage";
-const MAXIMUM_STAT: &str = "attack maximum added physical damage";
+const MINIMUM_STAT: &str = "attack_minimum_added_physical_damage";
+const MAXIMUM_STAT: &str = "attack_maximum_added_physical_damage";
 const IMPLICIT_TEMPLATE: &str = "Adds {minimum} to {maximum} Physical Damage to Attacks";
+/// The implicit's text with every placeholder written as `<stat identifier>` (AB#167: the
+/// placeholder names come from the converter, so only the stat they name is checked).
+const IMPLICIT_TEXT_BY_STAT: &str = "Adds <attack_minimum_added_physical_damage> to \
+    <attack_maximum_added_physical_damage> Physical Damage to Attacks";
 
 /// Ranges of the two implicit stats from the PO's table (1–1 and 4–4).
 const MINIMUM_RANGE: (i32, i32) = (1, 1);
@@ -45,7 +53,6 @@ const MAXIMUM_RANGE: (i32, i32) = (4, 4);
 
 /// Texts the start page shows (AC1).
 const IRON_RING_IMPLICIT_TEXT: &str = "Adds 1 to 4 Physical Damage to Attacks";
-const REQUIRES_LEVEL_TEXT: &str = "Requires Level 2";
 
 /// Translation keys and texts from the tech lead's plan (AC1, AC7).
 const REQUIRES_LEVEL_KEY: &str = "item.requires_level";
@@ -259,15 +266,16 @@ fn stat_definition(id: &str, (min, max): (i32, i32)) -> StatDefinition {
         id: id.to_owned(),
         min,
         max,
-        global: true,
     }
 }
 
 /// A hand-built mod definition with the Iron Ring's text and placeholder map, but with
-/// the given stats (any ranges, any order).
+/// the given stats (any ranges, any order). Adapted for AB#167: no Global flag; the mod
+/// has a level and no conversion.
 fn physical_damage_definition(stats: Vec<StatDefinition>) -> ModDefinition {
     ModDefinition {
         family: IMPLICIT_FAMILY.to_owned(),
+        level: IMPLICIT_LEVEL,
         tags: IMPLICIT_TAGS.iter().map(|tag| (*tag).to_owned()).collect(),
         stats,
         text: IMPLICIT_TEMPLATE.to_owned(),
@@ -275,6 +283,7 @@ fn physical_damage_definition(stats: Vec<StatDefinition>) -> ModDefinition {
             ("minimum".to_owned(), MINIMUM_STAT.to_owned()),
             ("maximum".to_owned(), MAXIMUM_STAT.to_owned()),
         ]),
+        conversions: BTreeMap::new(),
     }
 }
 
@@ -306,6 +315,8 @@ fn find_stat_definition<'a>(definition: &'a ModDefinition, id: &str) -> &'a Stat
 // Damage to Attacks“."
 // (PO decision: the rendering is checked in the local preview, on the condition that the
 // data file is embedded at build time; that condition is checked in AC2.)
+// (Adapted for AB#167, PO-confirmed: AC5 of AB#167 replaces "Requires Level 2". A normal
+// Iron Ring shows no level requirement; "Requires Level 2" was the drop level.)
 #[test]
 fn ac1_iron_ring_is_a_normal_item_with_its_base_values_and_labels() {
     // Given the Iron Ring from crafting-core, a seeded RNG and the English translations
@@ -315,8 +326,6 @@ fn ac1_iron_ring_is_a_normal_item_with_its_base_values_and_labels() {
 
     // When the start page creates the item and looks up its labels
     let item = Item::new(&base, &mut rng);
-    let requires_level = translation(&translations, REQUIRES_LEVEL_KEY)
-        .replace("{level}", &item.base.required_level.to_string());
     let rarity_label = translation(&translations, "item.rarity.normal");
     let implicit_texts: Vec<String> = item.implicits.iter().map(Mod::display_text).collect();
 
@@ -324,8 +333,8 @@ fn ac1_iron_ring_is_a_normal_item_with_its_base_values_and_labels() {
     assert_eq!(item.base.name, IRON_RING_NAME);
     assert_eq!(item.base.item_class, IRON_RING_CLASS);
     assert_eq!(item.rarity, Rarity::Normal);
-    // And the page shows "Requires Level 2" and the rarity "Normal"
-    assert_eq!(requires_level, REQUIRES_LEVEL_TEXT);
+    // And it has no level requirement to show, and the page shows the rarity "Normal"
+    assert_eq!(item.required_level(), None);
     assert_eq!(rarity_label, "Normal");
     // And its only implicit reads "Adds 1 to 4 Physical Damage to Attacks"
     assert_eq!(implicit_texts, [IRON_RING_IMPLICIT_TEXT]);
@@ -336,6 +345,9 @@ fn ac1_iron_ring_is_a_normal_item_with_its_base_values_and_labels() {
 // keine Funktion sie nutzt."
 // (Includes the PO's condition for AC1: the data file is embedded at build time and not
 // loaded at runtime, ADR 0008.)
+// (Adapted for AB#167, PO-confirmed: AC1 of AB#167 replaces the table values by RePoE's.
+// `required_level` is the base's own requirement (0 for rings), the stat identifiers have
+// underscores, the placeholder names come from the converter, and there is no Global flag.)
 #[test]
 fn ac2_item_data_lives_in_an_embedded_data_file_with_all_table_values() {
     // Given the data file, the crafting-core sources and the web files
@@ -380,19 +392,19 @@ fn ac2_item_data_lives_in_an_embedded_data_file_with_all_table_values() {
         json_string_set(implicit, "tags", "the implicit"),
         string_set(&IMPLICIT_TAGS)
     );
-    assert_eq!(
-        json_str(implicit, "text", "the implicit"),
-        IMPLICIT_TEMPLATE
-    );
-    assert_eq!(
-        json_str(placeholders, "minimum", "the placeholders"),
-        MINIMUM_STAT
-    );
-    assert_eq!(
-        json_str(placeholders, "maximum", "the placeholders"),
-        MAXIMUM_STAT
-    );
-    // And for both stats: identifier, range and the "Global" flag
+    let placeholders = placeholders
+        .as_object()
+        .unwrap_or_else(|| panic!("{BASE_ITEMS_JSON}: the placeholders must be an object"));
+    assert_eq!(placeholders.len(), 2, "one placeholder per stat");
+    let mut text_by_stat = json_str(implicit, "text", "the implicit").to_owned();
+    for (name, stat) in placeholders {
+        let stat = stat
+            .as_str()
+            .unwrap_or_else(|| panic!("{BASE_ITEMS_JSON}: placeholder {name:?} must name a stat"));
+        text_by_stat = text_by_stat.replace(&format!("{{{name}}}"), &format!("<{stat}>"));
+    }
+    assert_eq!(text_by_stat, IMPLICIT_TEXT_BY_STAT);
+    // And for both stats: identifier and range, without a "Global" flag
     assert_eq!(stats.len(), 2, "the implicit has exactly two stats");
     for (id, (min, max)) in [(MINIMUM_STAT, MINIMUM_RANGE), (MAXIMUM_STAT, MAXIMUM_RANGE)] {
         let stat = stats
@@ -401,10 +413,9 @@ fn ac2_item_data_lives_in_an_embedded_data_file_with_all_table_values() {
             .unwrap_or_else(|| panic!("{BASE_ITEMS_JSON}: the implicit must have a stat {id:?}"));
         assert_eq!(json_i64(stat, "min", id), i64::from(min), "min of {id:?}");
         assert_eq!(json_i64(stat, "max", id), i64::from(max), "max of {id:?}");
-        assert_eq!(
-            json_field(stat, "global", id).as_bool(),
-            Some(true),
-            "{id:?} must be marked as global"
+        assert!(
+            stat.get("global").is_none(),
+            "{id:?} has no Global flag in RePoE"
         );
     }
     // And crafting-core offers exactly the base items of the data file
@@ -457,15 +468,19 @@ fn ac2_item_data_lives_in_an_embedded_data_file_with_all_table_values() {
 // AC3: „Ein Mod besteht aus einem oder mehreren Stats. Jeder Stat hat eine Kennung (die
 // Bezeichnung von poedb), eine Spanne (Min–Max) und einen gewürfelten Wert innerhalb
 // dieser Spanne."
+// (Adapted for AB#167, PO-confirmed: the test data has no Global flag, and the mod
+// definitions have a level and no conversion.)
 #[test]
 fn ac3_every_stat_of_a_mod_has_identifier_range_and_rolled_value_in_range() {
     // Given a mod with one stat and a mod with two stats, both with real ranges
     let one_stat = ModDefinition {
         family: "TestFamily".to_owned(),
+        level: 1,
         tags: Vec::new(),
         stats: vec![stat_definition("test single stat", (5, 9))],
         text: "+{value} to Test".to_owned(),
         placeholders: BTreeMap::from([("value".to_owned(), "test single stat".to_owned())]),
+        conversions: BTreeMap::new(),
     };
     let two_stats = physical_damage_definition(vec![
         stat_definition(MINIMUM_STAT, (2, 7)),
@@ -486,7 +501,6 @@ fn ac3_every_stat_of_a_mod_has_identifier_range_and_rolled_value_in_range() {
                 // And each stat keeps its identifier and range
                 let defined = find_stat_definition(definition, &stat.id);
                 assert_eq!((stat.min, stat.max), (defined.min, defined.max));
-                assert_eq!(stat.global, defined.global);
                 // And its rolled value lies within the range
                 assert!(
                     (stat.min..=stat.max).contains(&stat.value),
@@ -517,6 +531,7 @@ fn ac3_every_stat_of_a_mod_has_identifier_range_and_rolled_value_in_range() {
 
 // AC4: „Der Implicit des Iron Rings ist **ein** Mod mit **zwei** Stats. Wird das Item
 // erzeugt, ergibt das Würfeln immer 1 und 4."
+// (Adapted for AB#167, PO-confirmed: the stat identifiers are RePoE's, with underscores.)
 #[test]
 fn ac4_iron_ring_implicit_is_one_mod_with_two_stats_rolling_1_and_4() {
     // Given the Iron Ring from crafting-core
@@ -563,6 +578,8 @@ fn ac4_iron_ring_implicit_is_one_mod_with_two_stats_rolling_1_and_4() {
 // mit vertauschter Reihenfolge der Stats in den Daten."
 // (The unit test inside crafting-core is the developer's, AB#58. This test checks the same
 // behaviour through the public interface.)
+// (Adapted for AB#167, PO-confirmed: the test data has no Global flag, and the mod
+// definitions have a level and no conversion.)
 #[test]
 fn ac5_mod_text_uses_rolled_values_matched_by_stat_identifier_not_order() {
     // Given an invented value pair 3 and 12, once in the given and once in swapped order

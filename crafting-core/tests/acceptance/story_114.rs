@@ -314,25 +314,27 @@ fn iron_ring_pool() -> Vec<ExplicitModDefinition> {
     valid_mods(&explicit_mods(), UI_ITEM_LEVEL)
 }
 
-/// A test mod with one stat. The stat's range is real, so values are rolled.
+/// A test mod with one stat. The stat's range is real, so values are rolled. Adapted for
+/// AB#167 (PO-confirmed): no Global flag; the level is part of the mod definition, which has
+/// no conversion.
 fn test_mod(name: &str, affix_type: AffixType, weight: u32, level: u32) -> ExplicitModDefinition {
     let stat_id = format!("{name} stat");
     ExplicitModDefinition {
         name: name.to_owned(),
         affix_type,
-        level,
         weight,
         definition: ModDefinition {
             family: format!("{name} family"),
+            level,
             tags: vec!["test".to_owned()],
             stats: vec![StatDefinition {
                 id: stat_id.clone(),
                 min: 1,
                 max: 10,
-                global: true,
             }],
             text: format!("+{{value}} to {name}"),
             placeholders: BTreeMap::from([("value".to_owned(), stat_id)]),
+            conversions: BTreeMap::new(),
         },
     }
 }
@@ -1066,7 +1068,7 @@ fn ac6_item_level_rule_is_written_down_and_decides_the_valid_mods() {
         .collect();
     let expected = |item_level: u32| -> Vec<String> {
         mods.iter()
-            .filter(|definition| definition.level <= item_level)
+            .filter(|definition| definition.definition.level <= item_level)
             .map(|definition| definition.name.clone())
             .collect()
     };
@@ -1147,7 +1149,7 @@ fn ac6_item_level_rule_is_written_down_and_decides_the_valid_mods() {
     for item_level in [0, 1, 2, 3, 7, 8, 15, 16, UI_ITEM_LEVEL] {
         let expected: Vec<String> = all
             .iter()
-            .filter(|definition| definition.level <= item_level)
+            .filter(|definition| definition.definition.level <= item_level)
             .map(|definition| definition.name.clone())
             .collect();
         // Then they follow the rule
