@@ -41,8 +41,13 @@ whose condition holds for its whole range; only the two handlers above occur.
   with a multiplier, an addend or a fixed value, on a divisor that is not a whole number, and
   on any handler it does not know.
 - A rolled mod keeps the level and the conversions of its definition. `Mod::display_text()`
-  shows a converted value as `poe-crafting-rules` defines it (32-bit floating point, rounding
-  to the precision, half to even, trailing zeros dropped) and every other value as rolled.
+  shows a converted value as `poe-crafting-rules` defines it and every other value as rolled.
+  With a precision, the value is computed in 32-bit floating point, rounded to the precision
+  (half to even) and shown without trailing zeros. Without a precision, the value is shown
+  exactly, without trailing zeros (leech: raw 21 divided by 100 is shown as 0.21). A conversion
+  without a precision needs a divisor whose quotient has a finite decimal form (only the prime
+  factors 2 and 5, at most 9 decimals); the converter and the loading of the data reject any
+  other.
 - The base item's `required_level` is the requirement of the base itself: RePoE's
   `requirements.level`, 0 if the base has none (rings). The item computes its displayed
   requirement in `crafting-core` by the rule and reports none when it is 1 or lower; `web`
@@ -73,7 +78,8 @@ whose condition holds for its whole range; only the two handlers above occur.
   change with the model; the PO confirms them per story (AB#167).
 - Handlers that the next pools need (for example `negate`) are added to the converter and
   to the conversion when a story needs them; until then the converter stops with a message.
-- A conversion without a precision needs a rule in `poe-crafting-rules` for how its value is
-  shown.
+- The rule for a conversion without a precision is in `poe-crafting-rules` (the value is shown
+  exactly, without trailing zeros). It says nothing about a quotient without a finite decimal
+  form, so such a conversion is rejected until a story needs it and the PO defines it.
 - `data/mods.json` grows from 6 to 207 mods; the website embeds it as before (ADR 0008) and
   loads nothing at runtime.
