@@ -33,6 +33,10 @@ Lossless copy of work item fields (UTF-8):
   Then run:
   `az devops invoke --area wit --resource workitemsbatch --http-method POST --api-version 7.1 --in-file req.json --out-file result.json`
   The result file is UTF-8 and loses no characters. The endpoint only reads, although it uses POST.
+- `--out-file` does not overwrite an existing file: the command stops with "Out file already exists"
+  and leaves the old file in place.
+- Every fetch therefore uses a new file name (for example with the revision), and the command's
+  error output is not hidden.
 - Use this command for every verbatim copy from a work item.
 - iconv cannot restore characters outside Windows-1252.
 
