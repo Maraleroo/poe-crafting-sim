@@ -11,7 +11,39 @@ use std::{env, fs};
 use data_import::{convert, RawFiles};
 
 /// The bases that the data files hold. A story that needs more bases adds them here.
-const BASES: [&str; 1] = ["Metadata/Items/Rings/Ring1"];
+const BASES: [&str; 31] = [
+    "Metadata/Items/Rings/Ring1",
+    "Metadata/Items/Rings/Ring2",
+    "Metadata/Items/Rings/Ring3",
+    "Metadata/Items/Rings/Ring4",
+    "Metadata/Items/Rings/Ring5",
+    "Metadata/Items/Rings/Ring6",
+    "Metadata/Items/Rings/Ring7",
+    "Metadata/Items/Rings/Ring8",
+    "Metadata/Items/Rings/Ring9",
+    "Metadata/Items/Rings/Ring10",
+    "Metadata/Items/Rings/Ring11",
+    "Metadata/Items/Rings/Ring12",
+    "Metadata/Items/Rings/Ring13",
+    "Metadata/Items/Rings/Ring14",
+    "Metadata/Items/Rings/Ring15",
+    "Metadata/Items/Rings/Ring16",
+    "Metadata/Items/Rings/RingAtlas1",
+    "Metadata/Items/Rings/RingAtlas2",
+    "Metadata/Items/Rings/RingAtlas3",
+    "Metadata/Items/Rings/RingAtlas4",
+    "Metadata/Items/Rings/RingAtlas5",
+    "Metadata/Items/Rings/RingK1",
+    "Metadata/Items/Rings/RingK2",
+    "Metadata/Items/Rings/RingK3",
+    "Metadata/Items/Rings/RingK4",
+    "Metadata/Items/Rings/RingK5a",
+    "Metadata/Items/Rings/RingK5b",
+    "Metadata/Items/Rings/RingK5c",
+    "Metadata/Items/Rings/RingR1",
+    "Metadata/Items/Rings/BreachRing",
+    "Metadata/Items/Rings/MirrorRing",
+];
 
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();

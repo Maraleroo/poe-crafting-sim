@@ -103,8 +103,14 @@ impl<'a> Translator<'a> {
         for (position, index) in chosen {
             let entry = &entries[&position];
             let translation = &entry.english.as_deref().unwrap_or_default()[index];
-            lines.push(self.line(owner, entry, translation, stats, &mut conversions)?);
-            placeholders.extend(entry.ids.iter().map(|id| (id.clone(), id.clone())));
+            lines.push(self.line(
+                owner,
+                entry,
+                translation,
+                stats,
+                &mut placeholders,
+                &mut conversions,
+            )?);
         }
         Ok(Display {
             text: lines.join("\n"),
@@ -114,13 +120,15 @@ impl<'a> Translator<'a> {
     }
 
     /// The text of one translation with its placeholders named after the stat identifiers;
-    /// the conversions of its stats go into `conversions`.
+    /// the placeholders go into `placeholders` and the conversions of the stats into
+    /// `conversions`. A stat with the format `ignore` gets neither (ADR 0017).
     fn line(
         &self,
         owner: &str,
         entry: &RawTranslationEntry,
         translation: &RawTranslation,
         stats: &[OutStat],
+        placeholders: &mut BTreeMap<String, String>,
         conversions: &mut BTreeMap<String, OutConversion>,
     ) -> Result<String, String> {
         let mut shown = Vec::new();
@@ -136,12 +144,23 @@ impl<'a> Translator<'a> {
                          (range {min} to {max})"
                     ))
                 }
+                "ignore" if !translation.string.contains(&format!("{{{index}}}")) => {
+                    shown.push(String::new());
+                    continue;
+                }
+                "ignore" => {
+                    return Err(format!(
+                        "{owner}: the stat {id:?} has the format \"ignore\" but the text                          {:?} shows its value",
+                        translation.string
+                    ))
+                }
                 other => {
                     return Err(format!(
                         "{owner}: the stat {id:?} has the unsupported format {other:?}"
                     ))
                 }
             });
+            placeholders.insert(id.clone(), id.clone());
             let handlers = &translation.index_handlers[index];
             if let Some(conversion) = self.conversion(owner, id, handlers)? {
                 conversions.insert(id.clone(), conversion);
@@ -177,15 +196,26 @@ impl<'a> Translator<'a> {
             "int" => {}
             _ => return Err(fail("has a type the converter does not know")),
         }
-        if handler.multiplier.is_some() || handler.addend.is_some() || handler.fixed == Some(true) {
-            return Err(fail("has a multiplier, an addend or a fixed value"));
+        if handler.addend.is_some() || handler.fixed == Some(true) {
+            return Err(fail("has an addend or a fixed value"));
         }
-        let divisor = handler.divisor.ok_or_else(|| fail("has no divisor"))?;
-        if divisor.fract() != 0.0 || divisor < 1.0 || divisor > f64::from(u32::MAX) {
-            return Err(fail("has a divisor that is not a positive whole number"));
-        }
-        let divisor = divisor as u32;
-        if handler.precision.is_none() && !has_finite_decimal(divisor) {
+        let divisor = match (handler.multiplier, handler.divisor) {
+            // RePoE's `negate`: the shown value has the reversed sign (ADR 0017)
+            (Some(-1.0), None) => -1,
+            (Some(_), _) => {
+                return Err(fail(
+                    "has a multiplier other than -1, or a multiplier together with a divisor",
+                ))
+            }
+            (None, None) => return Err(fail("has no divisor")),
+            (None, Some(divisor)) => {
+                if divisor.fract() != 0.0 || divisor < 1.0 || divisor > f64::from(i32::MAX) {
+                    return Err(fail("has a divisor that is not a positive whole number"));
+                }
+                divisor as i32
+            }
+        };
+        if handler.precision.is_none() && !has_finite_decimal(divisor.unsigned_abs()) {
             return Err(fail(
                 "has no precision and a divisor whose quotient has no exact decimal form",
             ));
@@ -313,6 +343,20 @@ mod tests {
         {"ids": ["third"], "English": [
             {"condition": [{"min": null, "max": null, "negated": null}], "format": ["#"],
              "index_handlers": [["by_three"]], "string": "{0} thirds"}]},
+        {"ids": ["reduced"], "English": [
+            {"condition": [{"min": null, "max": null, "negated": null}], "format": ["#"],
+             "index_handlers": [["negate"]], "string": "{0}% reduced"}]},
+        {"ids": ["doubled"], "English": [
+            {"condition": [{"min": null, "max": null, "negated": null}], "format": ["#"],
+             "index_handlers": [["negate_and_double"]], "string": "{0}% reduced"}]},
+        {"ids": ["scaled"], "English": [
+            {"condition": [{"min": null, "max": null, "negated": null}], "format": ["#"],
+             "index_handlers": [["thirty_percent"]], "string": "{0}% scaled"}]},
+        {"ids": ["sockets"], "English": [
+            {"condition": [{"min": 1, "max": 1, "negated": null}], "format": ["ignore"],
+             "index_handlers": [[]], "string": "Has 1 Socket"},
+            {"condition": [{"min": 2, "max": null, "negated": null}], "format": ["ignore"],
+             "index_handlers": [[]], "string": "Has {0} Sockets"}]},
         {"ids": ["negated"], "English": [
             {"condition": [{"min": 1, "max": null, "negated": true}], "format": ["#"],
              "index_handlers": [[]], "string": "{0} negated"}]}
@@ -320,7 +364,10 @@ mod tests {
 
     const HANDLERS: &str = r##"{
         "tq_noop": {"type": "noop"},
-        "by_three": {"type": "int", "divisor": 3.0, "precision": null}
+        "by_three": {"type": "int", "divisor": 3.0, "precision": null},
+        "negate": {"type": "int", "multiplier": -1.0, "divisor": null, "precision": null},
+        "negate_and_double": {"type": "int", "multiplier": -2.0, "divisor": null, "precision": null},
+        "thirty_percent": {"type": "int", "multiplier": 30.0, "divisor": 100.0, "precision": null}
     }"##;
 
     fn stat(id: &str, min: i32, max: i32) -> OutStat {
@@ -356,6 +403,47 @@ mod tests {
     fn a_divisor_without_an_exact_decimal_form_and_without_precision_is_rejected() {
         let message = display(stat("third", 1, 2)).err().unwrap();
         assert!(message.contains("by_three"), "{message}");
+    }
+
+    #[test]
+    fn the_handler_negate_gives_the_divisor_minus_one() {
+        let shown = display(stat("reduced", -15, -15)).unwrap();
+        assert_eq!(shown.text, "{reduced}% reduced");
+        assert_eq!(
+            shown.conversions["reduced"],
+            OutConversion {
+                divisor: -1,
+                precision: None
+            }
+        );
+    }
+
+    #[test]
+    fn any_other_multiplier_is_rejected() {
+        for id in ["doubled", "scaled"] {
+            let message = display(stat(id, 1, 2)).err().unwrap();
+            assert!(
+                message.contains(id) && message.contains("multiplier"),
+                "{message}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_format_ignore_is_accepted_when_the_text_shows_no_value() {
+        let shown = display(stat("sockets", 1, 1)).unwrap();
+        assert_eq!(shown.text, "Has 1 Socket");
+        assert!(shown.placeholders.is_empty());
+        assert!(shown.conversions.is_empty());
+    }
+
+    #[test]
+    fn the_format_ignore_is_rejected_when_the_text_shows_the_value() {
+        let message = display(stat("sockets", 2, 3)).err().unwrap();
+        assert!(
+            message.contains("sockets") && message.contains("ignore"),
+            "{message}"
+        );
     }
 
     #[test]
