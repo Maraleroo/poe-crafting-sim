@@ -1,6 +1,24 @@
+:root {
+  /* Dark palette; the page has no light theme. */
+  --background: #15181d;
+  --surface: #1d2128;
+  --item-surface: #0f1114;
+  --border: #2a2f37;
+  --border-strong: #353b45;
+  --text: #e6e8eb;
+  --text-muted: #9aa3ad;
+  --gold: #e0a84e;
+  --gold-light: #f3d9a8;
+  --magic: #a3b5ff;
+  --error: #ff9b8a;
+  color-scheme: dark;
+}
+
 html {
   /* Keeps the width of the page, and so the wrapping of the buttons, when a scrollbar appears. */
   scrollbar-gutter: stable;
+  background: var(--background);
+  color: var(--text);
 }
 
 body {
@@ -8,6 +26,8 @@ body {
   flex-direction: column;
   min-height: 100vh;
   margin: 0;
+  background: var(--background);
+  color: var(--text);
   font-family: system-ui, sans-serif;
 }
 
@@ -18,7 +38,8 @@ main {
 
 footer {
   padding: 1rem 2rem;
-  border-top: 1px solid #888;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -26,8 +47,25 @@ footer p {
   margin: 0.25rem 0;
 }
 
+/* Gold is the accent for links, and for the hover and focus states of links and buttons. */
+a,
+a:visited {
+  color: var(--gold);
+}
+
+a:hover {
+  color: var(--gold-light);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
 article {
   max-width: 50rem;
+  overflow-wrap: anywhere;
 }
 
 .item {
@@ -36,7 +74,10 @@ article {
   min-width: 16rem;
   max-width: 100%;
   padding: 0.5rem 1rem;
-  border: 1px solid #888;
+  border: 1px solid var(--border-strong);
+  background: var(--item-surface);
+  color: var(--text);
+  overflow-wrap: anywhere;
 }
 
 .item h2,
@@ -53,23 +94,46 @@ article {
 .item ul + ul {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid #888;
+  border-top: 1px solid var(--border-strong);
+}
+
+/* Magic items show their name and all their mods in blue. */
+.item.magic h2,
+.item.magic li {
+  color: var(--magic);
 }
 
 .buttons {
   margin: 0.75rem 0;
 }
 
+/* The border has the same width in every state; only its colour changes on hover. */
 .buttons button {
   margin-right: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
 }
 
+.buttons button:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+
+/* The orb stays clickable; muted text keeps its contrast, which a lower opacity would not. */
 .buttons button.inapplicable {
-  opacity: 0.5;
+  color: var(--text-muted);
   cursor: not-allowed;
+}
+
+.buttons button.inapplicable:hover {
+  color: var(--gold-light);
 }
 
 .message {
   min-height: 1.5rem;
-  color: #b00020;
+  color: var(--error);
 }

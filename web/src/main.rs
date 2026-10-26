@@ -225,7 +225,7 @@ fn listen(
 /// mods of its prefix and suffix.
 fn item_section(document: &Document, item: &ItemView) -> Result<Element, JsValue> {
     let section = element(document, "section", None)?;
-    section.set_class_name("item");
+    section.set_class_name(&format!("item {}", item.rarity_class));
     append(&section, element(document, "h2", Some(&item.name))?)?;
     append(&section, element(document, "p", Some(&item.item_class))?)?;
     append(&section, element(document, "p", Some(&item.rarity))?)?;
