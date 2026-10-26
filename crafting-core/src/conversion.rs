@@ -6,8 +6,9 @@ use serde::Deserialize;
 /// `divisor`. How the result is rounded and shown is defined in `poe-crafting-rules`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct Conversion {
-    /// Divisor, greater than zero.
-    pub divisor: u32,
+    /// Divisor, never zero. A negative divisor reverses the sign; -1 stands for RePoE's handler
+    /// `negate` (ADR 0017).
+    pub divisor: i32,
     /// Number of decimals the game rounds to, or none if the exact value is shown.
     pub precision: Option<u32>,
 }
@@ -25,7 +26,7 @@ impl Conversion {
             Some(precision) if precision > MAX_DECIMALS => {
                 Err(format!("the precision {precision} is above {MAX_DECIMALS}"))
             }
-            None if exact_scale(self.divisor).is_none() => Err(format!(
+            None if exact_scale(self.divisor.unsigned_abs()).is_none() => Err(format!(
                 "without a precision, the divisor {} has no exact decimal form with at most \
                  {MAX_DECIMALS} decimals",
                 self.divisor
@@ -54,7 +55,7 @@ impl Conversion {
                 decimal(scaled, scale)
             }
             None => {
-                let scale = exact_scale(self.divisor).expect("checked above");
+                let scale = exact_scale(self.divisor.unsigned_abs()).expect("checked above");
                 decimal(i64::from(raw) * (scale / i64::from(self.divisor)), scale)
             }
         }
@@ -142,6 +143,28 @@ mod tests {
         assert_eq!(percent().show(-21), "-0.21");
         assert_eq!(per_second().show(-135), "-2.2");
         assert_eq!(per_second().show(-1), "0");
+    }
+
+    #[test]
+    fn a_negative_divisor_reverses_the_sign() {
+        let negate = Conversion {
+            divisor: -1,
+            precision: None,
+        };
+        for (raw, shown) in [(-15, "15"), (15, "-15"), (0, "0")] {
+            assert_eq!(negate.show(raw), shown, "raw value {raw}");
+        }
+        let tenths = Conversion {
+            divisor: -10,
+            precision: Some(1),
+        };
+        assert_eq!(tenths.show(-25), "2.5");
+        let eighths = Conversion {
+            divisor: -8,
+            precision: None,
+        };
+        assert_eq!(eighths.show(-1), "0.125");
+        assert!(eighths.check().is_ok());
     }
 
     #[test]

@@ -5,7 +5,7 @@
 
 use crafting_core::{
     apply_orb_of_alteration, apply_orb_of_transmutation, base_item, can_apply_orb_of_alteration,
-    can_apply_orb_of_transmutation, explicit_mods, valid_mods, BaseItem, CraftError, Currency,
+    can_apply_orb_of_transmutation, mod_pool, valid_mods, BaseItem, CraftError, Currency,
     ExplicitModDefinition, Item, SeededRng,
 };
 
@@ -25,11 +25,13 @@ pub struct Workbench {
 }
 
 impl Workbench {
-    /// A workbench with a new normal item of the start base item and the valid mods of the
-    /// game data for the item level of the page. The same seed gives the same sequence of
-    /// results.
+    /// A workbench with a new normal item of the start base item and the valid mods of that
+    /// base item's own pool for the item level of the page. The same seed gives the same
+    /// sequence of results.
     pub fn new(seed: u64) -> Self {
-        Self::with_pool(seed, valid_mods(&explicit_mods(), ITEM_LEVEL))
+        let pool = mod_pool(START_ITEM_ID)
+            .unwrap_or_else(|| panic!("crafting-core has no pool for {START_ITEM_ID:?}"));
+        Self::with_pool(seed, valid_mods(&pool, ITEM_LEVEL))
     }
 
     /// Like [`Workbench::new`], but with the given pool of valid mods.
@@ -115,7 +117,8 @@ mod tests {
     #[test]
     fn the_pool_holds_the_valid_mods_for_the_item_level_of_the_page() {
         let workbench = Workbench::new(1);
-        assert_eq!(workbench.pool, valid_mods(&explicit_mods(), ITEM_LEVEL));
+        let pool = mod_pool(START_ITEM_ID).expect("the start base item has a pool");
+        assert_eq!(workbench.pool, valid_mods(&pool, ITEM_LEVEL));
     }
 
     #[test]

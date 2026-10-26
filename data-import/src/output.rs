@@ -13,7 +13,7 @@ pub struct OutStat {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct OutConversion {
-    pub divisor: u32,
+    pub divisor: i32,
     pub precision: Option<u32>,
 }
 

@@ -33,9 +33,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crafting_core::{
-    apply_orb_of_alteration, apply_orb_of_transmutation, base_item, explicit_mods, valid_mods,
-    AffixType, BaseItem, Conversion, ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition,
-    Rarity, SeededRng, StatDefinition,
+    apply_orb_of_alteration, apply_orb_of_transmutation, base_item, explicit_mods, mod_pool,
+    valid_mods, AffixType, BaseItem, Conversion, ExplicitMod, ExplicitModDefinition, Item, Mod,
+    ModDefinition, Rarity, SeededRng, StatDefinition,
 };
 use data_import::{convert, Converted, RawFiles};
 use serde_json::{json, Value};
@@ -1192,6 +1192,7 @@ fn invented_raw_files() -> RawSet {
         "per_minute_to_per_second": handler(Some(60.0), None, None, Some(1), None),
         "divide_by_one_hundred": handler(Some(100.0), None, None, None, None),
         "negate": handler(None, Some(-1.0), None, None, None),
+        "30%_of_value": handler(Some(100.0), Some(30.0), None, None, None),
         "per_minute_to_per_second_1dp": handler(Some(60.0), None, None, Some(1), Some(true)),
         "test_plus_one": handler(None, None, Some(1.0), None, None),
         "test_divide_by_two_and_a_half": handler(Some(2.5), None, None, None, None),
@@ -1316,6 +1317,8 @@ fn assert_conversion_fails(label: &str, raw: &RawFiles, base_ids: &[&str], hints
 // taken from the raw files; that they are the converter's output is checked by the
 // developer's second run without a diff. The raw files include `stat_value_handlers.json`
 // (ADR 0016).)
+// (Adapted for AB#185, PO-confirmed: criterion 5 of AB#185 makes the divisor of `Conversion`
+// signed (ADR 0017). The expected divisors are turned into an `i32`.)
 #[test]
 fn ac1_data_holds_the_iron_ring_and_its_full_repoe_pool_with_provenance() {
     // Given the data files, crafting-core and the provenance in data/README.md
@@ -1514,7 +1517,7 @@ fn ac1_data_holds_the_iron_ring_and_its_full_repoe_pool_with_provenance() {
                 (
                     (*stat).to_owned(),
                     Conversion {
-                        divisor: *divisor,
+                        divisor: i32::try_from(*divisor).expect("the divisor fits into an i32"),
                         precision: *precision,
                     },
                 )
@@ -1547,6 +1550,10 @@ fn ac1_data_holds_the_iron_ring_and_its_full_repoe_pool_with_provenance() {
 // `data-import` (ADR 0016). The cases in which the converter must stop are those of ADR 0015,
 // ADR 0016 and the tech lead's plan. That the binary writes nothing after an error is checked
 // by the developer.)
+// (Adapted for AB#185, PO-confirmed: criterion 5 of AB#185 lets the converter turn the
+// handler `negate` into the divisor -1 (ADR 0017). The case "a handler with a multiplier" uses
+// the handler `30%_of_value` from RePoE instead, so a multiplier without a rule still stops
+// the converter.)
 #[test]
 fn ac2_converter_is_deterministic_and_stops_with_a_message_on_unconvertible_values() {
     // Given small invented raw files and the two rings to convert
@@ -1795,12 +1802,12 @@ fn ac2_converter_is_deterministic_and_stops_with_a_message_on_unconvertible_valu
             *at(
                 &mut changed.stat_translations,
                 &[LIFE_ENTRY, "English", "0", "index_handlers", "0"],
-            ) = json!(["negate"]);
+            ) = json!(["30%_of_value"]);
             (
                 "a handler with a multiplier",
                 changed,
                 rings.to_vec(),
-                vec!["negate", "test_maximum_life", "TestLife1"],
+                vec!["30%_of_value", "test_maximum_life", "TestLife1"],
             )
         },
         {
@@ -1866,6 +1873,9 @@ fn ac2_converter_is_deterministic_and_stops_with_a_message_on_unconvertible_valu
 // AB#114 (AC2), which use the pool from crafting-core. Here: the pool at item level 100 is
 // the Iron Ring's whole pool, both orbs reach every mod of it and no other, and the page
 // builds the pool with the item level rule.)
+// (Adapted for AB#185, PO-confirmed: criterion 6 of AB#185 gives every base its own pool
+// (ADR 0017). The Iron Ring's pool comes from `mod_pool` instead of `explicit_mods()`, which
+// now offers the mods of all ring bases, and the page takes it from `mod_pool`.)
 #[test]
 fn ac3_both_orbs_roll_from_the_full_pool_at_item_level_100() {
     // Given the Iron Ring, its pool in the data file and the pool at the UI's item level
@@ -1889,7 +1899,11 @@ fn ac3_both_orbs_roll_from_the_full_pool_at_item_level_100() {
                 )
             })
             .collect();
-    let pool = iron_ring_pool();
+    let pool = valid_mods(
+        &mod_pool(IRON_RING_ID)
+            .unwrap_or_else(|| panic!("crafting-core must offer the pool of {IRON_RING_ID:?}")),
+        UI_ITEM_LEVEL,
+    );
 
     // Then the pool at item level 100 is the Iron Ring's whole pool, with its levels and weights
     let core_pool: BTreeMap<String, (String, u64, u64)> = pool
@@ -1972,10 +1986,7 @@ fn ac3_both_orbs_roll_from_the_full_pool_at_item_level_100() {
         "valid_mods",
         "the page builds the pool with the item level rule",
     );
-    assert_web_src_uses(
-        "explicit_mods",
-        "the page takes the pool from crafting-core",
-    );
+    assert_web_src_uses("mod_pool", "the page takes the pool from crafting-core");
 }
 
 // AC4: „Mod-Texte erscheinen wie im Spiel: mit den gewürfelten Werten, bei mehrzeiligen Mods
@@ -1983,6 +1994,8 @@ fn ac3_both_orbs_roll_from_the_full_pool_at_item_level_100() {
 // umrechnet."
 // (PO: "wie im Spiel" means values, line order and conversion; no reminder texts yet. The
 // display of converted values follows the PO's rules of AC8 and AC9 in "Item basics".)
+// (Adapted for AB#185, PO-confirmed: criterion 5 of AB#185 makes the divisor of `Conversion`
+// signed (ADR 0017). The expected divisors are turned into an `i32`.)
 #[test]
 fn ac4_mod_texts_show_rolled_values_in_game_line_order_with_conversion() {
     let mut rng = SeededRng::new(SEED);
@@ -2090,7 +2103,7 @@ fn ac4_mod_texts_show_rolled_values_in_game_line_order_with_conversion() {
             (
                 (*stat).to_owned(),
                 Conversion {
-                    divisor: *divisor,
+                    divisor: i32::try_from(*divisor).expect("the divisor fits into an i32"),
                     precision: *precision,
                 },
             )

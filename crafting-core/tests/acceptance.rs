@@ -51,3 +51,6 @@ mod story_167;
 
 #[path = "acceptance/story_184.rs"]
 mod story_184;
+
+#[path = "acceptance/story_185.rs"]
+mod story_185;

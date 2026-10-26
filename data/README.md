@@ -12,8 +12,14 @@ export for Path of Exile 1 (ADR 0015, ADR 0016). Do not edit them by hand.
   https://repoe-fork.github.io/poe1.html). The raw files are not in the repository.
 - Game version: 3.29.3.3, as stated on the export page; the files do not carry a version.
 - Download date of the raw files: 2026-10-25.
-- Converted bases: the Iron Ring (`Metadata/Items/Rings/Ring1`), listed in
-  `data-import/src/main.rs`.
+- Converted bases: the 31 ring bases that the PO selected (ADR 0017), listed in
+  `data-import/src/main.rs`: item class Ring and release state `released` in RePoE, without the
+  four Royale variants (`RingRoyale1` to `RingRoyale4`), the six Breach rings (Cryonic,
+  Enthalpic, Formless, Fugitive, Organic and Synaptic Ring), the six Heist rings (Cogwork,
+  Composite, Geodesic, Ratcheting, Helical and Manifold Ring), Golden Hoop and Jet Ring. The
+  "Breach Ring" (`BreachRing`) and the base "Ring" (`MirrorRing`) are included. Two-Stone Ring
+  and Shadowed Ring occur three times each with different implicits; they are separate bases
+  with separate identifiers.
 - Command, with the directory of the six raw files as argument (it overwrites both data files;
   on an error it prints the message and writes nothing):
 
@@ -55,7 +61,10 @@ BaseItem:
 - `tags`: tags of the base
 - `implicits`: list of mods the base item always has
 - `mod_pool`: identifiers (`id` in `mods.json`) of the prefixes and suffixes that can roll on the
-  base: the categories `prefix` and `suffix` of its entry in `mods_by_base.json` (ADR 0016)
+  base: the categories `prefix` and `suffix` of its entry in `mods_by_base.json` (ADR 0016), in
+  the order of `mods.json`. Each base has its own pool (ADR 0017): 28 bases have the 207 mods of
+  the Iron Ring, Bone Ring and Gloam Ring have 23 minion mods more, the Unset Ring 3 mods for
+  socketed gems. `crafting-core` offers the pool of a base as `mod_pool(base_id)`.
 
 Mod (an implicit):
 - `family`: the mod's group
@@ -65,15 +74,18 @@ Mod (an implicit):
   `min`/`max` is the raw range the stat rolls in.
 - `text`: display text with named placeholders, e.g. `Adds {attack_minimum_added_physical_damage}
   to {attack_maximum_added_physical_damage} ...`. A text with several lines separates them with
-  `
-`, in the order of the game.
+  `\n`, in the order of the game. A stat whose text shows no value (RePoE format `ignore`, e.g.
+  "Has 1 Socket" of the Unset Ring) stays in `stats`, but no placeholder names it.
 - `placeholders`: maps each placeholder name in `text` to the identifier of a stat of the same
   mod (the converter names each placeholder after its stat). The text is rendered through the
   identifier, never through the order of the stats.
 - `conversions`: maps the identifier of a stat that the game converts for display to
   `{ "divisor": n, "precision": n or null }`: the shown value is the raw value divided by
   `divisor`, rounded to `precision` decimals; without a precision it is exact
-  (`poe-crafting-rules`, "Item basics"). A stat that is not in the map is shown as rolled.
+  (`poe-crafting-rules`, "Item basics"). The divisor is a whole number that is never zero. A
+  negative divisor reverses the sign: `-1` is RePoE's handler `negate` (a raw -15 is shown as
+  15, in the wording of the game "15% reduced ..."; ADR 0017). A stat that is not in the map is
+  shown as rolled.
 
 ## mods.json
 

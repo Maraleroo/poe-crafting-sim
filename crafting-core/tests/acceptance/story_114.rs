@@ -1024,6 +1024,8 @@ fn ac5_alteration_rule_file_has_the_po_content_and_is_linked() {
 //    mods with level 82 rolled 63 times, mods with level 84 or 85 never."
 // (Besides the text, the rule is checked where the tech lead's plan and ADR 0013 put it:
 // `valid_mods`, the pool both orbs roll from, and the page building its pool with it.)
+// (Adapted for AB#185, PO-confirmed: criterion 6 of AB#185 gives every base its own pool
+// (ADR 0017). The page builds its pool from `mod_pool` instead of `explicit_mods`.)
 #[test]
 fn ac6_item_level_rule_is_written_down_and_decides_the_valid_mods() {
     // --- The PO's text ---
@@ -1161,7 +1163,7 @@ fn ac6_item_level_rule_is_written_down_and_decides_the_valid_mods() {
     }
     // And the page builds the pool for both orbs with the item level rule
     assert_web_src_uses(
-        &["valid_mods", "explicit_mods"],
+        &["valid_mods", "mod_pool"],
         "the page builds the pool of valid mods with the item level rule (ADR 0013)",
     );
 }

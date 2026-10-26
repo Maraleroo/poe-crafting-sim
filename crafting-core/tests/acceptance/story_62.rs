@@ -34,9 +34,9 @@ use std::path::{Path, PathBuf};
 
 use crafting_core::{
     apply_orb_of_transmutation, base_item, can_apply_orb_of_transmutation, currencies,
-    explicit_mods, AffixType, BaseItem, Conversion, CraftError, Currency, CurrencyDefinition,
-    ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition, Rarity, SeededRng,
-    StatDefinition,
+    explicit_mods, mod_pool, AffixType, BaseItem, Conversion, CraftError, Currency,
+    CurrencyDefinition, ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition, Rarity,
+    SeededRng, StatDefinition,
 };
 use serde_json::{Map, Value};
 
@@ -1213,6 +1213,8 @@ fn ac4_mod_pool_lives_in_a_data_file_with_all_table_values() {
 // AC5: „Die Transmutation ist in `crafting-core` umgesetzt, genau nach der Regel des PO
 // (Kriterium 9); `web` zeigt nur an."
 // (The shares of rules 1 to 3 are checked in AC7 and AC8, rule 4 in AC8.)
+// (Adapted for AB#185, PO-confirmed: criterion 6 of AB#185 gives every base its own pool
+// (ADR 0017). The page takes the Iron Ring's pool from `mod_pool` instead of `explicit_mods`.)
 #[test]
 fn ac5_transmutation_lives_in_crafting_core_and_web_only_displays() {
     // Given the mod pool from crafting-core
@@ -1233,7 +1235,7 @@ fn ac5_transmutation_lives_in_crafting_core_and_web_only_displays() {
         &[
             "crafting_core",
             "apply_orb_of_transmutation",
-            "explicit_mods",
+            "mod_pool",
             "can_apply_orb_of_transmutation",
         ],
         "the transmutation happens in crafting-core",
@@ -1341,10 +1343,14 @@ fn ac6_each_click_and_each_page_load_can_give_a_different_result() {
 // full pool from RePoE. The rounded shares of the mini pool no longer apply; the expected
 // shares follow from the weights of the full pool. Renamed from
 // `ac7_frequencies_with_the_mini_pool_follow_the_rule`.)
+// (Adapted for AB#185, PO-confirmed: criterion 6 of AB#185 gives every base its own pool
+// (ADR 0017). The Iron Ring's pool comes from `mod_pool` instead of `explicit_mods()`, which
+// now offers the mods of all ring bases.)
 #[test]
 fn ac7_frequencies_with_the_full_pool_follow_the_rule() {
     // Given the Iron Ring's full mod pool from crafting-core
-    let pool = explicit_mods();
+    let pool = mod_pool(IRON_RING_ID)
+        .unwrap_or_else(|| panic!("crafting-core must offer the pool of {IRON_RING_ID:?}"));
     assert_eq!(pool.len(), POOL_SIZE, "the Iron Ring's pool from RePoE");
     // And with one mod, the share of prefixes from its weights is far from a coin flip, so a
     // 50:50 choice between prefix and suffix fails clearly
