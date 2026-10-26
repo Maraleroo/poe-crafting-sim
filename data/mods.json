@@ -595,6 +595,75 @@
       "conversions": {}
     },
     {
+      "id": "LocalIncreaseSocketedGemUnsetRing1",
+      "name": "Exemplary",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreaseSocketedGemLevel",
+      "level": 2,
+      "tags": [
+        "gem"
+      ],
+      "stats": [
+        {
+          "id": "local_socketed_gem_level_+",
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "text": "+{local_socketed_gem_level_+} to Level of Socketed Gems",
+      "placeholders": {
+        "local_socketed_gem_level_+": "local_socketed_gem_level_+"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LocalIncreaseSocketedGemUnsetRing2",
+      "name": "Quintessential",
+      "affix_type": "prefix",
+      "weight": 1000,
+      "family": "IncreaseSocketedGemLevel",
+      "level": 50,
+      "tags": [
+        "gem"
+      ],
+      "stats": [
+        {
+          "id": "local_socketed_gem_level_+",
+          "min": 2,
+          "max": 2
+        }
+      ],
+      "text": "+{local_socketed_gem_level_+} to Level of Socketed Gems",
+      "placeholders": {
+        "local_socketed_gem_level_+": "local_socketed_gem_level_+"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "LocalIncreaseSocketedGemUnsetRing3",
+      "name": "Flawless",
+      "affix_type": "prefix",
+      "weight": 250,
+      "family": "IncreaseSocketedGemLevel",
+      "level": 76,
+      "tags": [
+        "gem"
+      ],
+      "stats": [
+        {
+          "id": "local_socketed_gem_level_+",
+          "min": 3,
+          "max": 3
+        }
+      ],
+      "text": "+{local_socketed_gem_level_+} to Level of Socketed Gems",
+      "placeholders": {
+        "local_socketed_gem_level_+": "local_socketed_gem_level_+"
+      },
+      "conversions": {}
+    },
+    {
       "id": "IncreasedEnergyShield1",
       "name": "Shining",
       "affix_type": "prefix",
@@ -2046,6 +2115,126 @@
       "placeholders": {
         "attack_maximum_added_lightning_damage": "attack_maximum_added_lightning_damage",
         "attack_minimum_added_lightning_damage": "attack_minimum_added_lightning_damage"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionDamagePercent1",
+      "name": "Baroness's",
+      "affix_type": "prefix",
+      "weight": 600,
+      "family": "MinionDamage",
+      "level": 4,
+      "tags": [
+        "damage",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_damage_+%",
+          "min": 5,
+          "max": 10
+        }
+      ],
+      "text": "Minions deal {minion_damage_+%}% increased Damage",
+      "placeholders": {
+        "minion_damage_+%": "minion_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionDamagePercent2",
+      "name": "Viscountess's",
+      "affix_type": "prefix",
+      "weight": 600,
+      "family": "MinionDamage",
+      "level": 15,
+      "tags": [
+        "damage",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_damage_+%",
+          "min": 11,
+          "max": 20
+        }
+      ],
+      "text": "Minions deal {minion_damage_+%}% increased Damage",
+      "placeholders": {
+        "minion_damage_+%": "minion_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionDamagePercent3",
+      "name": "Marchioness's",
+      "affix_type": "prefix",
+      "weight": 600,
+      "family": "MinionDamage",
+      "level": 30,
+      "tags": [
+        "damage",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_damage_+%",
+          "min": 21,
+          "max": 30
+        }
+      ],
+      "text": "Minions deal {minion_damage_+%}% increased Damage",
+      "placeholders": {
+        "minion_damage_+%": "minion_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionDamagePercent4",
+      "name": "Countess's",
+      "affix_type": "prefix",
+      "weight": 600,
+      "family": "MinionDamage",
+      "level": 60,
+      "tags": [
+        "damage",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_damage_+%",
+          "min": 31,
+          "max": 36
+        }
+      ],
+      "text": "Minions deal {minion_damage_+%}% increased Damage",
+      "placeholders": {
+        "minion_damage_+%": "minion_damage_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionDamagePercent5",
+      "name": "Duchess's",
+      "affix_type": "prefix",
+      "weight": 600,
+      "family": "MinionDamage",
+      "level": 81,
+      "tags": [
+        "damage",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_damage_+%",
+          "min": 37,
+          "max": 42
+        }
+      ],
+      "text": "Minions deal {minion_damage_+%}% increased Damage",
+      "placeholders": {
+        "minion_damage_+%": "minion_damage_+%"
       },
       "conversions": {}
     },
@@ -5135,6 +5324,455 @@
       "text": "{mana_regeneration_rate_+%}% increased Mana Regeneration Rate",
       "placeholders": {
         "mana_regeneration_rate_+%": "mana_regeneration_rate_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionAttackAndCastSpeed1",
+      "name": "of Motivation",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionAttackSpeedAndCastSpeed",
+      "level": 2,
+      "tags": [
+        "attack",
+        "caster",
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_attack_and_cast_speed_+%",
+          "min": 5,
+          "max": 7
+        }
+      ],
+      "text": "Minions have {minion_attack_and_cast_speed_+%}% increased Attack and Cast Speed",
+      "placeholders": {
+        "minion_attack_and_cast_speed_+%": "minion_attack_and_cast_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionAttackAndCastSpeed2",
+      "name": "of Coercion",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionAttackSpeedAndCastSpeed",
+      "level": 15,
+      "tags": [
+        "attack",
+        "caster",
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_attack_and_cast_speed_+%",
+          "min": 8,
+          "max": 10
+        }
+      ],
+      "text": "Minions have {minion_attack_and_cast_speed_+%}% increased Attack and Cast Speed",
+      "placeholders": {
+        "minion_attack_and_cast_speed_+%": "minion_attack_and_cast_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionAttackAndCastSpeed3_",
+      "name": "of Incitation",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionAttackSpeedAndCastSpeed",
+      "level": 30,
+      "tags": [
+        "attack",
+        "caster",
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_attack_and_cast_speed_+%",
+          "min": 11,
+          "max": 13
+        }
+      ],
+      "text": "Minions have {minion_attack_and_cast_speed_+%}% increased Attack and Cast Speed",
+      "placeholders": {
+        "minion_attack_and_cast_speed_+%": "minion_attack_and_cast_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionAttackAndCastSpeed4",
+      "name": "of Agitation",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionAttackSpeedAndCastSpeed",
+      "level": 40,
+      "tags": [
+        "attack",
+        "caster",
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_attack_and_cast_speed_+%",
+          "min": 14,
+          "max": 16
+        }
+      ],
+      "text": "Minions have {minion_attack_and_cast_speed_+%}% increased Attack and Cast Speed",
+      "placeholders": {
+        "minion_attack_and_cast_speed_+%": "minion_attack_and_cast_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionResistancesWeapon1_",
+      "name": "of Adjustment",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionElementalResistances",
+      "level": 8,
+      "tags": [
+        "elemental",
+        "resistance",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_elemental_resistance_%",
+          "min": 11,
+          "max": 15
+        }
+      ],
+      "text": "Minions have +{minion_elemental_resistance_%}% to all Elemental Resistances",
+      "placeholders": {
+        "minion_elemental_resistance_%": "minion_elemental_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionResistancesWeapon2",
+      "name": "of Acclimatisation",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionElementalResistances",
+      "level": 24,
+      "tags": [
+        "elemental",
+        "resistance",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_elemental_resistance_%",
+          "min": 16,
+          "max": 20
+        }
+      ],
+      "text": "Minions have +{minion_elemental_resistance_%}% to all Elemental Resistances",
+      "placeholders": {
+        "minion_elemental_resistance_%": "minion_elemental_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionResistancesWeapon3",
+      "name": "of Adaptation",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionElementalResistances",
+      "level": 37,
+      "tags": [
+        "elemental",
+        "resistance",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_elemental_resistance_%",
+          "min": 21,
+          "max": 23
+        }
+      ],
+      "text": "Minions have +{minion_elemental_resistance_%}% to all Elemental Resistances",
+      "placeholders": {
+        "minion_elemental_resistance_%": "minion_elemental_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionResistancesWeapon4",
+      "name": "of Evolution",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionElementalResistances",
+      "level": 50,
+      "tags": [
+        "elemental",
+        "resistance",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_elemental_resistance_%",
+          "min": 24,
+          "max": 26
+        }
+      ],
+      "text": "Minions have +{minion_elemental_resistance_%}% to all Elemental Resistances",
+      "placeholders": {
+        "minion_elemental_resistance_%": "minion_elemental_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionResistancesWeapon5",
+      "name": "of Metamorphosis",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionElementalResistances",
+      "level": 61,
+      "tags": [
+        "elemental",
+        "resistance",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_elemental_resistance_%",
+          "min": 27,
+          "max": 30
+        }
+      ],
+      "text": "Minions have +{minion_elemental_resistance_%}% to all Elemental Resistances",
+      "placeholders": {
+        "minion_elemental_resistance_%": "minion_elemental_resistance_%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionLifeWeapon1",
+      "name": "of the Administrator",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionLife",
+      "level": 10,
+      "tags": [
+        "resource",
+        "life",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_maximum_life_+%",
+          "min": 13,
+          "max": 17
+        }
+      ],
+      "text": "Minions have {minion_maximum_life_+%}% increased maximum Life",
+      "placeholders": {
+        "minion_maximum_life_+%": "minion_maximum_life_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionLifeWeapon2",
+      "name": "of the Rector",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionLife",
+      "level": 26,
+      "tags": [
+        "resource",
+        "life",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_maximum_life_+%",
+          "min": 18,
+          "max": 22
+        }
+      ],
+      "text": "Minions have {minion_maximum_life_+%}% increased maximum Life",
+      "placeholders": {
+        "minion_maximum_life_+%": "minion_maximum_life_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionLifeWeapon3",
+      "name": "of the Overseer",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionLife",
+      "level": 42,
+      "tags": [
+        "resource",
+        "life",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_maximum_life_+%",
+          "min": 23,
+          "max": 27
+        }
+      ],
+      "text": "Minions have {minion_maximum_life_+%}% increased maximum Life",
+      "placeholders": {
+        "minion_maximum_life_+%": "minion_maximum_life_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionLifeWeapon4__",
+      "name": "of the Taskmaster",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionLife",
+      "level": 58,
+      "tags": [
+        "resource",
+        "life",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_maximum_life_+%",
+          "min": 28,
+          "max": 32
+        }
+      ],
+      "text": "Minions have {minion_maximum_life_+%}% increased maximum Life",
+      "placeholders": {
+        "minion_maximum_life_+%": "minion_maximum_life_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionMovementSpeed1",
+      "name": "of Coordination",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionMovementSpeed",
+      "level": 1,
+      "tags": [
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_movement_speed_+%",
+          "min": 6,
+          "max": 10
+        }
+      ],
+      "text": "Minions have {minion_movement_speed_+%}% increased Movement Speed",
+      "placeholders": {
+        "minion_movement_speed_+%": "minion_movement_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionMovementSpeed2",
+      "name": "of Collaboration",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionMovementSpeed",
+      "level": 15,
+      "tags": [
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_movement_speed_+%",
+          "min": 11,
+          "max": 15
+        }
+      ],
+      "text": "Minions have {minion_movement_speed_+%}% increased Movement Speed",
+      "placeholders": {
+        "minion_movement_speed_+%": "minion_movement_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionMovementSpeed3",
+      "name": "of Integration",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionMovementSpeed",
+      "level": 30,
+      "tags": [
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_movement_speed_+%",
+          "min": 16,
+          "max": 20
+        }
+      ],
+      "text": "Minions have {minion_movement_speed_+%}% increased Movement Speed",
+      "placeholders": {
+        "minion_movement_speed_+%": "minion_movement_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionMovementSpeed4",
+      "name": "of Orchestration",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionMovementSpeed",
+      "level": 40,
+      "tags": [
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_movement_speed_+%",
+          "min": 21,
+          "max": 25
+        }
+      ],
+      "text": "Minions have {minion_movement_speed_+%}% increased Movement Speed",
+      "placeholders": {
+        "minion_movement_speed_+%": "minion_movement_speed_+%"
+      },
+      "conversions": {}
+    },
+    {
+      "id": "MinionMovementSpeed5",
+      "name": "of Harmony",
+      "affix_type": "suffix",
+      "weight": 2000,
+      "family": "MinionMovementSpeed",
+      "level": 55,
+      "tags": [
+        "speed",
+        "minion"
+      ],
+      "stats": [
+        {
+          "id": "minion_movement_speed_+%",
+          "min": 26,
+          "max": 30
+        }
+      ],
+      "text": "Minions have {minion_movement_speed_+%}% increased Movement Speed",
+      "placeholders": {
+        "minion_movement_speed_+%": "minion_movement_speed_+%"
       },
       "conversions": {}
     },
