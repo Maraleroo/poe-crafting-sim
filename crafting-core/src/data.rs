@@ -1,6 +1,6 @@
 //! The game data files, embedded at build time (ADR 0008).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Deserialize;
 
@@ -20,6 +20,30 @@ struct BaseItemsFile {
 #[derive(Deserialize)]
 struct ModsFile {
     mods: Vec<ExplicitModDefinition>,
+}
+
+/// The part of an entry of `base_items.json` that holds the pool: its mods, by `id`.
+#[derive(Deserialize)]
+struct PoolEntry {
+    id: String,
+    #[serde(default)]
+    mod_pool: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct PoolsFile {
+    base_items: Vec<PoolEntry>,
+}
+
+/// The part of an entry of `mods.json` that identifies the mod.
+#[derive(Deserialize)]
+struct ModIdEntry {
+    id: String,
+}
+
+#[derive(Deserialize)]
+struct ModIdsFile {
+    mods: Vec<ModIdEntry>,
 }
 
 #[derive(Deserialize)]
@@ -48,6 +72,16 @@ pub fn explicit_mods() -> Vec<ExplicitModDefinition> {
     parse_mods(MODS_JSON)
 }
 
+/// The mods that can roll on the base item with the given identifier, in the order of the
+/// base's `mod_pool` in the game data (ADR 0017). `None` if there is no such base.
+///
+/// # Panics
+/// If the embedded data is invalid, for example a pool names a mod that does not exist. That is
+/// a programming error, caught by the unit tests.
+pub fn mod_pool(base_id: &str) -> Option<Vec<ExplicitModDefinition>> {
+    parse_mod_pool(BASE_ITEMS_JSON, MODS_JSON, base_id)
+}
+
 /// All currencies of the game data.
 ///
 /// # Panics
@@ -68,6 +102,43 @@ fn parse_mods(json: &str) -> Vec<ExplicitModDefinition> {
         validate_mod(&explicit.name, &explicit.definition);
     }
     file.mods
+}
+
+fn parse_mod_pool(
+    base_items_json: &str,
+    mods_json: &str,
+    base_id: &str,
+) -> Option<Vec<ExplicitModDefinition>> {
+    let pools: PoolsFile = serde_json::from_str(base_items_json)
+        .unwrap_or_else(|error| panic!("invalid base item data: {error}"));
+    let pool = pools
+        .base_items
+        .into_iter()
+        .find(|base| base.id == base_id)?;
+    let ids: ModIdsFile =
+        serde_json::from_str(mods_json).unwrap_or_else(|error| panic!("invalid mod data: {error}"));
+    let mut mods: BTreeMap<String, ExplicitModDefinition> = BTreeMap::new();
+    for (entry, explicit) in ids.mods.into_iter().zip(parse_mods(mods_json)) {
+        assert!(
+            !mods.contains_key(&entry.id),
+            "duplicate mod id {:?} in the mod data",
+            entry.id
+        );
+        mods.insert(entry.id, explicit);
+    }
+    Some(
+        pool.mod_pool
+            .iter()
+            .map(|id| {
+                mods.get(id).cloned().unwrap_or_else(|| {
+                    panic!(
+                        "the pool of {base_id:?} names the mod {id:?}, \
+                         which the mod data does not have"
+                    )
+                })
+            })
+            .collect(),
+    )
 }
 
 fn parse_currencies(json: &str) -> Vec<CurrencyDefinition> {
@@ -270,6 +341,70 @@ mod tests {
         let names: BTreeSet<&str> = mods.iter().map(|m| m.name.as_str()).collect();
         assert_eq!(names.len(), mods.len());
         assert!(mods.iter().all(|m| m.weight > 0));
+    }
+
+    const POOL_BASES: &str = r#"{"base_items": [
+        {"id": "a", "mod_pool": ["m2", "m1"]},
+        {"id": "b", "mod_pool": []},
+        {"id": "c", "mod_pool": ["missing"]}
+    ]}"#;
+
+    fn two_mods(second_id: &str) -> String {
+        let entry = |id: &str, name: &str| {
+            format!(
+                r#"{{"id": "{id}", "name": "{name}", "affix_type": "suffix", "weight": 10,
+                "family": "F", "level": 1, "tags": [],
+                "stats": [{{"id": "s", "min": 1, "max": 2}}],
+                "text": "+{{v}}", "placeholders": {{"v": "s"}}, "conversions": {{}}}}"#
+            )
+        };
+        format!(
+            r#"{{"mods": [{}, {}]}}"#,
+            entry("m1", "One"),
+            entry(second_id, "Two")
+        )
+    }
+
+    fn pool_names(base_id: &str, mods_json: &str) -> Option<Vec<String>> {
+        parse_mod_pool(POOL_BASES, mods_json, base_id)
+            .map(|pool| pool.into_iter().map(|m| m.name).collect())
+    }
+
+    #[test]
+    fn a_pool_lists_its_mods_in_the_order_of_the_base() {
+        assert_eq!(
+            pool_names("a", &two_mods("m2")),
+            Some(vec!["Two".to_owned(), "One".to_owned()])
+        );
+        assert_eq!(pool_names("b", &two_mods("m2")), Some(Vec::new()));
+    }
+
+    #[test]
+    fn an_unknown_base_has_no_pool() {
+        assert_eq!(pool_names("unknown", &two_mods("m2")), None);
+        assert_eq!(mod_pool("does/not/exist"), None);
+    }
+
+    #[test]
+    #[should_panic(expected = "which the mod data does not have")]
+    fn a_pool_with_an_unknown_mod_is_rejected() {
+        pool_names("c", &two_mods("m2"));
+    }
+
+    #[test]
+    #[should_panic(expected = "duplicate mod id")]
+    fn two_mods_with_the_same_id_are_rejected() {
+        pool_names("a", &two_mods("m1"));
+    }
+
+    #[test]
+    fn every_embedded_pool_resolves_and_holds_each_mod_once() {
+        for base in base_items() {
+            let pool = mod_pool(&base.id).expect("the base exists");
+            assert!(!pool.is_empty(), "{}", base.id);
+            let names: BTreeSet<&str> = pool.iter().map(|m| m.name.as_str()).collect();
+            assert_eq!(names.len(), pool.len(), "{}", base.id);
+        }
     }
 
     #[test]

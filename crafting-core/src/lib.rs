@@ -17,7 +17,7 @@ pub use craft::{
     can_apply_orb_of_transmutation, valid_mods, CraftError,
 };
 pub use currency::{Currency, CurrencyDefinition};
-pub use data::{base_item, base_items, currencies, explicit_mods};
+pub use data::{base_item, base_items, currencies, explicit_mods, mod_pool};
 pub use model::{
     AffixType, BaseItem, ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition, Rarity,
     Stat, StatDefinition,
