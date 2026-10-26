@@ -12,6 +12,8 @@ pub struct ItemView {
     pub name: String,
     pub item_class: String,
     pub rarity: String,
+    /// The CSS class for the rarity. It is neither visible text nor a translation.
+    pub rarity_class: &'static str,
     /// The line for the level requirement; none if the item shows no requirement.
     pub requires_level: Option<String>,
     /// One entry per line of the implicit mods.
@@ -26,6 +28,7 @@ impl ItemView {
             name: item.name(),
             item_class: item.base.item_class.clone(),
             rarity: translations.text(rarity_key(item.rarity)).to_owned(),
+            rarity_class: rarity_class(item.rarity),
             requires_level: item.required_level().map(|level| {
                 translations.format("item.requires_level", &[("level", &level.to_string())])
             }),
@@ -56,6 +59,16 @@ fn rarity_key(rarity: Rarity) -> &'static str {
     }
 }
 
+/// CSS class that the stylesheet uses to colour an item by its rarity.
+fn rarity_class(rarity: Rarity) -> &'static str {
+    match rarity {
+        Rarity::Normal => "normal",
+        Rarity::Magic => "magic",
+        Rarity::Rare => "rare",
+        Rarity::Unique => "unique",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
@@ -72,6 +85,26 @@ mod tests {
         for rarity in [Rarity::Normal, Rarity::Magic, Rarity::Rare, Rarity::Unique] {
             assert!(!t.text(rarity_key(rarity)).is_empty());
         }
+    }
+
+    #[test]
+    fn the_rarity_class_follows_the_rarity_of_the_item() {
+        let mut workbench = Workbench::new(1);
+        let t = Translations::english();
+        assert_eq!(ItemView::new(&t, workbench.item()).rarity_class, "normal");
+        workbench.apply(Currency::OrbOfTransmutation).unwrap();
+        assert_eq!(ItemView::new(&t, workbench.item()).rarity_class, "magic");
+    }
+
+    #[test]
+    fn the_four_rarities_have_different_non_empty_classes() {
+        let classes: Vec<&str> = [Rarity::Normal, Rarity::Magic, Rarity::Rare, Rarity::Unique]
+            .into_iter()
+            .map(rarity_class)
+            .collect();
+        assert!(classes.iter().all(|class| !class.is_empty()));
+        let distinct: std::collections::BTreeSet<&str> = classes.iter().copied().collect();
+        assert_eq!(distinct.len(), classes.len());
     }
 
     #[test]
