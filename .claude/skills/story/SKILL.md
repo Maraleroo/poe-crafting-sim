@@ -88,6 +88,8 @@ Copy this checklist into your reply and tick it off as you go:
    the PO.
 7. Report to the PO: what changed, the PR link, open questions. Start the local preview (configuration `web` in
    `.claude/launch.json`).
+   The first build takes a while: before checking the preview, wait until it answers with
+   HTTP 200, for example with a curl loop.
    Whoever checks the local preview loads it with a fresh request that bypasses the browser
    cache, for example with a parameter in the address (such as `?nocache=<random>`) or with
    curl.
