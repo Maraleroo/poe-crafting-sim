@@ -23,6 +23,11 @@ Where the game converts a stat value for display, it computes the converted valu
 Where the game data gives no precision for a conversion, the converted value is shown exactly, without trailing zeros (for example a raw leech value of 21 divided by 100 is shown as 0.21).
 - Evidence: all 100 leech lines in the PO's Bone Ring item texts (poe_orb_test) show values with at most two decimals that equal RePoE's raw values divided by 100, with trailing zeros dropped (0.2, 0.21 … 0.4).
 
+In an extended item text (Ctrl+Alt+C), a value with a range (minimum less than maximum) is followed directly by `(minimum-maximum)`: in round brackets, with a normal hyphen, without spaces. If a mod has several values, this applies to each value separately. A fixed value (minimum equal to maximum) is shown as the value only, without brackets.
+- Evidence: extended copies (Ctrl+Alt+C) from Path of Exile 1, provided by the PO on AB#186. Two-Stone Ring: `+15(12-16)% to Fire and Lightning Resistances`. Steel Ring: `Adds 3(3-4) to 10(10-14) Physical Damage to Attacks`. Iron Ring: `Adds 1 to 4 Physical Damage to Attacks`.
+- PO decision for AB#186: suggestions and lists of bases have no rolled value yet. There the value before the brackets is left out and the range stays: `+(12-16)% to Fire and Lightning Resistances`, `Adds (3-4) to (10-14) Physical Damage to Attacks`. Fixed values stay as above: `Adds 1 to 4 Physical Damage to Attacks`.
+- Not evidenced and not to be guessed: ranges of negated values (reduced) and of values with decimals. They do not occur among the ring implicits; all negated values there are fixed.
+
 ## Item level
 A mod can roll on an item only if the item level is at least the mod's level. Example: a mod with level 60 needs an item level of 60 or higher. Default in the UI: 100.
 - Evidence: the PO's knowledge of the game. Consistent with the PO's measurement on 2026-10-21 (3000 Orbs of Transmutation and Alteration on a Bone Ring of item level 83): mods with level 82 rolled 63 times, mods with level 84 or 85 never.

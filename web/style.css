@@ -137,3 +137,150 @@ article {
   min-height: 1.5rem;
   color: var(--error);
 }
+
+/* The base picker: a field with a panel below it. Nothing is wider than the page. */
+.picker {
+  margin: 0.75rem 0;
+  max-width: 40rem;
+}
+
+.picker label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.picker input {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 24rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--item-surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.picker input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.picker-panel {
+  box-sizing: border-box;
+  margin-top: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+
+.picker-panel[hidden] {
+  display: none;
+}
+
+.path {
+  margin-bottom: 0.75rem;
+}
+
+.path span {
+  margin-right: 0.5rem;
+}
+
+.path button {
+  margin-right: 0.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.path button:hover {
+  color: var(--gold-light);
+}
+
+.path [aria-current] {
+  color: var(--text);
+}
+
+.picker-panel button.slot,
+.picker-panel button.option {
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--item-surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.picker-panel button.slot:hover,
+.picker-panel button.option:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+
+/* Three columns: weapon, helmet, off-hand; ring, body armour, amulet; gloves, belt, boots. */
+.slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.slot {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0.5rem;
+}
+
+.slot.unavailable {
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.slot .note {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.options {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.options li + li {
+  margin-top: 0.5rem;
+}
+
+.picker-panel button.option {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+}
+
+.option .kind {
+  margin-right: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* As in the game, the lines of an implicit text are blue. */
+.option .implicit {
+  display: block;
+  color: var(--magic);
+}
+
+.nothing-found {
+  margin: 0;
+}
+
+.hint {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}

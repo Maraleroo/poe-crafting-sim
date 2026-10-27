@@ -7,6 +7,8 @@ mod i18n;
 mod item_view;
 mod legal;
 mod page;
+mod picker;
+mod picker_ui;
 mod route;
 mod workbench;
 
@@ -17,6 +19,8 @@ use crafting_core::Currency;
 use i18n::Translations;
 use item_view::ItemView;
 use page::PageText;
+use picker::{Catalog, Picker};
+use picker_ui::PickerElements;
 use route::Route;
 use wasm_bindgen::closure::Closure;
 use wasm_bindgen::{JsCast, JsValue};
@@ -104,7 +108,8 @@ fn random_seed(window: &Window) -> Result<u64, JsValue> {
     Ok(u64::from_le_bytes(bytes))
 }
 
-/// The start page: the buttons that change the item, the message and the item on the workbench.
+/// The start page: the base picker, the buttons that change the item, the message and the item
+/// on the workbench.
 struct StartPage {
     document: Document,
     translations: Translations,
@@ -113,11 +118,15 @@ struct StartPage {
     /// The button of each currency, in the order they are shown.
     currencies: Vec<(Currency, HtmlButtonElement)>,
     message: Element,
+    /// The state of the base picker, what it offers and its elements (`picker_ui.rs`).
+    picker: RefCell<Picker>,
+    catalog: Catalog,
+    picker_elements: PickerElements,
 }
 
 impl StartPage {
-    /// Adds the buttons, the message area and the item to `parent` and registers the click
-    /// listeners. The listeners live as long as the page.
+    /// Adds the base picker, the buttons, the message area and the item to `parent` and
+    /// registers the listeners. The listeners live as long as the page.
     fn mount(
         document: &Document,
         parent: &Element,
@@ -125,6 +134,8 @@ impl StartPage {
         seed: u64,
     ) -> Result<(), JsValue> {
         let item_host = element(document, "div", None)?;
+        let picker_elements = picker_ui::build(document, &Translations::english())?;
+        append(parent, picker_elements.root.clone())?;
         let currencies = vec![
             (
                 Currency::OrbOfTransmutation,
@@ -155,7 +166,12 @@ impl StartPage {
             item_host,
             currencies: currencies.clone(),
             message,
+            picker: RefCell::new(Picker::new()),
+            catalog: Catalog::new(),
+            picker_elements,
         });
+        picker_ui::wire(&page)?;
+        page.render_picker()?;
         page.show(None)?;
         for (currency, orb) in &currencies {
             let currency = *currency;

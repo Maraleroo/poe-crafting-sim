@@ -87,6 +87,28 @@ Mod (an implicit):
   15, in the wording of the game "15% reduced ..."; ADR 0017). A stat that is not in the map is
   shown as rolled.
 
+## item_slots.json
+
+Written by hand (ADR 0018). It assigns item classes to equipment slots, so that no item class
+name is written into code.
+
+```
+{ "slots": [ { "id": "ring", "item_classes": ["Rings"] }, ... ] }
+```
+
+- `id`: the identifier of a slot (`Slot::id` in `crafting-core`: `weapon`, `helmet`, `off_hand`,
+  `body_armour`, `amulet`, `ring`, `belt`, `gloves`, `boots`); listed at most once. A slot
+  without an entry has no item classes and is not available.
+- `item_classes`: names of item classes as in the `item_class` field of `base_items.json`. A class
+  belongs to one slot only, and some base must have it.
+
+Every base's item class must belong to a slot. Loading the data stops with an error when the
+file breaks one of these rules. A story that imports bases of a new item class adds the class here.
+
+Loading the data also stops when the implicit of a base has a range that `poe-crafting-rules`
+does not define (a range of a converted or negative value), because the list of bases shows the
+implicit texts with ranges (`ModDefinition::range_text`).
+
 ## mods.json
 
 ```
