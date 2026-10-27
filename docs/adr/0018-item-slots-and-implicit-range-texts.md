@@ -16,9 +16,11 @@ classes belong to which slot, without writing a game text such as "Rings" into c
 
 Bases with the same name (three Two-Stone Rings, three Shadowed Rings) are told apart by their
 implicit text. The PO decided that suggestions and the list show every base's implicit text
-with its value ranges, the way the game shows ranges (Ctrl+Alt+C), for example
-"+(12–16)% to Fire and Lightning Resistances". `Mod::display_text` only renders rolled values,
-and the item of a base does not exist yet when the list is shown.
+with its value ranges. `poe-crafting-rules` ("Item basics") defines how the game shows ranges
+in an extended item text (Ctrl+Alt+C) and, by the PO's decision for AB#186, how a range without
+a rolled value is shown, for example "+(12-16)% to Fire and Lightning Resistances", while a
+fixed value is shown alone ("Adds 1 to 4 Physical Damage to Attacks"). `Mod::display_text`
+only renders rolled values, and the item of a base does not exist yet when the list is shown.
 
 ## Decision
 - Slots are a model of `crafting-core`, like currencies (ADR 0011): an enum `Slot` with one
@@ -37,9 +39,14 @@ and the item of a base does not exist yet when the list is shown.
 - A slot is available when `base_items()` of the slot is not empty. The page needs no list of
   available slots of its own.
 - `ModDefinition::range_text()` returns the display text of a mod definition with every
-  placeholder replaced by the stat's range, as `poe-crafting-rules` defines it. Each end of a
-  range is converted with the stat's `Conversion`, as for rolled values (ADR 0016, ADR 0017).
-  A text without placeholders stays as it is; a text with several lines keeps its line breaks.
+  placeholder replaced as `poe-crafting-rules` defines it for a text without a rolled value: a
+  range as `(minimum-maximum)`, a fixed value alone. A fixed value is converted with the stat's
+  `Conversion`, as a rolled value is (ADR 0016, ADR 0017), for example the negated values of
+  the Dusk Ring. A text without placeholders stays as it is; a text with several lines keeps
+  its line breaks.
+- The rule leaves ranges of negated values and of values with decimals open, so they are not
+  guessed: `range_text` panics on a range of a stat with a conversion, and loading the data
+  panics on a base whose implicit has one. No ring implicit has one.
 - The search, the suggestions, the path and the open or closed state of the picker are plain
   Rust in `web` that is tested without a browser (ADR 0010). Matching and ordering are UI
   behaviour, not crafting logic, so they stay out of `crafting-core`.
@@ -65,5 +72,6 @@ and the item of a base does not exist yet when the list is shown.
   that imports it; otherwise loading the data panics.
 - The search and the slot layout are not covered by `cargo test` in `crafting-core`; they are
   checked by unit tests in `web` and by the PO in the local preview (ADR 0004).
-- Ranges of negated or divided stats do not occur in the ring implicits. How the game orders
-  the two ends of a negated range is left to the story that first needs it.
+- A base whose implicit has a range of a negated or divided stat (for example a Coral Amulet,
+  whose life regeneration is stored per minute) stops the data loading until the PO adds the
+  rule for such ranges to `poe-crafting-rules`.
