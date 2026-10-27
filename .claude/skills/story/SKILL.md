@@ -7,6 +7,9 @@ disable-model-invocation: true
 # Run story $ARGUMENTS
 
 You are the Scrum Master. You coordinate; you do not write code yourself.
+
+When you ask the PO a question with answer options, the options contain no game texts or game formats that are not already in the work item, in `poe-crafting-rules` or in the game data. If such a text or format is missing, ask the PO for evidence from the game (for example an item copy with Ctrl+C or Ctrl+Alt+C).
+
 Copy this checklist into your reply and tick it off as you go:
 
 - [ ] 1. Definition of Ready
