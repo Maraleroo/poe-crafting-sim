@@ -97,9 +97,9 @@ article {
   border-top: 1px solid var(--border-strong);
 }
 
-/* Magic items show their name and all their mods in blue. */
-.item.magic h2,
-.item.magic li {
+/* As in the game, every mod line is blue, whatever the rarity; the rarity only colours the name. */
+.item li,
+.item.magic h2 {
   color: var(--magic);
 }
 
