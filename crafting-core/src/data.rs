@@ -7,10 +7,12 @@ use serde::Deserialize;
 use crate::craft::CraftError;
 use crate::currency::CurrencyDefinition;
 use crate::model::{BaseItem, ExplicitModDefinition, ModDefinition};
+use crate::slot::Slot;
 
 const BASE_ITEMS_JSON: &str = include_str!("../../data/base_items.json");
 const MODS_JSON: &str = include_str!("../../data/mods.json");
 const CURRENCIES_JSON: &str = include_str!("../../data/currencies.json");
+const ITEM_SLOTS_JSON: &str = include_str!("../../data/item_slots.json");
 
 #[derive(Deserialize)]
 struct BaseItemsFile {
@@ -44,6 +46,18 @@ struct ModIdEntry {
 #[derive(Deserialize)]
 struct ModIdsFile {
     mods: Vec<ModIdEntry>,
+}
+
+/// An entry of `item_slots.json`: the item classes of a slot.
+#[derive(Deserialize)]
+struct SlotEntry {
+    id: String,
+    item_classes: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct SlotsFile {
+    slots: Vec<SlotEntry>,
 }
 
 #[derive(Deserialize)]
@@ -88,6 +102,61 @@ pub fn mod_pool(base_id: &str) -> Option<Vec<ExplicitModDefinition>> {
 /// If the embedded data is invalid. That is a programming error, caught by the unit tests.
 pub fn currencies() -> Vec<CurrencyDefinition> {
     parse_currencies(CURRENCIES_JSON)
+}
+
+/// The item classes of the slot with the given identifier (`Slot::id`): those of its entry in
+/// `item_slots.json`, none if it has no entry.
+///
+/// # Panics
+/// If the embedded data is invalid. That is a programming error, caught by the unit tests.
+pub(crate) fn slot_item_classes(slot_id: &str) -> Vec<String> {
+    let mut by_slot = parse_item_slots(ITEM_SLOTS_JSON, &base_items());
+    by_slot.remove(slot_id).unwrap_or_default()
+}
+
+/// Reads `item_slots.json` and checks it against the bases: every slot id is known and listed
+/// once, no item class belongs to two slots or is unknown to the bases, and the item class of
+/// every base belongs to a slot.
+fn parse_item_slots(json: &str, bases: &[BaseItem]) -> BTreeMap<String, Vec<String>> {
+    let file: SlotsFile = serde_json::from_str(json)
+        .unwrap_or_else(|error| panic!("invalid item slot data: {error}"));
+    let mut by_slot: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut slot_of_class: BTreeMap<String, String> = BTreeMap::new();
+    for entry in file.slots {
+        assert!(
+            Slot::ALL.iter().any(|slot| slot.id() == entry.id),
+            "item slots: {:?} is not a slot",
+            entry.id
+        );
+        for class in &entry.item_classes {
+            assert!(
+                bases.iter().any(|base| base.item_class == *class),
+                "item slots: no base item has the item class {class:?}"
+            );
+            if let Some(other) = slot_of_class.insert(class.clone(), entry.id.clone()) {
+                panic!(
+                    "item slots: the item class {class:?} is listed for {other:?} and {:?}",
+                    entry.id
+                );
+            }
+        }
+        assert!(
+            by_slot
+                .insert(entry.id.clone(), entry.item_classes)
+                .is_none(),
+            "item slots: the slot {:?} is listed twice",
+            entry.id
+        );
+    }
+    for base in bases {
+        assert!(
+            slot_of_class.contains_key(&base.item_class),
+            "item slots: the item class {:?} of {:?} belongs to no slot",
+            base.item_class,
+            base.id
+        );
+    }
+    by_slot
 }
 
 fn parse_mods(json: &str) -> Vec<ExplicitModDefinition> {
@@ -175,6 +244,11 @@ fn parse_base_items(json: &str) -> Vec<BaseItem> {
         assert!(ids.insert(&base.id), "duplicate base item {:?}", base.id);
         for implicit in &base.implicits {
             validate_mod(&base.id, implicit);
+            // The text of a base is shown without rolled values (ADR 0018). The rule does not
+            // define every range, so the data must not hold one it does not define.
+            if let Err(message) = implicit.try_range_text() {
+                panic!("{}: {message}", base.id);
+            }
         }
     }
     file.base_items
@@ -405,6 +479,89 @@ mod tests {
             let names: BTreeSet<&str> = pool.iter().map(|m| m.name.as_str()).collect();
             assert_eq!(names.len(), pool.len(), "{}", base.id);
         }
+    }
+
+    fn invented_base(id: &str, item_class: &str) -> BaseItem {
+        BaseItem {
+            id: id.to_owned(),
+            name: id.to_owned(),
+            item_class: item_class.to_owned(),
+            required_level: 0,
+            tags: Vec::new(),
+            implicits: Vec::new(),
+        }
+    }
+
+    fn invented_bases() -> Vec<BaseItem> {
+        vec![invented_base("a", "Rings"), invented_base("b", "Amulets")]
+    }
+
+    #[test]
+    fn item_slots_assign_item_classes_to_slots() {
+        let json = r#"{"slots": [
+            {"id": "ring", "item_classes": ["Rings"]},
+            {"id": "amulet", "item_classes": ["Amulets"]}
+        ]}"#;
+        let by_slot = parse_item_slots(json, &invented_bases());
+        assert_eq!(by_slot["ring"], vec!["Rings".to_owned()]);
+        assert_eq!(by_slot["amulet"], vec!["Amulets".to_owned()]);
+        assert!(!by_slot.contains_key("boots"));
+    }
+
+    #[test]
+    #[should_panic(expected = "is not a slot")]
+    fn an_unknown_slot_is_rejected() {
+        let json = r#"{"slots": [{"id": "tail", "item_classes": []}]}"#;
+        parse_item_slots(json, &[]);
+    }
+
+    #[test]
+    #[should_panic(expected = "listed twice")]
+    fn a_repeated_slot_is_rejected() {
+        let json = r#"{"slots": [
+            {"id": "ring", "item_classes": ["Rings"]},
+            {"id": "ring", "item_classes": []}
+        ]}"#;
+        parse_item_slots(json, &invented_bases());
+    }
+
+    #[test]
+    #[should_panic(expected = "is listed for")]
+    fn an_item_class_of_two_slots_is_rejected() {
+        let json = r#"{"slots": [
+            {"id": "ring", "item_classes": ["Rings"]},
+            {"id": "amulet", "item_classes": ["Rings", "Amulets"]}
+        ]}"#;
+        parse_item_slots(json, &invented_bases());
+    }
+
+    #[test]
+    #[should_panic(expected = "no base item has the item class")]
+    fn an_item_class_without_a_base_is_rejected() {
+        let json = r#"{"slots": [{"id": "belt", "item_classes": ["Belts"]}]}"#;
+        parse_item_slots(json, &[]);
+    }
+
+    #[test]
+    #[should_panic(expected = "belongs to no slot")]
+    fn a_base_whose_item_class_belongs_to_no_slot_is_rejected() {
+        let json = r#"{"slots": [{"id": "ring", "item_classes": ["Rings"]}]}"#;
+        parse_item_slots(json, &invented_bases());
+    }
+
+    #[test]
+    fn the_embedded_item_slots_are_valid() {
+        assert_eq!(slot_item_classes("ring"), vec!["Rings".to_owned()]);
+        assert!(slot_item_classes("belt").is_empty());
+    }
+
+    #[test]
+    #[should_panic(expected = "not defined by poe-crafting-rules")]
+    fn a_base_whose_implicit_has_an_undefined_range_is_rejected() {
+        parse_base_items(&VALID.replace(
+            r#""conversions": {}"#,
+            r#""conversions": {"s": {"divisor": 100, "precision": null}}"#,
+        ));
     }
 
     #[test]

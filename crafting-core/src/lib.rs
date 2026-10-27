@@ -10,6 +10,7 @@ mod currency;
 mod data;
 mod model;
 mod rng;
+mod slot;
 
 pub use conversion::Conversion;
 pub use craft::{
@@ -23,6 +24,7 @@ pub use model::{
     Stat, StatDefinition,
 };
 pub use rng::{Rng, SeededRng};
+pub use slot::Slot;
 
 /// Version of the `crafting-core` package, for example `"0.1.0"`.
 pub fn version() -> &'static str {

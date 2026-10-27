@@ -44,6 +44,65 @@ pub struct ModDefinition {
     pub conversions: BTreeMap<String, Conversion>,
 }
 
+impl ModDefinition {
+    /// The display text of the definition without a rolled value (ADR 0018), as
+    /// `poe-crafting-rules` defines it for suggestions and lists of bases: a stat with a range
+    /// is shown as `(minimum-maximum)` with a normal hyphen, a fixed value alone, converted as
+    /// the game does where the mod has a conversion for the stat. Line breaks stay, a text
+    /// without placeholders is unchanged.
+    ///
+    /// # Panics
+    /// If the rule does not define the text: a range of a stat with a conversion, or a range of
+    /// negative values. Or if a placeholder names a stat the mod does not have. That is an
+    /// error in the data.
+    pub fn range_text(&self) -> String {
+        self.try_range_text()
+            .unwrap_or_else(|message| panic!("{message}"))
+    }
+
+    /// Like `range_text`, but returns the reason instead of panicking.
+    pub(crate) fn try_range_text(&self) -> Result<String, String> {
+        let mut out = String::new();
+        let mut rest = self.text.as_str();
+        while let Some(start) = rest.find('{') {
+            out.push_str(&rest[..start]);
+            let end = start
+                + rest[start..]
+                    .find('}')
+                    .ok_or_else(|| "unclosed placeholder in the mod text".to_owned())?;
+            let name = &rest[start + 1..end];
+            let stat_id = self
+                .placeholders
+                .get(name)
+                .ok_or_else(|| format!("the mod text uses the unmapped placeholder {name:?}"))?;
+            let stat = self
+                .stats
+                .iter()
+                .find(|stat| stat.id == *stat_id)
+                .ok_or_else(|| {
+                    format!("placeholder {name:?} names the missing stat {stat_id:?}")
+                })?;
+            let conversion = self.conversions.get(stat_id);
+            if stat.min < stat.max {
+                if conversion.is_some() || stat.min < 0 {
+                    return Err(format!(
+                        "the range of stat {stat_id:?} is not defined by poe-crafting-rules:                          ranges of converted or negative values"
+                    ));
+                }
+                out.push_str(&format!("({}-{})", stat.min, stat.max));
+            } else {
+                match conversion {
+                    Some(conversion) => out.push_str(&conversion.show(stat.min)),
+                    None => out.push_str(&stat.min.to_string()),
+                }
+            }
+            rest = &rest[end + 1..];
+        }
+        out.push_str(rest);
+        Ok(out)
+    }
+}
+
 /// Whether a mod is a prefix or a suffix.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -303,6 +362,118 @@ mod tests {
         assert_eq!(item.rarity, Rarity::Normal);
         assert_eq!(item.base, base);
         assert_eq!(item.implicits.len(), 1);
+    }
+
+    fn range_text_of(stats: Vec<StatDefinition>) -> String {
+        definition(stats).range_text()
+    }
+
+    #[test]
+    fn range_text_shows_a_range_in_brackets_and_a_fixed_value_alone() {
+        let ranged = vec![
+            StatDefinition {
+                id: LOW.to_owned(),
+                min: 3,
+                max: 4,
+            },
+            stat(HIGH, 4),
+        ];
+        assert_eq!(
+            range_text_of(ranged),
+            "Adds (3-4) to 4 Physical Damage to Attacks"
+        );
+    }
+
+    #[test]
+    fn range_text_finds_stats_by_identifier_and_keeps_line_breaks() {
+        let mut multi = definition(vec![
+            stat(HIGH, 12),
+            StatDefinition {
+                id: LOW.to_owned(),
+                min: 1,
+                max: 2,
+            },
+        ]);
+        multi.text.push_str(
+            "
+Second line",
+        );
+        assert_eq!(
+            multi.range_text(),
+            "Adds (1-2) to 12 Physical Damage to Attacks
+Second line"
+        );
+    }
+
+    #[test]
+    fn range_text_converts_a_fixed_value_like_a_rolled_one() {
+        let mut converted = definition(vec![stat(LOW, 135), stat(HIGH, -15)]);
+        converted.conversions.insert(
+            LOW.to_owned(),
+            Conversion {
+                divisor: 60,
+                precision: Some(1),
+            },
+        );
+        converted.conversions.insert(
+            HIGH.to_owned(),
+            Conversion {
+                divisor: -1,
+                precision: None,
+            },
+        );
+        assert_eq!(
+            converted.range_text(),
+            "Adds 2.2 to 15 Physical Damage to Attacks"
+        );
+    }
+
+    #[test]
+    fn range_text_leaves_a_text_without_placeholders_unchanged() {
+        let mut plain = definition(vec![stat(LOW, 1)]);
+        plain.text = "No placeholders".to_owned();
+        plain.placeholders.clear();
+        assert_eq!(plain.range_text(), "No placeholders");
+    }
+
+    #[test]
+    #[should_panic(expected = "not defined by poe-crafting-rules")]
+    fn range_text_does_not_guess_the_range_of_a_converted_stat() {
+        let mut converted = definition(vec![
+            stat(LOW, 1),
+            StatDefinition {
+                id: HIGH.to_owned(),
+                min: 60,
+                max: 120,
+            },
+        ]);
+        converted.conversions.insert(
+            HIGH.to_owned(),
+            Conversion {
+                divisor: 60,
+                precision: Some(1),
+            },
+        );
+        converted.range_text();
+    }
+
+    #[test]
+    #[should_panic(expected = "not defined by poe-crafting-rules")]
+    fn range_text_does_not_guess_the_range_of_negative_values() {
+        range_text_of(vec![
+            stat(LOW, 1),
+            StatDefinition {
+                id: HIGH.to_owned(),
+                min: -5,
+                max: -3,
+            },
+        ]);
+    }
+
+    #[test]
+    #[should_panic(expected = "missing stat")]
+    fn range_text_of_a_placeholder_without_a_stat_is_a_programming_error() {
+        range_text_of(vec![stat(LOW, 3)]);
     }
 
     fn explicit(name: &str, affix_type: AffixType) -> ExplicitMod {
