@@ -39,6 +39,10 @@ Lossless copy of work item fields (UTF-8):
   error output is not hidden.
 - Use this command for every verbatim copy from a work item.
 - iconv cannot restore characters outside Windows-1252.
+- All comments of a work item are read with:
+  `az devops invoke --area wit --resource comments --route-parameters project=poe-crafting-sim workItemId=<id> --api-version 7.1-preview --out-file <file>`
+  The file is UTF-8. The same rule as for the other fetches applies: every fetch uses a new file name.
+- Whoever evaluates the file with Python reads it with `encoding='utf-8'` and writes the result to a file with `encoding='utf-8'` instead of printing it to the console.
 
 Rules:
 - Only create Tasks. Never create User Stories, Features or Epics.
