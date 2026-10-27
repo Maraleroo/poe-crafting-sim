@@ -16,6 +16,13 @@ const START_ITEM_ID: &str = "Metadata/Items/Rings/Ring1";
 /// The page cannot change it yet (ADR 0013).
 const ITEM_LEVEL: u32 = 100;
 
+/// The valid mods of the base item's own pool for the item level of the page.
+fn valid_pool(base_id: &str) -> Vec<ExplicitModDefinition> {
+    let pool =
+        mod_pool(base_id).unwrap_or_else(|| panic!("crafting-core has no pool for {base_id:?}"));
+    valid_mods(&pool, ITEM_LEVEL)
+}
+
 /// The item, its base and the generator that serves every roll of the page.
 pub struct Workbench {
     base: BaseItem,
@@ -29,9 +36,7 @@ impl Workbench {
     /// base item's own pool for the item level of the page. The same seed gives the same
     /// sequence of results.
     pub fn new(seed: u64) -> Self {
-        let pool = mod_pool(START_ITEM_ID)
-            .unwrap_or_else(|| panic!("crafting-core has no pool for {START_ITEM_ID:?}"));
-        Self::with_pool(seed, valid_mods(&pool, ITEM_LEVEL))
+        Self::with_pool(seed, valid_pool(START_ITEM_ID))
     }
 
     /// Like [`Workbench::new`], but with the given pool of valid mods.
@@ -89,6 +94,20 @@ impl Workbench {
         self.item = Item::new(&self.base, &mut self.rng);
     }
 
+    /// Chooses the base item with the given identifier: the base, its pool of valid mods for
+    /// the item level of the page and the item are replaced, and the item becomes a new normal
+    /// item of the base, as after [`Workbench::reset`] (ADR 0018).
+    ///
+    /// # Panics
+    /// If `crafting-core` has no such base item. The identifiers come from `crafting-core`, so
+    /// that is a programming error.
+    pub fn select(&mut self, base_id: &str) {
+        self.base = base_item(base_id)
+            .unwrap_or_else(|| panic!("crafting-core has no base item {base_id:?}"));
+        self.pool = valid_pool(base_id);
+        self.reset();
+    }
+
     fn check(&self, currency: Currency) -> Result<(), CraftError> {
         match currency {
             Currency::OrbOfTransmutation => can_apply_orb_of_transmutation(&self.item),
@@ -100,7 +119,7 @@ impl Workbench {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crafting_core::Rarity;
+    use crafting_core::{Rarity, Slot};
 
     const TRANSMUTATION: Currency = Currency::OrbOfTransmutation;
     const ALTERATION: Currency = Currency::OrbOfAlteration;
@@ -253,6 +272,69 @@ mod tests {
         };
         let first = run(0);
         assert!((1..50).any(|seed| run(seed) != first));
+    }
+
+    /// The base items of the ring slot other than the start base item.
+    fn other_bases() -> Vec<BaseItem> {
+        Slot::Ring
+            .base_items()
+            .into_iter()
+            .filter(|base| base.id != START_ITEM_ID)
+            .collect()
+    }
+
+    #[test]
+    fn select_gives_a_normal_item_of_the_chosen_base_with_its_own_pool() {
+        for base in other_bases() {
+            let mut workbench = Workbench::new(1);
+            workbench.apply(TRANSMUTATION).unwrap();
+            workbench.select(&base.id);
+            assert_eq!(workbench.item().base, base, "{}", base.id);
+            assert_eq!(workbench.item().rarity, Rarity::Normal, "{}", base.id);
+            assert_eq!(workbench.item().implicits.len(), base.implicits.len());
+            assert_eq!(workbench.pool, valid_pool(&base.id), "{}", base.id);
+            assert!(workbench.applicable(TRANSMUTATION));
+            assert!(!workbench.applicable(ALTERATION));
+        }
+    }
+
+    #[test]
+    fn select_uses_the_pool_of_the_chosen_base() {
+        let own_mods =
+            |id: &str| -> Vec<String> { valid_pool(id).into_iter().map(|m| m.name).collect() };
+        let start = own_mods(START_ITEM_ID);
+        let base = other_bases()
+            .into_iter()
+            .find(|base| own_mods(&base.id) != start)
+            .expect("a ring base has a pool of its own");
+        let mut workbench = Workbench::new(1);
+        workbench.select(&base.id);
+        let chosen = own_mods(&base.id);
+        for _ in 0..200 {
+            workbench.reset();
+            workbench.apply(TRANSMUTATION).unwrap();
+            let item = workbench.item();
+            for explicit in item.prefix.iter().chain(&item.suffix) {
+                assert!(chosen.contains(&explicit.name));
+            }
+        }
+    }
+
+    #[test]
+    fn reset_after_select_keeps_the_chosen_base() {
+        let base = other_bases().remove(0);
+        let mut workbench = Workbench::new(1);
+        workbench.select(&base.id);
+        workbench.apply(TRANSMUTATION).unwrap();
+        workbench.reset();
+        assert_eq!(workbench.item().base, base);
+        assert_eq!(workbench.item().rarity, Rarity::Normal);
+    }
+
+    #[test]
+    #[should_panic(expected = "has no base item")]
+    fn selecting_an_unknown_base_is_a_programming_error() {
+        Workbench::new(1).select("does/not/exist");
     }
 
     #[test]
