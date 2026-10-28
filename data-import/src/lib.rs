@@ -108,6 +108,53 @@ fn check_unique_names(mods: &[OutMod]) -> Result<(), String> {
     Ok(())
 }
 
+/// The start of the implicit line of a damage type lock (ADR 0020).
+const LOCK_LINE_START: &str = "Cannot roll Modifiers of Non-";
+
+/// The end of the implicit line of a damage type lock.
+const LOCK_LINE_END: &str = " Damage Types";
+
+/// The damage types of the PO's rule (`poe-crafting-rules`, "Breach rings"), by the name in the
+/// line of the lock. The tag of a damage type is its name in lower case.
+const DAMAGE_TYPES: [&str; 5] = ["Physical", "Lightning", "Cold", "Fire", "Chaos"];
+
+/// The tag of the damage type that the line "Cannot roll Modifiers of Non-<damage type> Damage
+/// Types" in the implicits of a base names, `None` if there is no such line.
+///
+/// # Errors
+/// If a line starts like that but does not name one of the five damage types, or if the implicits
+/// have more than one such line.
+fn damage_type_lock(
+    base_id: &str,
+    implicits: &[OutModDefinition],
+) -> Result<Option<String>, String> {
+    let mut lock = None;
+    for line in implicits
+        .iter()
+        .flat_map(|implicit| implicit.text.split('\n'))
+    {
+        let Some(rest) = line.strip_prefix(LOCK_LINE_START) else {
+            continue;
+        };
+        let name = rest
+            .strip_suffix(LOCK_LINE_END)
+            .filter(|name| DAMAGE_TYPES.contains(name))
+            .ok_or_else(|| {
+                format!(
+                    "the base item {base_id}: the line {line:?} does not name one of the \
+                     damage types {DAMAGE_TYPES:?}"
+                )
+            })?;
+        if lock.replace(name.to_lowercase()).is_some() {
+            return Err(format!(
+                "the base item {base_id} has more than one line that starts with \
+                 {LOCK_LINE_START:?}"
+            ));
+        }
+    }
+    Ok(lock)
+}
+
 /// The parsed raw files that the conversion reads.
 struct Converter<'a> {
     base_items: RawMap<'a>,
@@ -140,7 +187,8 @@ impl Converter<'_> {
             .implicits
             .iter()
             .map(|mod_id| self.definition(mod_id))
-            .collect::<Result<_, _>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
+        let damage_type_lock = damage_type_lock(id, &implicits)?;
         let out = OutBase {
             id: id.to_owned(),
             name: base.name,
@@ -148,6 +196,7 @@ impl Converter<'_> {
             required_level: base.requirements.and_then(|r| r.level).unwrap_or(0),
             tags: base.tags,
             implicits,
+            damage_type_lock,
             mod_pool: weights.keys().cloned().collect(),
         };
         Ok((out, weights))
@@ -274,5 +323,88 @@ impl Converter<'_> {
             placeholders: display.placeholders,
             conversions: display.conversions,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn implicit(text: &str) -> OutModDefinition {
+        OutModDefinition {
+            family: "Invented".to_owned(),
+            level: 1,
+            tags: Vec::new(),
+            stats: Vec::new(),
+            text: text.to_owned(),
+            placeholders: BTreeMap::new(),
+            conversions: BTreeMap::new(),
+        }
+    }
+
+    fn lock(texts: &[&str]) -> Result<Option<String>, String> {
+        let implicits: Vec<OutModDefinition> = texts.iter().map(|text| implicit(text)).collect();
+        damage_type_lock("invented", &implicits)
+    }
+
+    #[test]
+    fn each_of_the_five_damage_types_gives_its_tag() {
+        for name in DAMAGE_TYPES {
+            let line = format!("{LOCK_LINE_START}{name}{LOCK_LINE_END}");
+            assert_eq!(lock(&[&line]), Ok(Some(name.to_lowercase())));
+        }
+    }
+
+    #[test]
+    fn the_line_is_found_after_other_lines_and_in_another_implicit() {
+        let line = "Cannot roll Modifiers of Non-Cold Damage Types";
+        assert_eq!(
+            lock(&[&format!("+2% to maximum Cold Resistance\n{line}")]),
+            Ok(Some("cold".to_owned()))
+        );
+        assert_eq!(
+            lock(&["+2% to maximum Cold Resistance", line]),
+            Ok(Some("cold".to_owned()))
+        );
+    }
+
+    #[test]
+    fn a_base_without_the_line_has_no_lock() {
+        assert_eq!(lock(&[]), Ok(None));
+        assert_eq!(lock(&["(5-7)% increased Global Defences"]), Ok(None));
+        assert_eq!(lock(&["Has 1 Socket\nCannot roll Modifiers"]), Ok(None));
+    }
+
+    #[test]
+    fn a_line_with_an_unknown_damage_type_is_rejected() {
+        for text in [
+            "Cannot roll Modifiers of Non-Elemental Damage Types",
+            "Cannot roll Modifiers of Non-cold Damage Types",
+            "Cannot roll Modifiers of Non- Damage Types",
+            "Cannot roll Modifiers of Non-Cold Damage",
+            "Cannot roll Modifiers of Non-Cold Damage Types.",
+        ] {
+            let message = lock(&[text]).expect_err(text);
+            assert!(message.contains("invented"), "{message}");
+            assert!(message.contains(text), "{message}");
+        }
+    }
+
+    #[test]
+    fn two_lines_are_rejected_also_with_the_same_damage_type() {
+        for texts in [
+            ["Cannot roll Modifiers of Non-Cold Damage Types"; 2],
+            [
+                "Cannot roll Modifiers of Non-Cold Damage Types",
+                "Cannot roll Modifiers of Non-Fire Damage Types",
+            ],
+        ] {
+            let message = lock(&texts).expect_err("two lines");
+            assert!(message.contains("more than one"), "{message}");
+        }
+        let one_implicit = lock(&[
+            "Cannot roll Modifiers of Non-Cold Damage Types\nCannot roll Modifiers of Non-Fire Damage Types",
+        ]);
+        assert!(one_implicit.is_err());
     }
 }

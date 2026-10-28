@@ -86,7 +86,8 @@ impl ModDefinition {
             if stat.min < stat.max {
                 if conversion.is_some() || stat.min < 0 {
                     return Err(format!(
-                        "the range of stat {stat_id:?} is not defined by poe-crafting-rules:                          ranges of converted or negative values"
+                        "the range of stat {stat_id:?} is not defined by poe-crafting-rules: \
+                         ranges of converted or negative values"
                     ));
                 }
                 out.push_str(&format!("({}-{})", stat.min, stat.max));

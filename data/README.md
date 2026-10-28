@@ -12,14 +12,14 @@ export for Path of Exile 1 (ADR 0015, ADR 0016). Do not edit them by hand.
   https://repoe-fork.github.io/poe1.html). The raw files are not in the repository.
 - Game version: 3.29.3.3, as stated on the export page; the files do not carry a version.
 - Download date of the raw files: 2026-10-25.
-- Converted bases: the 31 ring bases that the PO selected (ADR 0017), listed in
+- Converted bases: the 37 ring bases that the PO selected (ADR 0017, ADR 0020), listed in
   `data-import/src/main.rs`: item class Ring and release state `released` in RePoE, without the
-  four Royale variants (`RingRoyale1` to `RingRoyale4`), the six Breach rings (Cryonic,
-  Enthalpic, Formless, Fugitive, Organic and Synaptic Ring), the six Heist rings (Cogwork,
+  four Royale variants (`RingRoyale1` to `RingRoyale4`), the six Heist rings (Cogwork,
   Composite, Geodesic, Ratcheting, Helical and Manifold Ring), Golden Hoop and Jet Ring. The
-  "Breach Ring" (`BreachRing`) and the base "Ring" (`MirrorRing`) are included. Two-Stone Ring
-  and Shadowed Ring occur three times each with different implicits; they are separate bases
-  with separate identifiers.
+  "Breach Ring" (`BreachRing`), the six Breach rings (Cryonic, Enthalpic, Synaptic, Organic,
+  Fugitive and Formless Ring, `RingB1` to `RingB6`) and the base "Ring" (`MirrorRing`) are
+  included. Two-Stone Ring and Shadowed Ring occur three times each with different implicits;
+  they are separate bases with separate identifiers.
 - Command, with the directory of the six raw files as argument (it overwrites both data files;
   on an error it prints the message and writes nothing):
 
@@ -62,9 +62,19 @@ BaseItem:
 - `implicits`: list of mods the base item always has
 - `mod_pool`: identifiers (`id` in `mods.json`) of the prefixes and suffixes that can roll on the
   base: the categories `prefix` and `suffix` of its entry in `mods_by_base.json` (ADR 0016), in
-  the order of `mods.json`. Each base has its own pool (ADR 0017): 28 bases have the 207 mods of
+  the order of `mods.json`. Each base has its own pool (ADR 0017): 34 bases have the 207 mods of
   the Iron Ring, Bone Ring and Gloam Ring have 23 minion mods more, the Unset Ring 3 mods for
-  socketed gems. `crafting-core` offers the pool of a base as `mod_pool(base_id)`.
+  socketed gems. `crafting-core` offers the pool of a base as `mod_pool(base_id)`. The six Breach
+  rings have the Iron Ring's pool; the lock below is not applied to it.
+- `damage_type_lock`: optional. The tag of a damage type (`physical`, `lightning`, `cold`,
+  `fire` or `chaos`), set when an implicit of the base has a line "Cannot roll Modifiers of
+  Non-<damage type> Damage Types" (ADR 0020): RePoE does not apply it to the pool, but the PO's
+  rule "Breach rings" in `poe-crafting-rules` says that it blocks every mod with a tag of one of
+  the other four damage types. A base without such a line has no field. `crafting-core` applies
+  it in `unblocked_mods(base_id, mods)`. Five bases have it: `RingB1` cold, `RingB2` fire,
+  `RingB3` lightning, `RingB4` physical, `RingB5` chaos; `RingB6` (Formless Ring) has none.
+  The converter stops if a line starts with "Cannot roll Modifiers of Non-" but does not name
+  one of the five damage types, or if a base has more than one such line.
 
 Mod (an implicit):
 - `family`: the mod's group

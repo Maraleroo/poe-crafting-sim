@@ -6,18 +6,19 @@
 use crate::item_level;
 use crafting_core::{
     apply_orb_of_alteration, apply_orb_of_transmutation, base_item, can_apply_orb_of_alteration,
-    can_apply_orb_of_transmutation, mod_pool, valid_mods, BaseItem, CraftError, Currency,
-    ExplicitModDefinition, Item, SeededRng,
+    can_apply_orb_of_transmutation, mod_pool, unblocked_mods, valid_mods, BaseItem, CraftError,
+    Currency, ExplicitModDefinition, Item, SeededRng,
 };
 
 /// The base item on the workbench (a reference, not item data).
 const START_ITEM_ID: &str = "Metadata/Items/Rings/Ring1";
 
-/// The valid mods of the base item's own pool for the item level.
+/// The valid mods of the base item's own pool for the item level, without the mods that the
+/// damage type lock of the base blocks (ADR 0013, ADR 0020).
 fn valid_pool(base_id: &str, item_level: u32) -> Vec<ExplicitModDefinition> {
     let pool =
         mod_pool(base_id).unwrap_or_else(|| panic!("crafting-core has no pool for {base_id:?}"));
-    valid_mods(&pool, item_level)
+    valid_mods(&unblocked_mods(base_id, &pool), item_level)
 }
 
 /// The item, its base, the chosen item level and the generator that serves every roll of the
@@ -166,6 +167,22 @@ mod tests {
         let pool = mod_pool(START_ITEM_ID).expect("the start base item has a pool");
         assert_eq!(workbench.item_level(), item_level::DEFAULT);
         assert_eq!(workbench.pool, valid_mods(&pool, item_level::DEFAULT));
+    }
+
+    /// A base with a damage type lock (a Breach ring) and a base without one.
+    const LOCKED_BASE_ID: &str = "Metadata/Items/Rings/RingB1";
+    const UNLOCKED_BASE_ID: &str = "Metadata/Items/Rings/RingB6";
+
+    #[test]
+    fn the_pool_of_a_locked_base_leaves_out_the_blocked_mods() {
+        for (id, blocks_mods) in [(LOCKED_BASE_ID, true), (UNLOCKED_BASE_ID, false)] {
+            let all = mod_pool(id).expect("the base has a pool");
+            let mut workbench = Workbench::new(1);
+            workbench.select(id);
+            let unblocked = unblocked_mods(id, &all);
+            assert_eq!(workbench.pool, valid_mods(&unblocked, item_level::DEFAULT));
+            assert_eq!(unblocked.len() < all.len(), blocks_mods, "{id}");
+        }
     }
 
     #[test]

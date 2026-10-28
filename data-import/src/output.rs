@@ -48,6 +48,10 @@ pub struct OutBase {
     pub required_level: u32,
     pub tags: Vec<String>,
     pub implicits: Vec<OutModDefinition>,
+    /// The tag of the damage type named by the implicit line "Cannot roll Modifiers of
+    /// Non-<damage type> Damage Types" (ADR 0020); left out for a base without that line.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub damage_type_lock: Option<String>,
     pub mod_pool: Vec<String>,
 }
 

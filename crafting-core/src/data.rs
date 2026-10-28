@@ -6,10 +6,11 @@ use serde::Deserialize;
 
 use crate::craft::CraftError;
 use crate::currency::CurrencyDefinition;
+use crate::damage_lock::parse_locks;
 use crate::model::{BaseItem, ExplicitModDefinition, ModDefinition};
 use crate::slot::Slot;
 
-const BASE_ITEMS_JSON: &str = include_str!("../../data/base_items.json");
+pub(crate) const BASE_ITEMS_JSON: &str = include_str!("../../data/base_items.json");
 const MODS_JSON: &str = include_str!("../../data/mods.json");
 const CURRENCIES_JSON: &str = include_str!("../../data/currencies.json");
 const ITEM_SLOTS_JSON: &str = include_str!("../../data/item_slots.json");
@@ -239,6 +240,8 @@ fn parse_currencies(json: &str) -> Vec<CurrencyDefinition> {
 fn parse_base_items(json: &str) -> Vec<BaseItem> {
     let file: BaseItemsFile = serde_json::from_str(json)
         .unwrap_or_else(|error| panic!("invalid base item data: {error}"));
+    // Checks the damage type locks (ADR 0020).
+    parse_locks(json);
     let mut ids = BTreeSet::new();
     for base in &file.base_items {
         assert!(ids.insert(&base.id), "duplicate base item {:?}", base.id);
