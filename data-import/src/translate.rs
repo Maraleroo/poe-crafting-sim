@@ -88,7 +88,8 @@ impl<'a> Translator<'a> {
             }
             let [(position, index)] = matches.as_slice() else {
                 return Err(format!(
-                    "{owner}: {} English translations of the stat {:?} hold for its range {}                      to {}, but exactly one must",
+                    "{owner}: {} English translations of the stat {:?} hold for its range {} \
+                     to {}, but exactly one must",
                     matches.len(),
                     stat.id,
                     stat.min,
@@ -150,7 +151,8 @@ impl<'a> Translator<'a> {
                 }
                 "ignore" => {
                     return Err(format!(
-                        "{owner}: the stat {id:?} has the format \"ignore\" but the text                          {:?} shows its value",
+                        "{owner}: the stat {id:?} has the format \"ignore\" but the text \
+                         {:?} shows its value",
                         translation.string
                     ))
                 }
