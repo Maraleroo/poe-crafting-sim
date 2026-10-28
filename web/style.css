@@ -138,6 +138,47 @@ article {
   color: var(--error);
 }
 
+/* The fields above the buttons: the base picker and the item level. The row wraps on a narrow
+   page, so nothing is wider than the page. */
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0 1.5rem;
+}
+
+.fields .picker {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+/* The item level: a label above a short number field. */
+.level {
+  flex: 0 0 auto;
+  margin: 0.75rem 0;
+}
+
+.level label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.level input {
+  box-sizing: border-box;
+  width: 6rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--item-surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.level input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
 /* The base picker: a field with a panel below it. Nothing is wider than the page. */
 .picker {
   margin: 0.75rem 0;

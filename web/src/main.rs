@@ -4,8 +4,10 @@
 //! so that `cargo clippy` and `cargo test` cover it; only `main` needs a browser.
 
 mod i18n;
+mod item_level;
 mod item_view;
 mod legal;
+mod level_ui;
 mod page;
 mod picker;
 mod picker_ui;
@@ -18,6 +20,7 @@ use std::rc::Rc;
 use crafting_core::Currency;
 use i18n::Translations;
 use item_view::ItemView;
+use level_ui::LevelElements;
 use page::PageText;
 use picker::{Catalog, Picker};
 use picker_ui::PickerElements;
@@ -108,7 +111,7 @@ fn random_seed(window: &Window) -> Result<u64, JsValue> {
     Ok(u64::from_le_bytes(bytes))
 }
 
-/// The start page: the base picker, the buttons that change the item, the message and the item
+/// The start page: the base picker, the item level field, the buttons that change the item, the message and the item
 /// on the workbench.
 struct StartPage {
     document: Document,
@@ -122,6 +125,7 @@ struct StartPage {
     picker: RefCell<Picker>,
     catalog: Catalog,
     picker_elements: PickerElements,
+    level_elements: LevelElements,
 }
 
 impl StartPage {
@@ -135,7 +139,12 @@ impl StartPage {
     ) -> Result<(), JsValue> {
         let item_host = element(document, "div", None)?;
         let picker_elements = picker_ui::build(document, &Translations::english())?;
-        append(parent, picker_elements.root.clone())?;
+        let level_elements = level_ui::build(document, &Translations::english())?;
+        let fields = element(document, "div", None)?;
+        fields.set_class_name("fields");
+        append(&fields, picker_elements.root.clone())?;
+        append(&fields, level_elements.root.clone())?;
+        append(parent, fields)?;
         let currencies = vec![
             (
                 Currency::OrbOfTransmutation,
@@ -169,8 +178,10 @@ impl StartPage {
             picker: RefCell::new(Picker::new()),
             catalog: Catalog::new(),
             picker_elements,
+            level_elements,
         });
         picker_ui::wire(&page)?;
+        level_ui::wire(&page)?;
         page.render_picker()?;
         page.show(None)?;
         for (currency, orb) in &currencies {
@@ -195,6 +206,7 @@ impl StartPage {
             orb.set_title(&workbench.tooltip(*currency));
         }
         self.message.set_text_content(message);
+        self.show_item_level();
         Ok(())
     }
 
