@@ -3,6 +3,7 @@
 //! This is plain Rust so it can be tested without a browser (ADR 0010). All crafting rules
 //! are in `crafting-core`; this only keeps the state and calls them.
 
+use crate::item_level;
 use crafting_core::{
     apply_orb_of_alteration, apply_orb_of_transmutation, base_item, can_apply_orb_of_alteration,
     can_apply_orb_of_transmutation, mod_pool, valid_mods, BaseItem, CraftError, Currency,
@@ -12,20 +13,18 @@ use crafting_core::{
 /// The base item on the workbench (a reference, not item data).
 const START_ITEM_ID: &str = "Metadata/Items/Rings/Ring1";
 
-/// The item level of the page: the default of the UI (`poe-crafting-rules`, "Item level").
-/// The page cannot change it yet (ADR 0013).
-const ITEM_LEVEL: u32 = 100;
-
-/// The valid mods of the base item's own pool for the item level of the page.
-fn valid_pool(base_id: &str) -> Vec<ExplicitModDefinition> {
+/// The valid mods of the base item's own pool for the item level.
+fn valid_pool(base_id: &str, item_level: u32) -> Vec<ExplicitModDefinition> {
     let pool =
         mod_pool(base_id).unwrap_or_else(|| panic!("crafting-core has no pool for {base_id:?}"));
-    valid_mods(&pool, ITEM_LEVEL)
+    valid_mods(&pool, item_level)
 }
 
-/// The item, its base and the generator that serves every roll of the page.
+/// The item, its base, the chosen item level and the generator that serves every roll of the
+/// page. The item level is state of the workbench, not of the item (ADR 0019).
 pub struct Workbench {
     base: BaseItem,
+    item_level: u32,
     pool: Vec<ExplicitModDefinition>,
     item: Item,
     rng: SeededRng,
@@ -33,10 +32,10 @@ pub struct Workbench {
 
 impl Workbench {
     /// A workbench with a new normal item of the start base item and the valid mods of that
-    /// base item's own pool for the item level of the page. The same seed gives the same
-    /// sequence of results.
+    /// base item's own pool for the default item level. The same seed gives the same sequence
+    /// of results.
     pub fn new(seed: u64) -> Self {
-        Self::with_pool(seed, valid_pool(START_ITEM_ID))
+        Self::with_pool(seed, valid_pool(START_ITEM_ID, item_level::DEFAULT))
     }
 
     /// Like [`Workbench::new`], but with the given pool of valid mods.
@@ -47,6 +46,7 @@ impl Workbench {
         let item = Item::new(&base, &mut rng);
         Self {
             base,
+            item_level: item_level::DEFAULT,
             pool,
             item,
             rng,
@@ -94,9 +94,34 @@ impl Workbench {
         self.item = Item::new(&self.base, &mut self.rng);
     }
 
-    /// Chooses the base item with the given identifier: the base, its pool of valid mods for
-    /// the item level of the page and the item are replaced, and the item becomes a new normal
-    /// item of the base, as after [`Workbench::reset`] (ADR 0018).
+    /// The chosen item level.
+    pub fn item_level(&self) -> u32 {
+        self.item_level
+    }
+
+    /// Chooses the item level: the pool of valid mods is built again for it, and the item
+    /// becomes a new normal item of the base, as after [`Workbench::reset`]. The same level
+    /// as the current one is no change, and the item stays.
+    ///
+    /// # Panics
+    /// If the level is not an allowed one (`item_level::ALLOWED`). The page only passes levels
+    /// it has read with `item_level::parse`, so that is a programming error.
+    pub fn set_item_level(&mut self, level: u32) {
+        assert!(
+            item_level::ALLOWED.contains(&level),
+            "item level {level} is not allowed"
+        );
+        if level == self.item_level {
+            return;
+        }
+        self.item_level = level;
+        self.pool = valid_pool(&self.base.id, level);
+        self.reset();
+    }
+
+    /// Chooses the base item with the given identifier: the base and its pool of valid mods
+    /// are replaced, the item level is set back to the default, and the item becomes a new
+    /// normal item of the base, as after [`Workbench::reset`] (ADR 0018, ADR 0019).
     ///
     /// # Panics
     /// If `crafting-core` has no such base item. The identifiers come from `crafting-core`, so
@@ -104,7 +129,8 @@ impl Workbench {
     pub fn select(&mut self, base_id: &str) {
         self.base = base_item(base_id)
             .unwrap_or_else(|| panic!("crafting-core has no base item {base_id:?}"));
-        self.pool = valid_pool(base_id);
+        self.item_level = item_level::DEFAULT;
+        self.pool = valid_pool(base_id, self.item_level);
         self.reset();
     }
 
@@ -119,6 +145,7 @@ impl Workbench {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::item_level;
     use crafting_core::{Rarity, Slot};
 
     const TRANSMUTATION: Currency = Currency::OrbOfTransmutation;
@@ -134,10 +161,11 @@ mod tests {
     }
 
     #[test]
-    fn the_pool_holds_the_valid_mods_for_the_item_level_of_the_page() {
+    fn the_pool_holds_the_valid_mods_for_the_default_item_level() {
         let workbench = Workbench::new(1);
         let pool = mod_pool(START_ITEM_ID).expect("the start base item has a pool");
-        assert_eq!(workbench.pool, valid_mods(&pool, ITEM_LEVEL));
+        assert_eq!(workbench.item_level(), item_level::DEFAULT);
+        assert_eq!(workbench.pool, valid_mods(&pool, item_level::DEFAULT));
     }
 
     #[test]
@@ -292,7 +320,12 @@ mod tests {
             assert_eq!(workbench.item().base, base, "{}", base.id);
             assert_eq!(workbench.item().rarity, Rarity::Normal, "{}", base.id);
             assert_eq!(workbench.item().implicits.len(), base.implicits.len());
-            assert_eq!(workbench.pool, valid_pool(&base.id), "{}", base.id);
+            assert_eq!(
+                workbench.pool,
+                valid_pool(&base.id, item_level::DEFAULT),
+                "{}",
+                base.id
+            );
             assert!(workbench.applicable(TRANSMUTATION));
             assert!(!workbench.applicable(ALTERATION));
         }
@@ -300,8 +333,12 @@ mod tests {
 
     #[test]
     fn select_uses_the_pool_of_the_chosen_base() {
-        let own_mods =
-            |id: &str| -> Vec<String> { valid_pool(id).into_iter().map(|m| m.name).collect() };
+        let own_mods = |id: &str| -> Vec<String> {
+            valid_pool(id, item_level::DEFAULT)
+                .into_iter()
+                .map(|m| m.name)
+                .collect()
+        };
         let start = own_mods(START_ITEM_ID);
         let base = other_bases()
             .into_iter()
@@ -352,5 +389,113 @@ mod tests {
         assert_eq!(magic.apply(ALTERATION), Err(CraftError::NoValidMod));
         assert_eq!(magic.item(), &before);
         assert!(magic.applicable(ALTERATION));
+    }
+
+    /// A level at which the pool of the start base item is smaller than at the default level
+    /// but not empty.
+    const LOW_LEVEL: u32 = 10;
+
+    #[test]
+    fn the_low_level_has_fewer_valid_mods_than_the_default_level() {
+        let all = valid_pool(START_ITEM_ID, item_level::DEFAULT);
+        let low = valid_pool(START_ITEM_ID, LOW_LEVEL);
+        assert!(!low.is_empty());
+        assert!(low.len() < all.len());
+    }
+
+    #[test]
+    fn set_item_level_builds_the_pool_for_the_level_and_resets_the_item() {
+        let mut workbench = Workbench::new(1);
+        workbench.apply(TRANSMUTATION).unwrap();
+        workbench.set_item_level(LOW_LEVEL);
+        assert_eq!(workbench.item_level(), LOW_LEVEL);
+        assert_eq!(workbench.pool, valid_pool(START_ITEM_ID, LOW_LEVEL));
+        assert_eq!(workbench.item().base, workbench.base);
+        assert_eq!(workbench.item().rarity, Rarity::Normal);
+        assert!(workbench.applicable(TRANSMUTATION));
+        assert!(!workbench.applicable(ALTERATION));
+    }
+
+    #[test]
+    fn the_orbs_roll_only_mods_up_to_the_chosen_item_level() {
+        let mut workbench = Workbench::new(1);
+        workbench.set_item_level(LOW_LEVEL);
+        for _ in 0..200 {
+            workbench.reset();
+            workbench.apply(TRANSMUTATION).unwrap();
+            workbench.apply(ALTERATION).unwrap();
+            let item = workbench.item();
+            for explicit in item.prefix.iter().chain(&item.suffix) {
+                assert!(explicit.modifier.level <= LOW_LEVEL);
+            }
+        }
+    }
+
+    #[test]
+    fn raising_the_item_level_again_allows_the_higher_mods() {
+        let mut workbench = Workbench::new(1);
+        workbench.set_item_level(LOW_LEVEL);
+        workbench.set_item_level(item_level::DEFAULT);
+        assert_eq!(
+            workbench.pool,
+            valid_pool(START_ITEM_ID, item_level::DEFAULT)
+        );
+    }
+
+    #[test]
+    fn the_same_item_level_is_no_change_and_the_item_stays() {
+        let mut workbench = Workbench::new(1);
+        workbench.apply(TRANSMUTATION).unwrap();
+        let magic = workbench.item().clone();
+        workbench.set_item_level(item_level::DEFAULT);
+        assert_eq!(workbench.item(), &magic);
+
+        workbench.set_item_level(LOW_LEVEL);
+        workbench.apply(TRANSMUTATION).unwrap();
+        let magic = workbench.item().clone();
+        workbench.set_item_level(LOW_LEVEL);
+        assert_eq!(workbench.item(), &magic);
+    }
+
+    #[test]
+    fn reset_keeps_the_item_level_and_the_pool() {
+        let mut workbench = Workbench::new(1);
+        workbench.set_item_level(LOW_LEVEL);
+        workbench.apply(TRANSMUTATION).unwrap();
+        workbench.reset();
+        assert_eq!(workbench.item_level(), LOW_LEVEL);
+        assert_eq!(workbench.pool, valid_pool(START_ITEM_ID, LOW_LEVEL));
+    }
+
+    #[test]
+    fn select_sets_the_item_level_back_to_the_default() {
+        for base in other_bases() {
+            let mut workbench = Workbench::new(1);
+            workbench.set_item_level(LOW_LEVEL);
+            workbench.select(&base.id);
+            assert_eq!(workbench.item_level(), item_level::DEFAULT, "{}", base.id);
+            assert_eq!(
+                workbench.pool,
+                valid_pool(&base.id, item_level::DEFAULT),
+                "{}",
+                base.id
+            );
+        }
+    }
+
+    #[test]
+    fn the_item_level_applies_to_the_chosen_base() {
+        let base = other_bases().remove(0);
+        let mut workbench = Workbench::new(1);
+        workbench.select(&base.id);
+        workbench.set_item_level(LOW_LEVEL);
+        assert_eq!(workbench.item().base, base);
+        assert_eq!(workbench.pool, valid_pool(&base.id, LOW_LEVEL));
+    }
+
+    #[test]
+    #[should_panic(expected = "is not allowed")]
+    fn an_item_level_outside_the_range_is_a_programming_error() {
+        Workbench::new(1).set_item_level(101);
     }
 }

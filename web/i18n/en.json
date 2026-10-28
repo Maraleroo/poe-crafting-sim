@@ -9,6 +9,7 @@
   "item.rarity.rare": "Rare",
   "item.rarity.unique": "Unique",
   "item.requires_level": "Requires Level {level}",
+  "item_level.field": "Item level",
   "picker.base_label": "{base} ({class})",
   "picker.field": "Item",
   "picker.hint": "Type two letters for suggestions, or click through the slots.",

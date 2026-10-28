@@ -91,7 +91,7 @@ pub fn wire(page: &Rc<StartPage>) -> Result<(), JsValue> {
 }
 
 /// Runs `handler` on the page whenever `event_name` reaches `target`.
-fn listen(
+pub(crate) fn listen(
     target: &EventTarget,
     event_name: &str,
     capture: bool,
