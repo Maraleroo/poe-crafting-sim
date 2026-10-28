@@ -37,6 +37,10 @@ The mods that can roll on a base and their weights come from the game data (RePo
 
 TODO (PO): which mod groups exclude each other.
 
+## Breach rings
+PO rule: There are exactly five damage types: Physical, Lightning, Cold, Fire, Chaos. The line "Cannot roll Modifiers of Non-<damage type> Damage Types" blocks every mod that has at least one tag of one of the four other damage types; a blocked mod can never roll on that ring. The mod's tags in the game data decide; there, the damage types are exactly the tags `physical`, `lightning`, `cold`, `fire` and `chaos`. Other tags such as `elemental`, `physical_damage` or `elemental_damage` are not damage types.
+- Source: AB#188, criterion 3.
+
 ## Currencies
 One file per currency, linked here, e.g. `currencies/orb-of-transmutation.md`:
 - Applies to: <which items>
