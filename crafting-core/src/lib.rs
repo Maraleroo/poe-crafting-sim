@@ -7,6 +7,7 @@
 mod conversion;
 mod craft;
 mod currency;
+mod damage_lock;
 mod data;
 mod model;
 mod rng;
@@ -18,6 +19,7 @@ pub use craft::{
     can_apply_orb_of_transmutation, valid_mods, CraftError,
 };
 pub use currency::{Currency, CurrencyDefinition};
+pub use damage_lock::unblocked_mods;
 pub use data::{base_item, base_items, currencies, explicit_mods, mod_pool};
 pub use model::{
     AffixType, BaseItem, ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition, Rarity,
