@@ -30,6 +30,8 @@ Copy this checklist into your reply and tick it off as you go:
    For a bug: repro steps, expected and actual behaviour; the first acceptance test must
    reproduce the bug.
    A rule that the PO quotes verbatim in an acceptance criterion counts as present.
+   A game rule that a criterion quotes for `poe-crafting-rules` must be in English.
+   If it is only in German, it goes on the list for the PO.
    Every user-visible text that a criterion requires (button, error message, hint) is quoted
    verbatim in the work item. If it is missing, it goes on the list for the PO.
    If a criterion prescribes a concrete mechanism (a setting, a variable, a command), try it
