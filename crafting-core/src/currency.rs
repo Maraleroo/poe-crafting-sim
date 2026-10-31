@@ -97,10 +97,8 @@ mod tests {
     /// The reasons with which the currency can fail (ADR 0012). Each has a game message.
     fn failure_reasons(currency: Currency) -> Vec<CraftError> {
         match currency {
-            Currency::OrbOfTransmutation => {
-                vec![CraftError::ItemNotNormal, CraftError::NoValidMod]
-            }
-            Currency::OrbOfAlteration => vec![CraftError::ItemNotMagic, CraftError::NoValidMod],
+            Currency::OrbOfTransmutation => vec![CraftError::ItemNotNormal],
+            Currency::OrbOfAlteration => vec![CraftError::ItemNotMagic],
         }
     }
 

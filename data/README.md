@@ -71,8 +71,9 @@ BaseItem:
   Non-<damage type> Damage Types" (ADR 0020): RePoE does not apply it to the pool, but the PO's
   rule "Breach rings" in `poe-crafting-rules` says that it blocks every mod with a tag of one of
   the other four damage types. A base without such a line has no field. `crafting-core` applies
-  it in `unblocked_mods(base_id, mods)`. Five bases have it: `RingB1` cold, `RingB2` fire,
-  `RingB3` lightning, `RingB4` physical, `RingB5` chaos; `RingB6` (Formless Ring) has none.
+  it when it builds the valid pool for a random mod (`valid_pool`, ADR 0021). Five bases have
+  it: `RingB1` cold, `RingB2` fire, `RingB3` lightning, `RingB4` physical, `RingB5` chaos;
+  `RingB6` (Formless Ring) has none.
   The converter stops if a line starts with "Cannot roll Modifiers of Non-" but does not name
   one of the five damage types, or if a base has more than one such line.
 
@@ -149,5 +150,5 @@ messages from the story texts of AB#113 and AB#114 (ADR 0012).
 - `description`: the currency's English game description (game text, shown unchanged)
 - `messages`: maps a reason code to the game's failure message for this currency (game text,
   shown unchanged). The keys are the codes of `CraftError` (`item_not_normal`,
-  `item_not_magic`, `no_valid_mod`); a currency has a message for every reason it can fail
+  `item_not_magic`); a currency has a message for every reason it can fail
   with, and for no other.

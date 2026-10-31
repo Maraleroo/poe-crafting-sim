@@ -15,15 +15,16 @@ mod slot;
 
 pub use conversion::Conversion;
 pub use craft::{
-    apply_orb_of_alteration, apply_orb_of_transmutation, can_apply_orb_of_alteration,
-    can_apply_orb_of_transmutation, valid_mods, CraftError,
+    add_random_mod, apply_orb_of_alteration, apply_orb_of_transmutation,
+    can_apply_orb_of_alteration, can_apply_orb_of_transmutation, valid_mods, valid_pool,
+    CraftError,
 };
 pub use currency::{Currency, CurrencyDefinition};
 pub use damage_lock::unblocked_mods;
 pub use data::{base_item, base_items, currencies, explicit_mods, mod_pool};
 pub use model::{
-    AffixType, BaseItem, ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition, Rarity,
-    Stat, StatDefinition,
+    AffixLimits, AffixType, BaseItem, ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition,
+    Rarity, Stat, StatDefinition, DEFAULT_ITEM_LEVEL,
 };
 pub use rng::{Rng, SeededRng};
 pub use slot::Slot;

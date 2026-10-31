@@ -217,30 +217,71 @@ pub struct ExplicitMod {
     pub modifier: Mod,
 }
 
-/// An item: a base item with a rarity, rolled implicit mods and at most one prefix and
-/// one suffix.
+/// The item level a new item has: the default of the rule "Item level" in
+/// `poe-crafting-rules`. The page uses it as the default of its item level field.
+pub const DEFAULT_ITEM_LEVEL: u32 = 100;
+
+/// How many mods an item can hold (rule "Affix limits" in `poe-crafting-rules`). Only
+/// prefixes and suffixes count; implicit mods do not. Both the total limit and the limit of
+/// the side hold at all times.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AffixLimits {
+    /// At most this many prefixes and suffixes together.
+    pub mods: usize,
+    /// At most this many prefixes.
+    pub prefixes: usize,
+    /// At most this many suffixes.
+    pub suffixes: usize,
+}
+
+impl AffixLimits {
+    /// The limits of an item of the given rarity: none for a normal item, 2 mods (1 prefix
+    /// and 1 suffix) for a magic item and 6 mods (3 and 3) for a rare item. `None` for a unique
+    /// item, which has no rule yet. This is the only place of the limits.
+    pub fn of(rarity: Rarity) -> Option<AffixLimits> {
+        let (mods, prefixes, suffixes) = match rarity {
+            Rarity::Normal => (0, 0, 0),
+            Rarity::Magic => (2, 1, 1),
+            Rarity::Rare => (6, 3, 3),
+            Rarity::Unique => return None,
+        };
+        Some(AffixLimits {
+            mods,
+            prefixes,
+            suffixes,
+        })
+    }
+}
+
+/// An item: a base item with a rarity, an item level, rolled implicit mods and the prefixes
+/// and suffixes it holds, as many as its affix limits allow.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Item {
     pub base: BaseItem,
     pub rarity: Rarity,
+    /// Decides which mods can roll on the item (rule "Item level").
+    pub item_level: u32,
     pub implicits: Vec<Mod>,
-    pub prefix: Option<ExplicitMod>,
-    pub suffix: Option<ExplicitMod>,
+    /// In the order they were added.
+    pub prefixes: Vec<ExplicitMod>,
+    /// In the order they were added.
+    pub suffixes: Vec<ExplicitMod>,
 }
 
 impl Item {
-    /// A new normal item of `base`, with its implicit mods rolled.
+    /// A new normal item of `base` at `DEFAULT_ITEM_LEVEL`, with its implicit mods rolled.
     pub fn new(base: &BaseItem, rng: &mut impl Rng) -> Item {
         Item {
             base: base.clone(),
             rarity: Rarity::Normal,
+            item_level: DEFAULT_ITEM_LEVEL,
             implicits: base
                 .implicits
                 .iter()
                 .map(|definition| Mod::roll(definition, rng))
                 .collect(),
-            prefix: None,
-            suffix: None,
+            prefixes: Vec::new(),
+            suffixes: Vec::new(),
         }
     }
 
@@ -251,8 +292,12 @@ impl Item {
         let highest_mod_level = self
             .implicits
             .iter()
-            .chain(self.prefix.iter().map(|explicit| &explicit.modifier))
-            .chain(self.suffix.iter().map(|explicit| &explicit.modifier))
+            .chain(
+                self.prefixes
+                    .iter()
+                    .chain(&self.suffixes)
+                    .map(|explicit| &explicit.modifier),
+            )
             .map(|modifier| modifier.level)
             .max()
             .unwrap_or(0);
@@ -260,13 +305,14 @@ impl Item {
         (requirement > 1).then_some(requirement)
     }
 
-    /// The name of the item: `<prefix name> <base name> <suffix name>`. A missing prefix or
-    /// suffix leaves its part out.
+    /// The name of a magic item: `<prefix name> <base name> <suffix name>`. A missing prefix
+    /// or suffix leaves its part out. Names of rare items are not defined yet; for them, the
+    /// name uses the first prefix and the first suffix.
     pub fn name(&self) -> String {
         [
-            self.prefix.as_ref().map(|prefix| prefix.name.as_str()),
+            self.prefixes.first().map(|prefix| prefix.name.as_str()),
             Some(self.base.name.as_str()),
-            self.suffix.as_ref().map(|suffix| suffix.name.as_str()),
+            self.suffixes.first().map(|suffix| suffix.name.as_str()),
         ]
         .into_iter()
         .flatten()
@@ -498,15 +544,34 @@ Second line"
             implicits: Vec::new(),
         };
         let mut item = Item::new(&base, &mut SeededRng::new(1));
-        item.prefix = prefix.map(|name| explicit(name, AffixType::Prefix));
-        item.suffix = suffix.map(|name| explicit(name, AffixType::Suffix));
+        item.prefixes = prefix
+            .map(|name| explicit(name, AffixType::Prefix))
+            .into_iter()
+            .collect();
+        item.suffixes = suffix
+            .map(|name| explicit(name, AffixType::Suffix))
+            .into_iter()
+            .collect();
         item
     }
 
     #[test]
-    fn new_item_has_neither_prefix_nor_suffix() {
+    fn new_item_is_normal_at_the_default_item_level_without_prefixes_and_suffixes() {
         let item = item_with(None, None);
-        assert_eq!((item.prefix, item.suffix), (None, None));
+        assert_eq!(item.rarity, Rarity::Normal);
+        assert_eq!(item.item_level, DEFAULT_ITEM_LEVEL);
+        assert!(item.prefixes.is_empty() && item.suffixes.is_empty());
+    }
+
+    #[test]
+    fn affix_limits_follow_the_rarity() {
+        let limits = |rarity| {
+            AffixLimits::of(rarity).map(|limits| (limits.mods, limits.prefixes, limits.suffixes))
+        };
+        assert_eq!(limits(Rarity::Normal), Some((0, 0, 0)));
+        assert_eq!(limits(Rarity::Magic), Some((2, 1, 1)));
+        assert_eq!(limits(Rarity::Rare), Some((6, 3, 3)));
+        assert_eq!(limits(Rarity::Unique), None);
     }
 
     #[test]
@@ -580,12 +645,29 @@ Second line"
         };
         let mut rng = SeededRng::new(1);
         let mut item = Item::new(&base, &mut rng);
-        item.prefix = prefix.map(|level| ExplicitMod {
-            name: "Prefix".to_owned(),
-            affix_type: AffixType::Prefix,
-            modifier: Mod::roll(&at_level(level), &mut rng),
-        });
+        item.prefixes = prefix
+            .map(|level| ExplicitMod {
+                name: "Prefix".to_owned(),
+                affix_type: AffixType::Prefix,
+                modifier: Mod::roll(&at_level(level), &mut rng),
+            })
+            .into_iter()
+            .collect();
         item
+    }
+
+    #[test]
+    fn requirement_counts_every_prefix_and_suffix() {
+        let mut item = leveled_item(0, None, Some(10));
+        for (level, affix_type) in [(20, AffixType::Prefix), (60, AffixType::Suffix)] {
+            let mut rolled = explicit("Another", affix_type);
+            rolled.modifier.level = level;
+            match affix_type {
+                AffixType::Prefix => item.prefixes.push(rolled),
+                AffixType::Suffix => item.suffixes.push(rolled),
+            }
+        }
+        assert_eq!(item.required_level(), Some(48));
     }
 
     #[test]
