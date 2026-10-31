@@ -35,6 +35,11 @@
 //!
 //! What is checked outside `cargo test`, by the PO in the local preview: criterion 6 on the
 //! page itself.
+//!
+//! Adapted for AB#189 (PO-confirmed on AB#189): criterion 1 of AB#189 adds the six Heist rings
+//! to the slot "Ring" (43 ring bases). Each of them has a side with the magic limit 0, so the
+//! checks of criterion 6 and of the valid pool of every new magic ring in criterion 2 cover the
+//! 37 rings of AB#248 only. The Heist rings are checked by the tests of AB#189.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -60,8 +65,20 @@ const CRYONIC_RING_ID: &str = "Metadata/Items/Rings/RingB1";
 /// The suffix of the PO's evidence: Cold Resistance, the family of the Sapphire Ring's implicit.
 const POLAR_BEAR: &str = "of the Polar Bear";
 
-/// The rings on the page today (story text and criterion 6).
-const RING_BASES: usize = 37;
+/// The rings on the page: the 37 of AB#248 and the six Heist rings of AB#189.
+const RING_BASES: usize = 43;
+/// The rings on the page at AB#248 (story text and criterion 6): all ring bases except the six
+/// Heist rings, which AB#189 added (PO confirmation on AB#189).
+const TODAYS_RING_BASES: usize = 37;
+/// The Heist rings of AB#189 (RePoE ids `RingE1` to `RingE6`).
+const HEIST_RING_IDS: [&str; 6] = [
+    "Metadata/Items/Rings/RingE1",
+    "Metadata/Items/Rings/RingE2",
+    "Metadata/Items/Rings/RingE3",
+    "Metadata/Items/Rings/RingE4",
+    "Metadata/Items/Rings/RingE5",
+    "Metadata/Items/Rings/RingE6",
+];
 
 /// The default item level of the rule "Item level".
 const UI_ITEM_LEVEL: u32 = 100;
@@ -203,6 +220,17 @@ fn ring(id: &str) -> BaseItem {
 
 fn pool_of(id: &str) -> Vec<ExplicitModDefinition> {
     mod_pool(id).unwrap_or_else(|| panic!("crafting-core must offer the pool of {id:?}"))
+}
+
+/// The ring bases of the slot "Ring" at AB#248: all of them except the Heist rings of AB#189.
+fn todays_rings() -> Vec<BaseItem> {
+    let rings: Vec<BaseItem> = Slot::Ring
+        .base_items()
+        .into_iter()
+        .filter(|base| !HEIST_RING_IDS.contains(&base.id.as_str()))
+        .collect();
+    assert_eq!(rings.len(), TODAYS_RING_BASES, "the ring bases of AB#248");
+    rings
 }
 
 /// An invented mod with one stat whose range is real, so values are rolled.
@@ -736,6 +764,9 @@ fn ac1_affix_limits_follow_the_rarity_and_implicits_do_not_count() {
 // (The wording is checked at the acceptance. Here: each filter of step 1 with `valid_pool`, also
 // with the game data of all ring bases; step 2 and step 3 with `add_random_mod`. The room under
 // the limits is checked in AC1. That both orbs use the rule is checked in AC3 and AC4.)
+// (Adapted for AB#189, PO-confirmed: the check with the game data covers the 37 ring bases of
+// AB#248; every Heist ring has a side with the magic limit 0, so its valid pool is checked by
+// the tests of AB#189.)
 #[test]
 fn ac2_adding_a_random_mod_builds_the_valid_pool_and_chooses_by_weight() {
     let mut rng = SeededRng::new(SEED);
@@ -842,9 +873,9 @@ fn ac2_adding_a_random_mod_builds_the_valid_pool_and_chooses_by_weight() {
     // And on the Iron Ring, which has no lock, none is left out
     let on_iron = item_with(&iron, Rarity::Magic, &[], &[], &mut rng);
     assert_eq!(valid_pool(&on_iron, &tagged_pool), tagged_pool, "Iron Ring");
-    // And with the game data, the valid pool of every new magic ring is its pool without the
-    // mods its lock blocks, at the item level 100
-    for base in Slot::Ring.base_items() {
+    // And with the game data, the valid pool of every new magic ring of AB#248 is its pool
+    // without the mods its lock blocks, at the item level 100
+    for base in todays_rings() {
         let whole = pool_of(&base.id);
         let item = item_with(&base, Rarity::Magic, &[], &[], &mut rng);
         assert_eq!(
@@ -1570,11 +1601,12 @@ fn ac5_an_item_holds_as_many_prefixes_and_suffixes_as_the_limits_allow() {
 // a ring are its pool without the mods its lock blocks, at the item level 100, as the unchanged
 // `valid_mods` and `unblocked_mods` give them. Here: all 37 rings with both orbs. The page itself
 // is checked by the PO in the local preview.)
+// (Adapted for AB#189, PO-confirmed: the 37 rings are the ring bases without the six Heist rings
+// that AB#189 adds. Their limit changes replace this behaviour for them, AB#189 criterion 3.)
 #[test]
 fn ac6_todays_rings_roll_as_before_with_the_pool_the_page_passes() {
     let mut rng = SeededRng::new(RING_SEED);
-    let bases = Slot::Ring.base_items();
-    assert_eq!(bases.len(), RING_BASES, "ring bases");
+    let bases = todays_rings();
     let (mut results, mut one_mod, mut one_mod_prefixes) = (0_u64, 0_u64, 0_u64);
     let (mut expected_prefixes, mut variance) = (0.0_f64, 0.0_f64);
 

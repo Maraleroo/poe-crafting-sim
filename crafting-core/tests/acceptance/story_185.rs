@@ -8,7 +8,7 @@
 //!   `valid_mods`, `Item::new` and `Mod::display_text()`.
 //! - `data-import` (dev-dependency of `crafting-core`): the unchanged `convert(raw, base_ids)`.
 //!
-//! The expected game data (the 37 bases with name, tags and implicits, the line order, the
+//! The expected game data (the 43 bases with name, tags and implicits, the line order, the
 //! negated stats, the pools and the additional mods) was taken by a program from the PO's
 //! RePoE export 3.29.3.3; the raw files are not in the repository. Lines are in the order of
 //! their entries in `stat_translations.json` (ADR 0015). Displayed values follow the PO's
@@ -44,27 +44,22 @@ const RINGS_CLASS: &str = "Rings";
 
 /// Size of the Iron Ring's pool (categories `prefix` and `suffix`, ADR 0016).
 const IRON_POOL_SIZE: usize = 207;
-/// Number of mods in the pools of all 37 bases together.
+/// Number of mods in the pools of all 43 bases together.
 const ALL_MODS: usize = 233;
 
 /// The item level the UI uses by default ("Item level" in `poe-crafting-rules`).
 const UI_ITEM_LEVEL: u32 = 100;
 
-/// The bases the PO excluded (criterion 2): the Royale variants and the Heist rings. The
-/// Royale variants carry the names of included rings, so they are checked by their ids. The
-/// Breach rings `RingB1` to `RingB6` are no longer excluded: AB#188 criterion 1 replaces
-/// criterion 2 for them (PO confirmation on AB#188).
-const EXCLUDED_BASES: [&str; 10] = [
+/// The bases the PO excluded (criterion 2): the Royale variants. They carry the names of
+/// included rings, so they are checked by their ids. The Breach rings `RingB1` to `RingB6` are
+/// no longer excluded: AB#188 criterion 1 replaces criterion 2 for them (PO confirmation on
+/// AB#188). The Heist rings `RingE1` to `RingE6` are no longer excluded either: AB#189
+/// criterion 1 replaces criterion 2 for them (PO confirmation on AB#189).
+const EXCLUDED_BASES: [&str; 4] = [
     "Metadata/Items/Rings/RingRoyale1",
     "Metadata/Items/Rings/RingRoyale2",
     "Metadata/Items/Rings/RingRoyale3",
     "Metadata/Items/Rings/RingRoyale4",
-    "Metadata/Items/Rings/RingE1",
-    "Metadata/Items/Rings/RingE2",
-    "Metadata/Items/Rings/RingE3",
-    "Metadata/Items/Rings/RingE4",
-    "Metadata/Items/Rings/RingE5",
-    "Metadata/Items/Rings/RingE6",
 ];
 
 /// Bases with the same name and different implicits (criterion 4).
@@ -141,10 +136,11 @@ struct ExtraMod {
     stat: (&'static str, i32, i32),
 }
 
-/// The 37 ring bases of the PO's decisions: item class Ring, release state `released`, without
-/// the excluded bases, Golden Hoop (unique only) and Jet Ring (unreleased). The last six, the
-/// Breach rings `RingB1` to `RingB6`, were added by AB#188.
-const BASES: [ExpectedBase; 37] = [
+/// The 43 ring bases of the PO's decisions: item class Ring, release state `released`, without
+/// the excluded bases, Golden Hoop (unique only) and Jet Ring (unreleased). The Breach rings
+/// `RingB1` to `RingB6` were added by AB#188, the last six, the Heist rings `RingE1` to
+/// `RingE6`, by AB#189. A Heist ring's magnitude stat of 0 % has no line (ADR 0022).
+const BASES: [ExpectedBase; 43] = [
     ExpectedBase {
         id: "Metadata/Items/Rings/Ring1",
         name: "Iron Ring",
@@ -789,6 +785,154 @@ const BASES: [ExpectedBase; 37] = [
             tags: &["defences"],
             stats: &[("global_defences_+%", 5, 7)],
             lines: &[&["global_defences_+%"]],
+            negated: &[],
+        }],
+        extra_mods: &[],
+    },
+    ExpectedBase {
+        id: "Metadata/Items/Rings/RingE1",
+        name: "Cogwork Ring",
+        tags: &["not_for_sale", "experimental_base", "ring", "default"],
+        implicits: &[ExpectedImplicit {
+            family: "MaxPrefixMaxSuffix",
+            level: 30,
+            tags: &[],
+            stats: &[
+                ("local_maximum_prefixes_allowed_+", -1, -1),
+                ("local_maximum_suffixes_allowed_+", 1, 1),
+                ("local_implicit_mod_cannot_be_changed", 1, 1),
+                ("local_suffix_mod_effect_+%", 25, 25),
+                ("local_prefix_mod_effect_+%", 0, 0),
+            ],
+            lines: &[
+                &["local_maximum_prefixes_allowed_+"],
+                &["local_maximum_suffixes_allowed_+"],
+                &[],
+                &["local_suffix_mod_effect_+%"],
+            ],
+            negated: &[],
+        }],
+        extra_mods: &[],
+    },
+    ExpectedBase {
+        id: "Metadata/Items/Rings/RingE2",
+        name: "Geodesic Ring",
+        tags: &["not_for_sale", "experimental_base", "ring", "default"],
+        implicits: &[ExpectedImplicit {
+            family: "MaxPrefixMaxSuffix",
+            level: 30,
+            tags: &[],
+            stats: &[
+                ("local_maximum_prefixes_allowed_+", 1, 1),
+                ("local_maximum_suffixes_allowed_+", -1, -1),
+                ("local_implicit_mod_cannot_be_changed", 1, 1),
+                ("local_suffix_mod_effect_+%", 0, 0),
+                ("local_prefix_mod_effect_+%", 25, 25),
+            ],
+            lines: &[
+                &["local_maximum_prefixes_allowed_+"],
+                &["local_maximum_suffixes_allowed_+"],
+                &[],
+                &["local_prefix_mod_effect_+%"],
+            ],
+            negated: &[],
+        }],
+        extra_mods: &[],
+    },
+    ExpectedBase {
+        id: "Metadata/Items/Rings/RingE3",
+        name: "Composite Ring",
+        tags: &["not_for_sale", "experimental_base", "ring", "default"],
+        implicits: &[ExpectedImplicit {
+            family: "MaxPrefixMaxSuffix",
+            level: 30,
+            tags: &[],
+            stats: &[
+                ("local_maximum_prefixes_allowed_+", 3, 3),
+                ("local_maximum_suffixes_allowed_+", -3, -3),
+                ("local_implicit_mod_cannot_be_changed", 1, 1),
+                ("local_suffix_mod_effect_+%", 0, 0),
+                ("local_prefix_mod_effect_+%", 0, 0),
+            ],
+            lines: &[
+                &["local_maximum_prefixes_allowed_+"],
+                &["local_maximum_suffixes_allowed_+"],
+                &[],
+            ],
+            negated: &[],
+        }],
+        extra_mods: &[],
+    },
+    ExpectedBase {
+        id: "Metadata/Items/Rings/RingE4",
+        name: "Manifold Ring",
+        tags: &["not_for_sale", "experimental_base", "ring", "default"],
+        implicits: &[ExpectedImplicit {
+            family: "MaxPrefixMaxSuffix",
+            level: 30,
+            tags: &[],
+            stats: &[
+                ("local_maximum_prefixes_allowed_+", 1, 1),
+                ("local_maximum_suffixes_allowed_+", -2, -2),
+                ("local_implicit_mod_cannot_be_changed", 1, 1),
+                ("local_suffix_mod_effect_+%", 0, 0),
+                ("local_prefix_mod_effect_+%", 50, 50),
+            ],
+            lines: &[
+                &["local_maximum_prefixes_allowed_+"],
+                &["local_maximum_suffixes_allowed_+"],
+                &[],
+                &["local_prefix_mod_effect_+%"],
+            ],
+            negated: &[],
+        }],
+        extra_mods: &[],
+    },
+    ExpectedBase {
+        id: "Metadata/Items/Rings/RingE5",
+        name: "Ratcheting Ring",
+        tags: &["not_for_sale", "experimental_base", "ring", "default"],
+        implicits: &[ExpectedImplicit {
+            family: "MaxPrefixMaxSuffix",
+            level: 30,
+            tags: &[],
+            stats: &[
+                ("local_maximum_prefixes_allowed_+", -3, -3),
+                ("local_maximum_suffixes_allowed_+", 3, 3),
+                ("local_implicit_mod_cannot_be_changed", 1, 1),
+                ("local_suffix_mod_effect_+%", 0, 0),
+                ("local_prefix_mod_effect_+%", 0, 0),
+            ],
+            lines: &[
+                &["local_maximum_prefixes_allowed_+"],
+                &["local_maximum_suffixes_allowed_+"],
+                &[],
+            ],
+            negated: &[],
+        }],
+        extra_mods: &[],
+    },
+    ExpectedBase {
+        id: "Metadata/Items/Rings/RingE6",
+        name: "Helical Ring",
+        tags: &["not_for_sale", "experimental_base", "ring", "default"],
+        implicits: &[ExpectedImplicit {
+            family: "MaxPrefixMaxSuffix",
+            level: 30,
+            tags: &[],
+            stats: &[
+                ("local_maximum_prefixes_allowed_+", -2, -2),
+                ("local_maximum_suffixes_allowed_+", 1, 1),
+                ("local_implicit_mod_cannot_be_changed", 1, 1),
+                ("local_suffix_mod_effect_+%", 50, 50),
+                ("local_prefix_mod_effect_+%", 0, 0),
+            ],
+            lines: &[
+                &["local_maximum_prefixes_allowed_+"],
+                &["local_maximum_suffixes_allowed_+"],
+                &[],
+                &["local_suffix_mod_effect_+%"],
+            ],
             negated: &[],
         }],
         extra_mods: &[],
@@ -1870,10 +2014,11 @@ fn assert_conversion_fails(label: &str, raw: &RawFiles, base_ids: &[&str], hints
 // AC1: „`data/` enthält die Ring-Basen nach den Entscheidungen des PO, jede mit ihren
 // Implicits und ihrem Mod-Pool aus RePoE, erzeugt mit dem Konverter. `data/README.md` ist
 // aktualisiert."
-// (The PO's decisions give 37 bases (ADR 0017, ADR 0020). The data files are checked against
-// values taken from the raw files; that they are the converter's output is checked by the
-// developer's second run without a diff. Implicits whose text shows no value (format
-// `ignore`, Breach Ring and Unset Ring) keep their stat without a placeholder (ADR 0017); the
+// (The PO's decisions give 43 bases (ADR 0017, ADR 0020, ADR 0022). The data files are checked
+// against values taken from the raw files; that they are the converter's output is checked by
+// the developer's second run without a diff. Implicits whose text shows no value (format
+// `ignore`, Breach Ring, Heist rings and Unset Ring) keep their stat without a placeholder
+// (ADR 0017), and so does a Heist ring's magnitude of 0 %, which has no line (ADR 0022); the
 // converter's handling of them is checked with invented raw files. The update of
 // `data/README.md` is wording and is checked in the review.)
 #[test]
