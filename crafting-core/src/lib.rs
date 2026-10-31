@@ -13,6 +13,7 @@ mod data;
 mod model;
 mod rng;
 mod slot;
+mod stat_order;
 
 pub use conversion::Conversion;
 pub use craft::{
