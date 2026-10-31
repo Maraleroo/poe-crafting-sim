@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use serde::Deserialize;
 
+use crate::base_effects::effects_of;
 use crate::conversion::Conversion;
 use crate::rng::{roll_in_range, Rng};
 
@@ -185,11 +186,19 @@ impl Mod {
 
     /// The display text with every placeholder replaced by the value of the stat it names,
     /// converted as the game does where the mod has a conversion for the stat. Stats are found
-    /// by identifier, never by their position.
+    /// by identifier, never by their position. The text shows the rolled values unscaled; the
+    /// normal view of a prefix or suffix is `Item::explicit_text`.
     ///
     /// # Panics
     /// If a placeholder names a stat the mod does not have. That is an error in the data.
     pub fn display_text(&self) -> String {
+        self.text_scaled_by(0)
+    }
+
+    /// Like `display_text`, but each stat value is first increased by `percent` percent:
+    /// multiplied by (100 + percent), divided by 100 and rounded down (integer arithmetic).
+    /// With 0 the value is unchanged.
+    fn text_scaled_by(&self, percent: u32) -> String {
         self.placeholders
             .iter()
             .fold(self.text.clone(), |text, (name, stat_id)| {
@@ -200,13 +209,21 @@ impl Mod {
                     .unwrap_or_else(|| {
                         panic!("placeholder {name:?} names the missing stat {stat_id:?}")
                     });
+                let value = scaled(stat.value, percent);
                 let shown = match self.conversions.get(stat_id) {
-                    Some(conversion) => conversion.show(stat.value),
-                    None => stat.value.to_string(),
+                    Some(conversion) => conversion.show(value),
+                    None => value.to_string(),
                 };
                 text.replace(&format!("{{{name}}}"), &shown)
             })
     }
+}
+
+/// `value` increased by `percent` percent and rounded down (ADR 0022). A result outside the
+/// range of `i32` is cut to it; the values of the game data are far from that.
+fn scaled(value: i32, percent: u32) -> i32 {
+    let scaled = (i64::from(value) * (100 + i64::from(percent))).div_euclid(100);
+    scaled.clamp(i64::from(i32::MIN), i64::from(i32::MAX)) as i32
 }
 
 /// A prefix or suffix of an item: its name from the game data and the rolled mod.
@@ -250,6 +267,20 @@ impl AffixLimits {
             prefixes,
             suffixes,
         })
+    }
+
+    /// These limits with the limit of each side changed by the given number (negative values
+    /// reduce it), never below 0. The total limit stays.
+    fn changed_by(self, prefixes: i32, suffixes: i32) -> AffixLimits {
+        let changed = |limit: usize, change: i32| {
+            let limit = i64::try_from(limit).unwrap_or(i64::MAX) + i64::from(change);
+            usize::try_from(limit.max(0)).unwrap_or(usize::MAX)
+        };
+        AffixLimits {
+            mods: self.mods,
+            prefixes: changed(self.prefixes, prefixes),
+            suffixes: changed(self.suffixes, suffixes),
+        }
     }
 }
 
@@ -305,19 +336,45 @@ impl Item {
         (requirement > 1).then_some(requirement)
     }
 
-    /// The name of a magic item: `<prefix name> <base name> <suffix name>`. A missing prefix
-    /// or suffix leaves its part out. Names of rare items are not defined yet; for them, the
-    /// name uses the first prefix and the first suffix.
+    /// The affix limits of the item: the limits of its rarity (`AffixLimits::of`) with the limit
+    /// of each side changed by the lines "+N Prefix Modifiers allowed" and "-N Suffix Modifiers
+    /// allowed" of its base, never below 0 (rule "Affix limits" in `poe-crafting-rules`, ADR
+    /// 0022). The total limit does not change. `None` for a unique item. This is where the
+    /// changes are applied; `AffixLimits::of` stays the only place of the limits themselves.
+    pub fn affix_limits(&self) -> Option<AffixLimits> {
+        let changes = effects_of(&self.base.id).affix_limit_changes;
+        AffixLimits::of(self.rarity)
+            .map(|limits| limits.changed_by(changes.prefixes, changes.suffixes))
+    }
+
+    /// The text of a prefix or suffix of the item in the normal view: each stat value is
+    /// increased by the percent of the lines "X% increased Prefix/Suffix Modifier magnitudes"
+    /// of the base for the mod's side (multiplied by (100 + X), divided by 100, rounded down),
+    /// then converted and inserted as `Mod::display_text` does. The mod keeps its unscaled
+    /// values. Without such a line the text equals `explicit.modifier.display_text()`.
+    ///
+    /// # Panics
+    /// If a placeholder of the mod names a stat the mod does not have. That is an error in the
+    /// data.
+    pub fn explicit_text(&self, explicit: &ExplicitMod) -> String {
+        let percent = effects_of(&self.base.id)
+            .magnitude_increases
+            .of(explicit.affix_type);
+        explicit.modifier.text_scaled_by(percent)
+    }
+
+    /// The name of the item: the names of all prefixes, the base name and the names of all
+    /// suffixes, each list in the order its mods were added, separated by spaces (rule "Item
+    /// basics" in `poe-crafting-rules`). A side without mods leaves its part out. Names of
+    /// rare items are not defined by a rule yet; the formula is the same for them.
     pub fn name(&self) -> String {
-        [
-            self.prefixes.first().map(|prefix| prefix.name.as_str()),
-            Some(self.base.name.as_str()),
-            self.suffixes.first().map(|suffix| suffix.name.as_str()),
-        ]
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>()
-        .join(" ")
+        self.prefixes
+            .iter()
+            .map(|prefix| prefix.name.as_str())
+            .chain([self.base.name.as_str()])
+            .chain(self.suffixes.iter().map(|suffix| suffix.name.as_str()))
+            .collect::<Vec<_>>()
+            .join(" ")
     }
 }
 
@@ -694,5 +751,121 @@ Second line"
         assert_eq!(leveled_item(0, Some(2), None).required_level(), None);
         assert_eq!(leveled_item(1, None, None).required_level(), None);
         assert_eq!(leveled_item(0, None, None).required_level(), None);
+    }
+
+    #[test]
+    fn name_has_all_prefixes_and_suffixes_in_the_order_they_were_added() {
+        let mut item = item_with(Some("First"), Some("of One"));
+        item.prefixes.push(explicit("Second", AffixType::Prefix));
+        item.suffixes.push(explicit("of Two", AffixType::Suffix));
+        assert_eq!(item.name(), "First Second Invented Base of One of Two");
+    }
+
+    #[test]
+    fn limits_changed_by_a_number_never_fall_below_zero_and_keep_the_total() {
+        let magic = AffixLimits::of(Rarity::Magic).unwrap();
+        let changed = magic.changed_by(3, -3);
+        assert_eq!(
+            (changed.mods, changed.prefixes, changed.suffixes),
+            (2, 4, 0)
+        );
+        let changed = magic.changed_by(-5, 1);
+        assert_eq!(
+            (changed.mods, changed.prefixes, changed.suffixes),
+            (2, 0, 2)
+        );
+        let normal = AffixLimits::of(Rarity::Normal).unwrap();
+        let changed = normal.changed_by(-1, 2);
+        assert_eq!(
+            (changed.mods, changed.prefixes, changed.suffixes),
+            (0, 0, 2)
+        );
+        assert_eq!(magic.changed_by(0, 0), magic);
+    }
+
+    #[test]
+    fn a_base_without_changes_has_the_limits_of_its_rarity() {
+        for rarity in [Rarity::Normal, Rarity::Magic, Rarity::Rare, Rarity::Unique] {
+            let mut item = item_with(None, None);
+            item.rarity = rarity;
+            assert_eq!(item.affix_limits(), AffixLimits::of(rarity));
+        }
+    }
+
+    /// A base of the game data with the given identifier, as a rare item with a prefix and a
+    /// suffix whose only stat has the value 11 or 100.
+    fn rare_item_of(base_id: &str, value: i32) -> Item {
+        let base = crate::data::base_item(base_id).expect("the base is in the game data");
+        let mut item = Item::new(&base, &mut SeededRng::new(1));
+        item.rarity = Rarity::Rare;
+        for affix_type in [AffixType::Prefix, AffixType::Suffix] {
+            let mut rolled = explicit("Invented", affix_type);
+            rolled.modifier.text = "{value}".to_owned();
+            rolled.modifier.placeholders = BTreeMap::from([("value".to_owned(), HIGH.to_owned())]);
+            rolled
+                .modifier
+                .stats
+                .iter_mut()
+                .for_each(|stat| stat.value = value);
+            match affix_type {
+                AffixType::Prefix => item.prefixes.push(rolled),
+                AffixType::Suffix => item.suffixes.push(rolled),
+            }
+        }
+        item
+    }
+
+    #[test]
+    fn explicit_text_increases_the_values_of_the_side_that_the_base_increases() {
+        // The base increases suffixes by 25 % and has +1 suffix and -1 prefix
+        let item = rare_item_of("Metadata/Items/Rings/RingE1", 11);
+        assert_eq!(item.explicit_text(&item.prefixes[0]), "11");
+        assert_eq!(item.explicit_text(&item.suffixes[0]), "13");
+        // The rolled value stays unscaled
+        assert_eq!(item.suffixes[0].modifier.display_text(), "11");
+        let item = rare_item_of("Metadata/Items/Rings/RingE4", 57);
+        assert_eq!(item.explicit_text(&item.prefixes[0]), "85");
+        assert_eq!(item.explicit_text(&item.suffixes[0]), "57");
+    }
+
+    #[test]
+    fn explicit_text_without_an_increase_equals_the_display_text() {
+        let item = rare_item_of("Metadata/Items/Rings/RingE3", 11);
+        for explicit in item.prefixes.iter().chain(&item.suffixes) {
+            assert_eq!(
+                item.explicit_text(explicit),
+                explicit.modifier.display_text()
+            );
+        }
+    }
+
+    #[test]
+    fn scaling_uses_integer_arithmetic_and_rounds_down() {
+        assert_eq!(scaled(11, 25), 13);
+        assert_eq!(scaled(6, 25), 7);
+        assert_eq!(scaled(47, 25), 58);
+        assert_eq!(scaled(57, 50), 85);
+        assert_eq!(scaled(31, 50), 46);
+        assert_eq!(scaled(7, 0), 7);
+        assert_eq!(scaled(-7, 0), -7);
+        assert_eq!(scaled(0, 100), 0);
+        assert_eq!(scaled(i32::MAX, 100), i32::MAX);
+    }
+
+    #[test]
+    fn scaling_happens_before_the_conversion() {
+        let mut converted = definition(vec![stat(LOW, 1), stat(HIGH, 30)]);
+        converted.text = "{high}".to_owned();
+        converted.placeholders = BTreeMap::from([("high".to_owned(), HIGH.to_owned())]);
+        converted.conversions.insert(
+            HIGH.to_owned(),
+            Conversion {
+                divisor: 100,
+                precision: None,
+            },
+        );
+        let rolled = Mod::roll(&converted, &mut SeededRng::new(1));
+        assert_eq!(rolled.display_text(), "0.3");
+        assert_eq!(rolled.text_scaled_by(25), "0.37");
     }
 }

@@ -4,6 +4,7 @@
 //! never user-facing text. Game texts (item names, mod texts) are game data and pass
 //! through unchanged (ADR 0008).
 
+mod base_effects;
 mod conversion;
 mod craft;
 mod currency;

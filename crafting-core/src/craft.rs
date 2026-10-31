@@ -1,7 +1,7 @@
 //! Crafting actions on items. Results are values and reason codes, never UI text.
 
 use crate::damage_lock::{blocked_tags, is_blocked};
-use crate::model::{AffixLimits, AffixType, ExplicitMod, ExplicitModDefinition, Item, Mod, Rarity};
+use crate::model::{AffixType, ExplicitMod, ExplicitModDefinition, Item, Mod, Rarity};
 use crate::rng::{choose_weighted, roll_below, Rng};
 
 /// Why a currency cannot be applied. A reason code; the UI decides how to show it.
@@ -65,7 +65,7 @@ fn valid_candidates<'a>(
     item: &Item,
     base_pool: &'a [ExplicitModDefinition],
 ) -> Vec<&'a ExplicitModDefinition> {
-    let Some(limits) = AffixLimits::of(item.rarity) else {
+    let Some(limits) = item.affix_limits() else {
         return Vec::new();
     };
     let total_has_room = item.prefixes.len() + item.suffixes.len() < limits.mods;
