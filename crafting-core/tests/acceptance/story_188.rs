@@ -22,6 +22,11 @@
 //! What is checked outside `cargo test`, by the PO in the local preview (tech lead's plan):
 //! - AC1: choosing the six rings in the picker, in the slot "Ring" and in the suggestions.
 //! - AC2: the implicits as the page shows them.
+//!
+//! Adapted for AB#248 (PO-confirmed): criterion 5 of AB#248 replaces the fields `prefix` and
+//! `suffix` of `Item` by the lists `prefixes` and `suffixes` (ADR 0021). The tests read the
+//! lists; what they check is unchanged. Criterion 4 of AB#248 replaces the check in AC4 that the
+//! page builds its pool with `unblocked_mods`.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -273,7 +278,7 @@ fn page_pool(base_id: &str) -> Vec<ExplicitModDefinition> {
 
 /// The rolled prefix and suffix of a magic item.
 fn explicit_mods_of(item: &Item) -> Vec<&ExplicitMod> {
-    item.prefix.iter().chain(item.suffix.iter()).collect()
+    item.prefixes.iter().chain(item.suffixes.iter()).collect()
 }
 
 /// What Orbs of Transmutation and of Alteration rolled on `orbs` normal items of a base.
@@ -575,6 +580,10 @@ fn ac3_the_lock_blocks_every_mod_with_a_tag_of_another_damage_type() {
 // the page builds it (ADR 0020); the orbs take the valid mods and do not filter them again
 // (ADR 0013). The examples are the mod families of the game data. The page builds its pool with
 // `unblocked_mods`.)
+// (Adapted for AB#248, PO-confirmed: criterion 4 of AB#248 replaces the check that the page
+// builds its pool with `unblocked_mods`. The page passes the ring's own pool from `mod_pool`,
+// and the orbs leave out the blocked mods themselves (ADR 0021, `story_248::ac4`). The rest
+// stays.)
 #[test]
 fn ac4_the_orbs_roll_only_unblocked_mods_on_the_five_locked_rings() {
     let mut rng = SeededRng::new(SEED);
@@ -676,10 +685,10 @@ fn ac4_the_orbs_roll_only_unblocked_mods_on_the_five_locked_rings() {
         );
     }
 
-    // And the page builds its pool with the lock
+    // And the page passes the ring's own pool to the orbs
     assert_web_src_uses(
-        "unblocked_mods",
-        "the orbs on the page roll only mods the ring's lock does not block",
+        "mod_pool",
+        "the orbs on the page roll from the ring's own pool and leave out the blocked mods",
     );
 }
 

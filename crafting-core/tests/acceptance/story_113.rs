@@ -20,6 +20,11 @@
 //! a text check of the PO's rules, which were committed to `poe-crafting-rules` before these
 //! tests (841b808); it passes as soon as the module compiles.
 //!
+//! Adapted for AB#248 (PO-confirmed): criterion 3 of AB#248 replaces AC4 and rule 4 in AC5.
+//! Without a valid mod, the orb takes effect and the item becomes magic with no mods; the orb
+//! never shows "Failed to apply item: Could not generate Mod.", and `CraftError::NoValidMod`
+//! is gone.
+//!
 //! What is checked outside `cargo test`, by the PO in the local preview:
 //! - AC1 and AC2: the tooltip on hover and how the inapplicable orb looks.
 //! - AC3: the message after a click, also in a narrow window (mobile).
@@ -50,7 +55,6 @@ const NO_VALID_MOD_MESSAGE: &str = "Failed to apply item: Could not generate Mod
 
 /// Reason codes from the tech lead's plan and ADR 0012, the keys of `messages`.
 const NOT_NORMAL_CODE: &str = "item_not_normal";
-const NO_VALID_MOD_CODE: &str = "no_valid_mod";
 
 /// The project's own text that the game message replaces (AC4), and its translation key
 /// (removed according to the tech lead's plan).
@@ -64,11 +68,6 @@ const OLD_NO_VALID_MOD_KEY: &str = "craft.error.no_valid_mod";
 const APPLIES_TO_LINE: &str = "- Applies to: normal items.";
 const NOT_APPLICABLE_LINE: &str = "- Not applicable when: the item is not normal. The reason \
      shown is the game's message \"Failed to apply item: Target is not Normal Rarity.\"";
-const RULE_4_LINE: &str = "4. If there is no valid mod at all, applying the orb fails with the \
-     game's message \"Failed to apply item: Could not generate Mod.\" and the item stays \
-     unchanged.";
-/// Start of every version of rule 4, to find a second, outdated rule 4.
-const RULE_4_START: &str = "4. If there is no valid mod at all";
 
 const CURRENCIES_JSON: &str = "data/currencies.json";
 const ORB_RULE_FILE: &str = ".claude/skills/poe-crafting-rules/currencies/orb-of-transmutation.md";
@@ -420,8 +419,13 @@ fn ac3_click_on_inapplicable_orb_shows_the_same_message_and_keeps_the_item() {
 // valid mods to roll from." wird nicht mehr verwendet."
 // (PO's answer: "no longer used" means the delivered website and the file contents of
 // `web/`, `crafting-core/src` and `data/`.)
+// (Adapted for AB#248, PO-confirmed: criterion 3 of AB#248 replaces the first sentence. Without
+// a valid mod, the orb takes effect, the ring becomes magic with no mods, and the orb never
+// shows "Failed to apply item: Could not generate Mod."; its message is removed from the game
+// data. The check that the old text is gone stays. Renamed from
+// `ac4_no_valid_mod_shows_the_game_message_and_the_old_text_is_gone`.)
 #[test]
-fn ac4_no_valid_mod_shows_the_game_message_and_the_old_text_is_gone() {
+fn ac4_without_a_valid_mod_the_orb_takes_effect_and_the_old_text_is_gone() {
     // Given normal Iron Rings and a pool without any valid mod
     let base = iron_ring();
     let empty: Vec<ExplicitModDefinition> = Vec::new();
@@ -434,38 +438,37 @@ fn ac4_no_valid_mod_shows_the_game_message_and_the_old_text_is_gone() {
         // When the orb is applied
         let result = apply_orb_of_transmutation(&mut item, &empty, &mut rng);
 
-        // Then it fails because there is no valid mod, and the item is unchanged
-        assert_eq!(result, Err(CraftError::NoValidMod));
-        assert_eq!(item, before);
-        // And the message shown is exactly the game text
-        let error = result.expect_err("the orb fails without a valid mod");
-        assert_eq!(
-            Currency::OrbOfTransmutation.failure_message(error),
-            NO_VALID_MOD_MESSAGE
-        );
+        // Then it takes effect: the ring becomes magic with no mods at all
+        assert_eq!(result, Ok(()));
+        assert_eq!(item.rarity, Rarity::Magic);
+        assert!(item.prefixes.is_empty() && item.suffixes.is_empty());
+        assert_eq!(item.base, before.base);
+        assert_eq!(item.implicits, before.implicits);
     }
-    // And the reason code links the error to the game data
-    assert_eq!(CraftError::NoValidMod.code(), NO_VALID_MOD_CODE);
+    // And the orb has no message "Could not generate Mod.", in crafting-core and in the game data
     let definition = orb_definition();
-    assert_eq!(
+    assert!(
         definition
             .messages
-            .get(NO_VALID_MOD_CODE)
-            .map(String::as_str),
-        Some(NO_VALID_MOD_MESSAGE),
-        "currencies(): message of {ORB_ID:?} for {NO_VALID_MOD_CODE:?}"
+            .values()
+            .all(|message| message.as_str() != NO_VALID_MOD_MESSAGE),
+        "currencies(): {ORB_ID:?} must have no message {NO_VALID_MOD_MESSAGE:?}, found {:?}",
+        definition.messages
     );
-    assert_eq!(
-        text_in_file(&["messages", NO_VALID_MOD_CODE]),
-        NO_VALID_MOD_MESSAGE
+    let entry = orb_entry_in_file();
+    let file_messages = entry
+        .get("messages")
+        .and_then(Value::as_object)
+        .unwrap_or_else(|| panic!("{CURRENCIES_JSON}: {ORB_ID:?} must have \"messages\""));
+    assert!(
+        file_messages
+            .values()
+            .all(|message| message.as_str() != Some(NO_VALID_MOD_MESSAGE)),
+        "{CURRENCIES_JSON}: {ORB_ID:?} must have no message {NO_VALID_MOD_MESSAGE:?}, found \
+         {file_messages:?}"
     );
     // And the text is not written into the code of crafting-core or web
     assert_only_in_game_data(NO_VALID_MOD_MESSAGE);
-    // And the page shows the message from crafting-core
-    assert_web_src_uses(
-        &["failure_message"],
-        "applying the orb without a valid mod shows the failure message from crafting-core",
-    );
 
     // And the old text is no longer used: not on the website and not in what it is built from
     let built_from = [web_files(), core_src_files(), data_files()].concat();
@@ -490,6 +493,9 @@ fn ac4_no_valid_mod_shows_the_game_message_and_the_old_text_is_gone() {
 //    - Regel 4 lautet genau:
 //      4. If there is no valid mod at all, applying the orb fails with the game's message
 //         "Failed to apply item: Could not generate Mod." and the item stays unchanged."
+// (Adapted for AB#248, PO-confirmed: criterion 3 of AB#248 replaces rules 1 to 4 of the file,
+// so rule 4 is no longer checked here. Its wording is checked at the acceptance of AB#248. The
+// "Not applicable when" line stays.)
 #[test]
 fn ac5_orb_rule_file_contains_the_po_lines_verbatim() {
     // Given the PO's rule file for the Orb of Transmutation
@@ -507,16 +513,5 @@ fn ac5_orb_rule_file_contains_the_po_lines_verbatim() {
         lines.get(applies_to + 1).copied(),
         Some(NOT_APPLICABLE_LINE),
         "in {ORB_RULE_FILE}, the line after {APPLIES_TO_LINE:?} must be the PO's line"
-    );
-    // And rule 4 is exactly the PO's text, and there is no other version of rule 4
-    let rule_4: Vec<&str> = lines
-        .iter()
-        .map(|line| line.trim_start())
-        .filter(|line| line.starts_with(RULE_4_START))
-        .collect();
-    assert_eq!(
-        rule_4,
-        vec![RULE_4_LINE],
-        "{ORB_RULE_FILE} must contain rule 4 exactly once, in the PO's words"
     );
 }

@@ -6,23 +6,21 @@
 use crate::item_level;
 use crafting_core::{
     apply_orb_of_alteration, apply_orb_of_transmutation, base_item, can_apply_orb_of_alteration,
-    can_apply_orb_of_transmutation, mod_pool, unblocked_mods, valid_mods, BaseItem, CraftError,
-    Currency, ExplicitModDefinition, Item, SeededRng,
+    can_apply_orb_of_transmutation, mod_pool, BaseItem, CraftError, Currency,
+    ExplicitModDefinition, Item, SeededRng,
 };
 
 /// The base item on the workbench (a reference, not item data).
 const START_ITEM_ID: &str = "Metadata/Items/Rings/Ring1";
 
-/// The valid mods of the base item's own pool for the item level, without the mods that the
-/// damage type lock of the base blocks (ADR 0013, ADR 0020).
-fn valid_pool(base_id: &str, item_level: u32) -> Vec<ExplicitModDefinition> {
-    let pool =
-        mod_pool(base_id).unwrap_or_else(|| panic!("crafting-core has no pool for {base_id:?}"));
-    valid_mods(&unblocked_mods(base_id, &pool), item_level)
+/// The pool of the base item with the given identifier, as the orbs take it. The orbs build
+/// the valid pool from it themselves (ADR 0021).
+fn base_pool(base_id: &str) -> Vec<ExplicitModDefinition> {
+    mod_pool(base_id).unwrap_or_else(|| panic!("crafting-core has no pool for {base_id:?}"))
 }
 
-/// The item, its base, the chosen item level and the generator that serves every roll of the
-/// page. The item level is state of the workbench, not of the item (ADR 0019).
+/// The item, its base, the pool of the base, the chosen item level and the generator that
+/// serves every roll of the page. The chosen item level is set on every new item (ADR 0021).
 pub struct Workbench {
     base: BaseItem,
     item_level: u32,
@@ -32,19 +30,19 @@ pub struct Workbench {
 }
 
 impl Workbench {
-    /// A workbench with a new normal item of the start base item and the valid mods of that
-    /// base item's own pool for the default item level. The same seed gives the same sequence
-    /// of results.
+    /// A workbench with a new normal item of the start base item at the default item level and
+    /// that base item's own pool. The same seed gives the same sequence of results.
     pub fn new(seed: u64) -> Self {
-        Self::with_pool(seed, valid_pool(START_ITEM_ID, item_level::DEFAULT))
+        Self::with_pool(seed, base_pool(START_ITEM_ID))
     }
 
-    /// Like [`Workbench::new`], but with the given pool of valid mods.
+    /// Like [`Workbench::new`], but with the given pool instead of the pool of the base item.
     pub fn with_pool(seed: u64, pool: Vec<ExplicitModDefinition>) -> Self {
         let base = base_item(START_ITEM_ID)
             .unwrap_or_else(|| panic!("crafting-core has no base item {START_ITEM_ID:?}"));
         let mut rng = SeededRng::new(seed);
-        let item = Item::new(&base, &mut rng);
+        let mut item = Item::new(&base, &mut rng);
+        item.item_level = item_level::DEFAULT;
         Self {
             base,
             item_level: item_level::DEFAULT,
@@ -90,9 +88,10 @@ impl Workbench {
         }
     }
 
-    /// Replaces the item with a new normal item of the same base.
+    /// Replaces the item with a new normal item of the same base at the chosen item level.
     pub fn reset(&mut self) {
         self.item = Item::new(&self.base, &mut self.rng);
+        self.item.item_level = self.item_level;
     }
 
     /// The chosen item level.
@@ -100,9 +99,9 @@ impl Workbench {
         self.item_level
     }
 
-    /// Chooses the item level: the pool of valid mods is built again for it, and the item
-    /// becomes a new normal item of the base, as after [`Workbench::reset`]. The same level
-    /// as the current one is no change, and the item stays.
+    /// Chooses the item level: the item becomes a new normal item of the base at that level,
+    /// as after [`Workbench::reset`]. The same level as the current one is no change, and the
+    /// item stays.
     ///
     /// # Panics
     /// If the level is not an allowed one (`item_level::ALLOWED`). The page only passes levels
@@ -116,13 +115,12 @@ impl Workbench {
             return;
         }
         self.item_level = level;
-        self.pool = valid_pool(&self.base.id, level);
         self.reset();
     }
 
-    /// Chooses the base item with the given identifier: the base and its pool of valid mods
-    /// are replaced, the item level is set back to the default, and the item becomes a new
-    /// normal item of the base, as after [`Workbench::reset`] (ADR 0018, ADR 0019).
+    /// Chooses the base item with the given identifier: the base and its pool are replaced,
+    /// the item level is set back to the default, and the item becomes a new normal item of
+    /// the base, as after [`Workbench::reset`] (ADR 0018, ADR 0019).
     ///
     /// # Panics
     /// If `crafting-core` has no such base item. The identifiers come from `crafting-core`, so
@@ -131,7 +129,7 @@ impl Workbench {
         self.base = base_item(base_id)
             .unwrap_or_else(|| panic!("crafting-core has no base item {base_id:?}"));
         self.item_level = item_level::DEFAULT;
-        self.pool = valid_pool(base_id, self.item_level);
+        self.pool = base_pool(base_id);
         self.reset();
     }
 
@@ -162,26 +160,41 @@ mod tests {
     }
 
     #[test]
-    fn the_pool_holds_the_valid_mods_for_the_default_item_level() {
+    fn the_pool_is_the_pool_of_the_base_and_the_item_has_the_default_item_level() {
         let workbench = Workbench::new(1);
         let pool = mod_pool(START_ITEM_ID).expect("the start base item has a pool");
         assert_eq!(workbench.item_level(), item_level::DEFAULT);
-        assert_eq!(workbench.pool, valid_mods(&pool, item_level::DEFAULT));
+        assert_eq!(workbench.item().item_level, item_level::DEFAULT);
+        assert_eq!(workbench.pool, pool);
     }
 
-    /// A base with a damage type lock (a Breach ring) and a base without one.
+    /// A base with a damage type lock (a Breach ring).
     const LOCKED_BASE_ID: &str = "Metadata/Items/Rings/RingB1";
-    const UNLOCKED_BASE_ID: &str = "Metadata/Items/Rings/RingB6";
 
     #[test]
-    fn the_pool_of_a_locked_base_leaves_out_the_blocked_mods() {
-        for (id, blocks_mods) in [(LOCKED_BASE_ID, true), (UNLOCKED_BASE_ID, false)] {
-            let all = mod_pool(id).expect("the base has a pool");
-            let mut workbench = Workbench::new(1);
-            workbench.select(id);
-            let unblocked = unblocked_mods(id, &all);
-            assert_eq!(workbench.pool, valid_mods(&unblocked, item_level::DEFAULT));
-            assert_eq!(unblocked.len() < all.len(), blocks_mods, "{id}");
+    fn the_pool_of_a_locked_base_is_passed_whole_and_the_orbs_leave_out_the_blocked_mods() {
+        let all = mod_pool(LOCKED_BASE_ID).expect("the base has a pool");
+        let mut workbench = Workbench::new(1);
+        workbench.select(LOCKED_BASE_ID);
+        assert_eq!(workbench.pool, all);
+        // This base is locked to cold: no mod rolled on it has a tag of another damage type.
+        const OTHER_DAMAGE_TYPES: [&str; 4] = ["physical", "lightning", "fire", "chaos"];
+        for _ in 0..300 {
+            workbench.reset();
+            workbench.apply(TRANSMUTATION).unwrap();
+            workbench.apply(ALTERATION).unwrap();
+            for explicit in workbench
+                .item()
+                .prefixes
+                .iter()
+                .chain(&workbench.item().suffixes)
+            {
+                assert!(explicit
+                    .modifier
+                    .tags
+                    .iter()
+                    .all(|tag| !OTHER_DAMAGE_TYPES.contains(&tag.as_str())));
+            }
         }
     }
 
@@ -192,7 +205,7 @@ mod tests {
         assert_eq!(workbench.apply(TRANSMUTATION), Ok(()));
         assert_eq!(workbench.item().rarity, Rarity::Magic);
         assert_eq!(workbench.item().implicits, implicits);
-        assert!(workbench.item().prefix.is_some() || workbench.item().suffix.is_some());
+        assert!(!workbench.item().prefixes.is_empty() || !workbench.item().suffixes.is_empty());
         assert!(!workbench.applicable(TRANSMUTATION));
         assert!(workbench.applicable(ALTERATION));
     }
@@ -263,9 +276,7 @@ mod tests {
     fn a_failure_has_the_message_of_its_currency_for_its_reason() {
         for (currency, error) in [
             (TRANSMUTATION, CraftError::ItemNotNormal),
-            (TRANSMUTATION, CraftError::NoValidMod),
             (ALTERATION, CraftError::ItemNotMagic),
-            (ALTERATION, CraftError::NoValidMod),
         ] {
             assert_eq!(
                 Workbench::failure_message(currency, error),
@@ -337,12 +348,7 @@ mod tests {
             assert_eq!(workbench.item().base, base, "{}", base.id);
             assert_eq!(workbench.item().rarity, Rarity::Normal, "{}", base.id);
             assert_eq!(workbench.item().implicits.len(), base.implicits.len());
-            assert_eq!(
-                workbench.pool,
-                valid_pool(&base.id, item_level::DEFAULT),
-                "{}",
-                base.id
-            );
+            assert_eq!(workbench.pool, base_pool(&base.id), "{}", base.id);
             assert!(workbench.applicable(TRANSMUTATION));
             assert!(!workbench.applicable(ALTERATION));
         }
@@ -350,12 +356,8 @@ mod tests {
 
     #[test]
     fn select_uses_the_pool_of_the_chosen_base() {
-        let own_mods = |id: &str| -> Vec<String> {
-            valid_pool(id, item_level::DEFAULT)
-                .into_iter()
-                .map(|m| m.name)
-                .collect()
-        };
+        let own_mods =
+            |id: &str| -> Vec<String> { base_pool(id).into_iter().map(|m| m.name).collect() };
         let start = own_mods(START_ITEM_ID);
         let base = other_bases()
             .into_iter()
@@ -368,7 +370,7 @@ mod tests {
             workbench.reset();
             workbench.apply(TRANSMUTATION).unwrap();
             let item = workbench.item();
-            for explicit in item.prefix.iter().chain(&item.suffix) {
+            for explicit in item.prefixes.iter().chain(&item.suffixes) {
                 assert!(chosen.contains(&explicit.name));
             }
         }
@@ -392,19 +394,19 @@ mod tests {
     }
 
     #[test]
-    fn without_any_valid_mod_the_currencies_fail_and_change_nothing() {
+    fn without_any_valid_mod_the_currencies_make_the_item_magic_with_no_mods() {
         let mut workbench = Workbench::with_pool(1, Vec::new());
-        let before = workbench.item().clone();
-        assert_eq!(workbench.apply(TRANSMUTATION), Err(CraftError::NoValidMod));
-        assert_eq!(workbench.item(), &before);
-        assert!(workbench.applicable(TRANSMUTATION));
+        assert_eq!(workbench.apply(TRANSMUTATION), Ok(()));
+        assert_eq!(workbench.item().rarity, Rarity::Magic);
+        assert!(workbench.item().prefixes.is_empty() && workbench.item().suffixes.is_empty());
+        assert!(workbench.applicable(ALTERATION));
 
         let mut magic = Workbench::new(1);
         magic.apply(TRANSMUTATION).unwrap();
         magic.pool.clear();
-        let before = magic.item().clone();
-        assert_eq!(magic.apply(ALTERATION), Err(CraftError::NoValidMod));
-        assert_eq!(magic.item(), &before);
+        assert_eq!(magic.apply(ALTERATION), Ok(()));
+        assert_eq!(magic.item().rarity, Rarity::Magic);
+        assert!(magic.item().prefixes.is_empty() && magic.item().suffixes.is_empty());
         assert!(magic.applicable(ALTERATION));
     }
 
@@ -413,20 +415,24 @@ mod tests {
     const LOW_LEVEL: u32 = 10;
 
     #[test]
-    fn the_low_level_has_fewer_valid_mods_than_the_default_level() {
-        let all = valid_pool(START_ITEM_ID, item_level::DEFAULT);
-        let low = valid_pool(START_ITEM_ID, LOW_LEVEL);
-        assert!(!low.is_empty());
-        assert!(low.len() < all.len());
+    fn the_low_level_leaves_out_some_mods_of_the_pool_but_not_all() {
+        let pool = base_pool(START_ITEM_ID);
+        let at_low_level = pool
+            .iter()
+            .filter(|definition| definition.definition.level <= LOW_LEVEL)
+            .count();
+        assert!(at_low_level > 0);
+        assert!(at_low_level < pool.len());
     }
 
     #[test]
-    fn set_item_level_builds_the_pool_for_the_level_and_resets_the_item() {
+    fn set_item_level_sets_the_level_on_a_new_item_and_keeps_the_pool_of_the_base() {
         let mut workbench = Workbench::new(1);
         workbench.apply(TRANSMUTATION).unwrap();
         workbench.set_item_level(LOW_LEVEL);
         assert_eq!(workbench.item_level(), LOW_LEVEL);
-        assert_eq!(workbench.pool, valid_pool(START_ITEM_ID, LOW_LEVEL));
+        assert_eq!(workbench.item().item_level, LOW_LEVEL);
+        assert_eq!(workbench.pool, base_pool(START_ITEM_ID));
         assert_eq!(workbench.item().base, workbench.base);
         assert_eq!(workbench.item().rarity, Rarity::Normal);
         assert!(workbench.applicable(TRANSMUTATION));
@@ -442,7 +448,7 @@ mod tests {
             workbench.apply(TRANSMUTATION).unwrap();
             workbench.apply(ALTERATION).unwrap();
             let item = workbench.item();
-            for explicit in item.prefix.iter().chain(&item.suffix) {
+            for explicit in item.prefixes.iter().chain(&item.suffixes) {
                 assert!(explicit.modifier.level <= LOW_LEVEL);
             }
         }
@@ -453,10 +459,22 @@ mod tests {
         let mut workbench = Workbench::new(1);
         workbench.set_item_level(LOW_LEVEL);
         workbench.set_item_level(item_level::DEFAULT);
-        assert_eq!(
-            workbench.pool,
-            valid_pool(START_ITEM_ID, item_level::DEFAULT)
-        );
+        assert_eq!(workbench.item().item_level, item_level::DEFAULT);
+        let highest = (0..300)
+            .map(|_| {
+                workbench.reset();
+                workbench.apply(TRANSMUTATION).unwrap();
+                let item = workbench.item();
+                item.prefixes
+                    .iter()
+                    .chain(&item.suffixes)
+                    .map(|explicit| explicit.modifier.level)
+                    .max()
+                    .unwrap_or(0)
+            })
+            .max()
+            .unwrap();
+        assert!(highest > LOW_LEVEL);
     }
 
     #[test]
@@ -481,7 +499,8 @@ mod tests {
         workbench.apply(TRANSMUTATION).unwrap();
         workbench.reset();
         assert_eq!(workbench.item_level(), LOW_LEVEL);
-        assert_eq!(workbench.pool, valid_pool(START_ITEM_ID, LOW_LEVEL));
+        assert_eq!(workbench.item().item_level, LOW_LEVEL);
+        assert_eq!(workbench.pool, base_pool(START_ITEM_ID));
     }
 
     #[test]
@@ -492,11 +511,12 @@ mod tests {
             workbench.select(&base.id);
             assert_eq!(workbench.item_level(), item_level::DEFAULT, "{}", base.id);
             assert_eq!(
-                workbench.pool,
-                valid_pool(&base.id, item_level::DEFAULT),
+                workbench.item().item_level,
+                item_level::DEFAULT,
                 "{}",
                 base.id
             );
+            assert_eq!(workbench.pool, base_pool(&base.id), "{}", base.id);
         }
     }
 
@@ -507,7 +527,8 @@ mod tests {
         workbench.select(&base.id);
         workbench.set_item_level(LOW_LEVEL);
         assert_eq!(workbench.item().base, base);
-        assert_eq!(workbench.pool, valid_pool(&base.id, LOW_LEVEL));
+        assert_eq!(workbench.item().item_level, LOW_LEVEL);
+        assert_eq!(workbench.pool, base_pool(&base.id));
     }
 
     #[test]

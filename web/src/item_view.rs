@@ -18,7 +18,7 @@ pub struct ItemView {
     pub requires_level: Option<String>,
     /// One entry per line of the implicit mods.
     pub implicits: Vec<String>,
-    /// One entry per line of the prefix, then of the suffix.
+    /// One entry per line of all prefixes, then of all suffixes.
     pub explicits: Vec<String>,
 }
 
@@ -34,9 +34,9 @@ impl ItemView {
             }),
             implicits: item.implicits.iter().flat_map(lines).collect(),
             explicits: item
-                .prefix
+                .prefixes
                 .iter()
-                .chain(&item.suffix)
+                .chain(&item.suffixes)
                 .flat_map(|explicit| lines(&explicit.modifier))
                 .collect(),
         }
@@ -76,7 +76,8 @@ mod tests {
     use super::*;
     use crate::workbench::Workbench;
     use crafting_core::{
-        AffixType, Currency, ExplicitModDefinition, ModDefinition, StatDefinition,
+        AffixType, Currency, ExplicitMod, ExplicitModDefinition, ModDefinition, SeededRng,
+        StatDefinition,
     };
 
     #[test]
@@ -142,9 +143,9 @@ mod tests {
         assert_eq!(view.rarity, t.text("item.rarity.magic"));
         assert_eq!(view.implicits, implicits);
         let expected: Vec<String> = item
-            .prefix
+            .prefixes
             .iter()
-            .chain(&item.suffix)
+            .chain(&item.suffixes)
             .flat_map(|explicit| {
                 explicit
                     .modifier
@@ -157,6 +158,60 @@ mod tests {
         assert!(!expected.is_empty());
         assert_eq!(view.explicits, expected);
         assert!(view.explicits.iter().all(|line| !line.contains('{')));
+    }
+
+    #[test]
+    fn a_magic_item_without_mods_shows_only_its_implicits() {
+        let t = Translations::english();
+        let mut workbench = Workbench::with_pool(1, Vec::new());
+        workbench.apply(Currency::OrbOfTransmutation).unwrap();
+        let item = workbench.item();
+        let view = ItemView::new(&t, item);
+        assert_eq!(view.rarity, t.text("item.rarity.magic"));
+        assert_eq!(view.name, item.base.name);
+        assert_eq!(
+            view.implicits,
+            [item.implicits[0].display_text()],
+            "the view shows the rolled implicit"
+        );
+        assert!(view.explicits.is_empty());
+    }
+
+    #[test]
+    fn view_shows_all_prefixes_then_all_suffixes_in_the_order_they_were_added() {
+        let mut rng = SeededRng::new(1);
+        let mut item = Workbench::new(1).item().clone();
+        item.rarity = Rarity::Rare;
+        for (name, affix_type) in [
+            ("first suffix", AffixType::Suffix),
+            ("first prefix", AffixType::Prefix),
+            ("second suffix", AffixType::Suffix),
+            ("second prefix", AffixType::Prefix),
+        ] {
+            let mut definition = invented_mod(name, 1);
+            definition.affix_type = affix_type;
+            definition.definition.text = name.to_owned();
+            definition.definition.placeholders.clear();
+            let explicit = ExplicitMod {
+                name: name.to_owned(),
+                affix_type,
+                modifier: Mod::roll(&definition.definition, &mut rng),
+            };
+            match affix_type {
+                AffixType::Prefix => item.prefixes.push(explicit),
+                AffixType::Suffix => item.suffixes.push(explicit),
+            }
+        }
+        let view = ItemView::new(&Translations::english(), &item);
+        assert_eq!(
+            view.explicits,
+            [
+                "first prefix",
+                "second prefix",
+                "first suffix",
+                "second suffix"
+            ]
+        );
     }
 
     #[test]

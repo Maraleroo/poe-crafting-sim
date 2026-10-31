@@ -2,11 +2,12 @@
 //! `poe-crafting-rules`).
 
 use std::collections::BTreeMap;
+use std::sync::OnceLock;
 
 use serde::Deserialize;
 
 use crate::data::BASE_ITEMS_JSON;
-use crate::model::ExplicitModDefinition;
+use crate::model::{ExplicitModDefinition, Item};
 
 /// The five damage types of the PO's rule, as tags of the game data. Other tags, such as
 /// `elemental`, `physical_damage` or `elemental_damage`, are not damage types. This is the only
@@ -32,30 +33,60 @@ struct LocksFile {
 /// other than the lock's. A base without a lock, or an identifier that is not in the game data,
 /// blocks nothing. A blocked mod can never roll on the base.
 ///
-/// Like `valid_mods`, this is not applied by the currencies (ADR 0013): the caller builds the
-/// pool with it.
+/// `valid_pool` applies the same block when a currency adds a random mod; the currencies need
+/// no pool filtered with this function.
 ///
 /// # Panics
 /// If the embedded data is invalid, for example a lock that is not one of the five damage
 /// types. That is a programming error, caught by the unit tests.
 pub fn unblocked_mods(base_id: &str, mods: &[ExplicitModDefinition]) -> Vec<ExplicitModDefinition> {
-    let lock = parse_locks(BASE_ITEMS_JSON).remove(base_id);
+    let blocked = blocked_tags_of_base(base_id);
     mods.iter()
-        .filter(|definition| !is_blocked(lock, definition))
+        .filter(|definition| !is_blocked(&blocked, definition))
         .cloned()
         .collect()
 }
 
-/// Whether a lock on the given damage type blocks the mod.
-fn is_blocked(lock: Option<&str>, definition: &ExplicitModDefinition) -> bool {
-    let Some(lock) = lock else {
-        return false;
-    };
+/// The tags that an item blocks (ADR 0021): a mod with one of them can never roll on the item.
+/// The item collects them from its sources. Today the only source is the damage type lock of
+/// its base.
+pub(crate) fn blocked_tags(item: &Item) -> Vec<&'static str> {
+    blocked_tags_of_base(&item.base.id)
+}
+
+/// The tags that the damage type lock of the base blocks: the four damage types other than
+/// the lock's, or none for a base without a lock.
+fn blocked_tags_of_base(base_id: &str) -> Vec<&'static str> {
+    tags_blocked_by(locks().get(base_id).copied())
+}
+
+/// The tags that a lock on the given damage type blocks.
+fn tags_blocked_by(lock: Option<&str>) -> Vec<&'static str> {
+    match lock {
+        Some(lock) => DAMAGE_TYPES
+            .into_iter()
+            .filter(|damage_type| *damage_type != lock)
+            .collect(),
+        None => Vec::new(),
+    }
+}
+
+/// The locks of the embedded game data, read once.
+///
+/// # Panics
+/// If the embedded data is invalid.
+fn locks() -> &'static BTreeMap<String, &'static str> {
+    static LOCKS: OnceLock<BTreeMap<String, &'static str>> = OnceLock::new();
+    LOCKS.get_or_init(|| parse_locks(BASE_ITEMS_JSON))
+}
+
+/// Whether the mod has one of the blocked tags.
+pub(crate) fn is_blocked(blocked: &[&str], definition: &ExplicitModDefinition) -> bool {
     definition
         .definition
         .tags
         .iter()
-        .any(|tag| tag != lock && DAMAGE_TYPES.contains(&tag.as_str()))
+        .any(|tag| blocked.contains(&tag.as_str()))
 }
 
 /// Reads the locks of `base_items.json` by base identifier. Bases without a lock are not in the
@@ -119,7 +150,7 @@ mod tests {
     }
 
     fn kept(lock: Option<&str>, tags: &[&str]) -> bool {
-        !is_blocked(lock, &invented_mod("m", tags))
+        !is_blocked(&tags_blocked_by(lock), &invented_mod("m", tags))
     }
 
     #[test]

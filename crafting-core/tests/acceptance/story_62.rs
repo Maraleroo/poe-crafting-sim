@@ -23,6 +23,11 @@
 //! pool (AC4, AC7), mod texts show converted values (AC1), and the test data follows the model
 //! of ADR 0016 (`test_mod`, AC8).
 //!
+//! Adapted for AB#248 (PO-confirmed): criterion 5 of AB#248 replaces the fields `prefix` and
+//! `suffix` of `Item` by the lists `prefixes` and `suffixes` (ADR 0021). The tests read and set
+//! the lists; what they check is unchanged. Criteria 1 to 3 of AB#248 replace AC8 for a pool
+//! without any mod, and the PO's old wording in AC9.
+//!
 //! What is checked outside `cargo test`, by the PO in the local preview:
 //! - AC1 to AC3: the rendering of the buttons and the magic item on the start page.
 //! - AC6: different results after reloading the page, and the network and storage tabs of
@@ -168,31 +173,14 @@ const AC7_ONE_MOD_SHARE: f64 = 0.5;
 /// Rounded share quoted in AC8 for the unbalanced pool.
 const AC8_SINGLE_PREFIX_SHARE: f64 = 0.90;
 
-/// The PO's rule for magic items in "Item basics" (AC9).
-const MAGIC_ITEM_RULE: &str = "A magic item has at most one prefix and one suffix. Its name is \
-    \"<prefix name> <base name> <suffix name>\"; a missing prefix or suffix leaves its part out.";
-
-/// The PO's rule file for the Orb of Transmutation (AC9), line by line, with "≈" (U+2248)
-/// and "⁻¹⁷" (U+207B U+00B9 U+2077) in the evidence.
-const ORB_RULE_LINES: [&str; 8] = [
+/// The lines of the PO's rule file for the Orb of Transmutation (AC9) that AB#248 does not
+/// replace. Adapted for AB#248 (PO-confirmed): criteria 1 and 1a of AB#248 replace the rule for
+/// magic items in "Item basics", and criterion 3 replaces rules 1 to 4 and the sentence on the
+/// empty pool in the evidence. Their wording is checked at the acceptance of AB#248.
+const ORB_RULE_LINES: [&str; 3] = [
     "**Orb of Transmutation**",
     "- Applies to: normal items.",
     "- Effect: the item becomes magic and gets new mods.",
-    "  1. The item gets 1 or 2 mods, each with a 50% chance.",
-    "  2. One mod: it is chosen from one pool of all valid prefixes and all valid suffixes \
-     together. The chance of a mod is its weight divided by the sum of the weights of all mods \
-     in this pool. There is no separate choice between prefix and suffix.",
-    "  3. Two mods: one prefix is chosen from the valid prefixes and one suffix from the valid \
-     suffixes. Within each pool, the chance of a mod is its weight divided by the sum of the \
-     weights in that pool. If one type has no valid mod, that mod is left out; no second mod \
-     of the other type is chosen instead.",
-    "  4. If there is no valid mod at all, applying the orb fails with the game's message \
-     \"Failed to apply item: Could not generate Mod.\" and the item stays unchanged.",
-    "- Evidence: measured by the PO on 2026-10-21 with 1000 Orbs of Transmutation on a Bone \
-     Ring (item level 83): 1 mod 49.5 %, 2 mods 50.5 %; with one mod, 68.5 % suffixes against \
-     69.4 % expected from the weights. A 50:50 choice between prefix and suffix is ruled out \
-     (p \u{2248} 10\u{207b}\u{b9}\u{2077}). Not documented by GGG. The empty-pool case in rule \
-     3 is the PO's assumption and not measured.",
 ];
 
 const MODS_JSON: &str = "data/mods.json";
@@ -262,11 +250,6 @@ fn read_text(relative: &str) -> String {
     let path = repo_path(relative);
     assert!(path.is_file(), "{relative} must exist");
     read_path(&path)
-}
-
-/// Collapses every run of whitespace, including line breaks, into one space.
-fn normalize_whitespace(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 /// All files below `dir`, skipping the given direct subdirectories (build output).
@@ -551,15 +534,13 @@ fn expected_display_text(rolled: &Mod) -> String {
 /// The name the PO's rule expects: "<prefix name> <base name> <suffix name>", missing parts
 /// left out.
 fn expected_name(item: &Item) -> String {
-    [
-        item.prefix.as_ref().map(|m| m.name.as_str()),
-        Some(item.base.name.as_str()),
-        item.suffix.as_ref().map(|m| m.name.as_str()),
-    ]
-    .into_iter()
-    .flatten()
-    .collect::<Vec<_>>()
-    .join(" ")
+    item.prefixes
+        .iter()
+        .map(|m| m.name.as_str())
+        .chain([item.base.name.as_str()])
+        .chain(item.suffixes.iter().map(|m| m.name.as_str()))
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 fn find_definition<'a>(pool: &'a [ExplicitModDefinition], name: &str) -> &'a ExplicitModDefinition {
@@ -719,14 +700,14 @@ fn transmute_many(pool: &[ExplicitModDefinition], seed: u64, trials: u64) -> Tal
             item.implicits, implicits_before,
             "trial {trial}: the implicits stay unchanged"
         );
-        if let Some(prefix) = &item.prefix {
+        for prefix in &item.prefixes {
             assert_rolled_from_pool(pool, prefix, AffixType::Prefix);
         }
-        if let Some(suffix) = &item.suffix {
+        for suffix in &item.suffixes {
             assert_rolled_from_pool(pool, suffix, AffixType::Suffix);
         }
-        match (&item.prefix, &item.suffix) {
-            (Some(prefix), Some(suffix)) => {
+        match (item.prefixes.as_slice(), item.suffixes.as_slice()) {
+            ([prefix], [suffix]) => {
                 tally.two_mods += 1;
                 *tally
                     .two_mod_prefixes
@@ -737,14 +718,20 @@ fn transmute_many(pool: &[ExplicitModDefinition], seed: u64, trials: u64) -> Tal
                     .entry(suffix.name.clone())
                     .or_default() += 1;
             }
-            (Some(only), None) | (None, Some(only)) => {
+            ([only], []) | ([], [only]) => {
                 tally.one_mod += 1;
                 if only.affix_type == AffixType::Prefix {
                     tally.one_mod_prefixes += 1;
                 }
                 *tally.one_mod_by_name.entry(only.name.clone()).or_default() += 1;
             }
-            (None, None) => panic!("trial {trial}: a magic item must have at least one mod"),
+            ([], []) => panic!("trial {trial}: a magic item must have at least one mod"),
+            (prefixes, suffixes) => panic!(
+                "trial {trial}: a magic item has at most one prefix and one suffix, found {} \
+                 and {}",
+                prefixes.len(),
+                suffixes.len()
+            ),
         }
     }
     tally
@@ -886,7 +873,8 @@ fn ac1_orb_of_transmutation_makes_the_iron_ring_magic_with_rolled_mod_texts() {
         let implicit_texts: Vec<String> = item.implicits.iter().map(Mod::display_text).collect();
         assert_eq!(implicit_texts, implicit_texts_before);
         // And it has new mods from the pool, shown as text with their rolled values
-        let new_mods: Vec<&ExplicitMod> = item.prefix.iter().chain(item.suffix.iter()).collect();
+        let new_mods: Vec<&ExplicitMod> =
+            item.prefixes.iter().chain(item.suffixes.iter()).collect();
         assert!(!new_mods.is_empty(), "the magic ring must have new mods");
         for rolled in new_mods {
             assert_rolled_from_pool(&pool, rolled, rolled.affix_type);
@@ -956,12 +944,12 @@ fn ac2_magic_item_name_is_prefix_base_name_suffix_with_missing_parts_left_out() 
     let normal = Item::new(&base, &mut rng);
     let mut both = normal.clone();
     both.rarity = Rarity::Magic;
-    both.prefix = Some(rolled_explicit(&pool, "Hale", &mut rng));
-    both.suffix = Some(rolled_explicit(&pool, "of the Pupil", &mut rng));
+    both.prefixes = vec![rolled_explicit(&pool, "Hale", &mut rng)];
+    both.suffixes = vec![rolled_explicit(&pool, "of the Pupil", &mut rng)];
     let mut prefix_only = both.clone();
-    prefix_only.suffix = None;
+    prefix_only.suffixes.clear();
     let mut suffix_only = both.clone();
-    suffix_only.prefix = None;
+    suffix_only.prefixes.clear();
 
     // When asking for their names
     // Then the names follow the PO's examples
@@ -1020,8 +1008,8 @@ fn ac3_reset_restores_the_normal_ring_and_the_orb_is_disabled_on_a_magic_item() 
 
         // Then it is the normal Iron Ring again, and the orb is enabled again
         assert_eq!(reset.rarity, Rarity::Normal);
-        assert_eq!(reset.prefix, None);
-        assert_eq!(reset.suffix, None);
+        assert!(reset.prefixes.is_empty(), "the reset ring has no prefix");
+        assert!(reset.suffixes.is_empty(), "the reset ring has no suffix");
         assert_eq!(reset.implicits, fresh.implicits);
         assert_eq!(reset.name(), IRON_RING_NAME);
         assert_eq!(can_apply_orb_of_transmutation(&reset), Ok(()));
@@ -1386,6 +1374,9 @@ fn ac7_frequencies_with_the_full_pool_follow_the_rule() {
 // text behind the key `craft.error.no_valid_mod`.)
 // (Adapted for AB#167, PO-confirmed: only the test data of `test_mod` changes, without the
 // Global flag and with the level in the mod definition.)
+// (Adapted for AB#248, PO-confirmed: criterion 3 of AB#248 replaces the error for a pool
+// without any mod. The orb takes effect, and the ring becomes magic with no mods at all. The
+// checks of the unbalanced pool and of the empty prefix and suffix pools stay.)
 #[test]
 fn ac8_own_test_pools_cover_unbalanced_and_empty_pools() {
     let prefix_a = test_mod("Test Prefix A", AffixType::Prefix, 6000);
@@ -1449,12 +1440,12 @@ fn ac8_own_test_pools_cover_unbalanced_and_empty_pools() {
             // Then the empty type's mod is left out, and no mod of the other type replaces it
             match present {
                 AffixType::Prefix => {
-                    assert!(item.prefix.is_some(), "{label}: the item gets a prefix");
-                    assert_eq!(item.suffix, None, "{label}: the suffix is left out");
+                    assert!(!item.prefixes.is_empty(), "{label}: the item gets a prefix");
+                    assert!(item.suffixes.is_empty(), "{label}: the suffix is left out");
                 }
                 AffixType::Suffix => {
-                    assert_eq!(item.prefix, None, "{label}: the prefix is left out");
-                    assert!(item.suffix.is_some(), "{label}: the item gets a suffix");
+                    assert!(item.prefixes.is_empty(), "{label}: the prefix is left out");
+                    assert!(!item.suffixes.is_empty(), "{label}: the item gets a suffix");
                 }
             }
         }
@@ -1474,9 +1465,12 @@ fn ac8_own_test_pools_cover_unbalanced_and_empty_pools() {
         // When the orb is applied
         let result = apply_orb_of_transmutation(&mut item, &empty, &mut rng);
 
-        // Then it fails with the reason "no valid mod", and the item is unchanged
-        assert_eq!(result, Err(CraftError::NoValidMod));
-        assert_eq!(item, before);
+        // Then it takes effect: the ring becomes magic with no mods at all
+        assert_eq!(result, Ok(()));
+        assert_eq!(item.rarity, Rarity::Magic);
+        assert!(item.prefixes.is_empty() && item.suffixes.is_empty());
+        assert_eq!(item.base, before.base);
+        assert_eq!(item.implicits, before.implicits);
     }
 }
 
@@ -1489,14 +1483,18 @@ fn ac8_own_test_pools_cover_unbalanced_and_empty_pools() {
 // becomes magic and gets new mods. > 1. The item gets 1 or 2 mods, each with a 50% chance.
 // > 2. One mod: [...] > 3. Two mods: [...] > 4. If there is no valid mod at all, applying the
 // orb fails with an error message and the item stays unchanged. > - Evidence: [...]"
-// (The full quote is in `ORB_RULE_LINES`.)
+// (The lines that AB#248 does not replace are in `ORB_RULE_LINES`.)
+// (Adapted for AB#248, PO-confirmed: criteria 1 and 1a of AB#248 replace the rule for magic
+// items in "Item basics", and criterion 3 replaces rules 1 to 4 of the currency file and the
+// sentence on the empty pool in its evidence. Their wording is checked at the acceptance of
+// AB#248, so this test no longer checks it; the other lines of the file and the link stay.)
 #[test]
 fn ac9_crafting_rules_contain_the_po_rules_verbatim() {
     // Given the skill poe-crafting-rules and its currency file
     let rules = read_text(CRAFTING_RULES);
     let orb_rules = read_text(ORB_RULE_FILE);
 
-    // When reading the sections "Item basics" and "Currencies"
+    // When reading the section "Currencies"
     let section = |heading: &str| -> String {
         let (_, after_heading) = rules
             .split_once(&format!("## {heading}"))
@@ -1507,15 +1505,9 @@ fn ac9_crafting_rules_contain_the_po_rules_verbatim() {
             .unwrap_or(after_heading)
             .to_owned()
     };
-    let item_basics = section("Item basics");
     let currencies_section = section("Currencies");
 
-    // Then "Item basics" contains the rule for magic items word for word
-    assert!(
-        normalize_whitespace(&item_basics).contains(&normalize_whitespace(MAGIC_ITEM_RULE)),
-        "the section `## Item basics` of {CRAFTING_RULES} must contain {MAGIC_ITEM_RULE:?}"
-    );
-    // And the currency file contains every line of the Orb of Transmutation rule word for word
+    // Then the currency file contains every line of the Orb of Transmutation rule word for word
     let file_lines: Vec<&str> = orb_rules.lines().map(str::trim_end).collect();
     let missing: Vec<&str> = ORB_RULE_LINES
         .iter()

@@ -1,14 +1,16 @@
 //! The item level field of the page: the allowed values and the reading of its text.
 //!
 //! The range and the reading are rules of the page (PO decision on AB#187, ADR 0019), not game
-//! rules. The game rule itself, which mods roll at which item level, is `valid_mods` in
-//! `crafting-core`.
+//! rules. The game rule itself, which mods roll at which item level, is part of the rule for
+//! adding a random mod in `crafting-core`.
 
 use std::ops::RangeInclusive;
 
+use crafting_core::DEFAULT_ITEM_LEVEL;
+
 /// The item level of a new workbench and after the choice of a base item
-/// (`poe-crafting-rules`, "Item level").
-pub const DEFAULT: u32 = 100;
+/// (`poe-crafting-rules`, "Item level"): the item level of a new item in `crafting-core`.
+pub const DEFAULT: u32 = DEFAULT_ITEM_LEVEL;
 
 /// The item levels the field accepts.
 pub const ALLOWED: RangeInclusive<u32> = 1..=100;
@@ -31,6 +33,11 @@ mod tests {
     #[test]
     fn the_default_is_an_allowed_item_level() {
         assert!(ALLOWED.contains(&DEFAULT));
+    }
+
+    #[test]
+    fn the_default_is_the_item_level_of_a_new_item() {
+        assert_eq!(DEFAULT, DEFAULT_ITEM_LEVEL);
     }
 
     #[test]
