@@ -26,6 +26,7 @@ pub struct CurrencyDefinition {
 pub enum Currency {
     OrbOfTransmutation,
     OrbOfAlteration,
+    OrbOfAugmentation,
 }
 
 impl Currency {
@@ -34,6 +35,7 @@ impl Currency {
         match self {
             Currency::OrbOfTransmutation => "orb_of_transmutation",
             Currency::OrbOfAlteration => "orb_of_alteration",
+            Currency::OrbOfAugmentation => "orb_of_augmentation",
         }
     }
 
@@ -85,10 +87,16 @@ mod tests {
     /// Every variant of [`Currency`]. The exhaustive match makes a new variant a compile
     /// error here until it is added to the list.
     fn all() -> Vec<Currency> {
-        let variants = [Currency::OrbOfTransmutation, Currency::OrbOfAlteration];
+        let variants = [
+            Currency::OrbOfTransmutation,
+            Currency::OrbOfAlteration,
+            Currency::OrbOfAugmentation,
+        ];
         for variant in variants {
             match variant {
-                Currency::OrbOfTransmutation | Currency::OrbOfAlteration => {}
+                Currency::OrbOfTransmutation
+                | Currency::OrbOfAlteration
+                | Currency::OrbOfAugmentation => {}
             }
         }
         variants.to_vec()
@@ -99,6 +107,11 @@ mod tests {
         match currency {
             Currency::OrbOfTransmutation => vec![CraftError::ItemNotNormal],
             Currency::OrbOfAlteration => vec![CraftError::ItemNotMagic],
+            Currency::OrbOfAugmentation => vec![
+                CraftError::ItemNotMagic,
+                CraftError::NoSpaceForMods,
+                CraftError::NoValidMod,
+            ],
         }
     }
 

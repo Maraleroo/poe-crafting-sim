@@ -5,9 +5,9 @@
 
 use crate::item_level;
 use crafting_core::{
-    apply_orb_of_alteration, apply_orb_of_transmutation, base_item, can_apply_orb_of_alteration,
-    can_apply_orb_of_transmutation, mod_pool, BaseItem, CraftError, Currency,
-    ExplicitModDefinition, Item, SeededRng,
+    apply_orb_of_alteration, apply_orb_of_augmentation, apply_orb_of_transmutation, base_item,
+    can_apply_orb_of_alteration, can_apply_orb_of_augmentation, can_apply_orb_of_transmutation,
+    mod_pool, BaseItem, CraftError, Currency, ExplicitModDefinition, Item, SeededRng,
 };
 
 /// The base item on the workbench (a reference, not item data).
@@ -85,6 +85,9 @@ impl Workbench {
             Currency::OrbOfAlteration => {
                 apply_orb_of_alteration(&mut self.item, &self.pool, &mut self.rng)
             }
+            Currency::OrbOfAugmentation => {
+                apply_orb_of_augmentation(&mut self.item, &self.pool, &mut self.rng)
+            }
         }
     }
 
@@ -137,6 +140,7 @@ impl Workbench {
         match currency {
             Currency::OrbOfTransmutation => can_apply_orb_of_transmutation(&self.item),
             Currency::OrbOfAlteration => can_apply_orb_of_alteration(&self.item),
+            Currency::OrbOfAugmentation => can_apply_orb_of_augmentation(&self.item),
         }
     }
 }
@@ -245,6 +249,67 @@ mod tests {
             seen.push(workbench.item().clone());
         }
         assert!(seen.iter().any(|item| item != &seen[0]));
+    }
+
+    const AUGMENTATION: Currency = Currency::OrbOfAugmentation;
+
+    /// A workbench with a magic item that has one mod and room for another.
+    fn magic_with_room() -> Workbench {
+        let mut workbench = Workbench::new(1);
+        workbench.apply(TRANSMUTATION).unwrap();
+        while workbench.item().prefixes.len() + workbench.item().suffixes.len() != 1 {
+            workbench.apply(ALTERATION).unwrap();
+        }
+        workbench
+    }
+
+    #[test]
+    fn the_augmentation_on_a_normal_item_fails_and_changes_nothing() {
+        let mut workbench = Workbench::new(1);
+        let normal = workbench.item().clone();
+        assert!(!workbench.applicable(AUGMENTATION));
+        assert_eq!(
+            workbench.tooltip(AUGMENTATION),
+            AUGMENTATION.failure_message(CraftError::ItemNotMagic)
+        );
+        assert_eq!(workbench.apply(AUGMENTATION), Err(CraftError::ItemNotMagic));
+        assert_eq!(workbench.item(), &normal);
+    }
+
+    #[test]
+    fn the_augmentation_adds_one_mod_and_then_has_no_space() {
+        let mut workbench = magic_with_room();
+        let before = workbench.item().clone();
+        assert!(workbench.applicable(AUGMENTATION));
+        assert_eq!(workbench.tooltip(AUGMENTATION), AUGMENTATION.description());
+        assert_eq!(workbench.apply(AUGMENTATION), Ok(()));
+        let item = workbench.item();
+        assert_eq!(item.rarity, Rarity::Magic);
+        assert_eq!(item.prefixes.len() + item.suffixes.len(), 2);
+        assert!(item.prefixes.starts_with(&before.prefixes));
+        assert!(item.suffixes.starts_with(&before.suffixes));
+
+        let full = workbench.item().clone();
+        assert!(!workbench.applicable(AUGMENTATION));
+        assert_eq!(
+            workbench.tooltip(AUGMENTATION),
+            AUGMENTATION.failure_message(CraftError::NoSpaceForMods)
+        );
+        assert_eq!(
+            workbench.apply(AUGMENTATION),
+            Err(CraftError::NoSpaceForMods)
+        );
+        assert_eq!(workbench.item(), &full);
+    }
+
+    #[test]
+    fn the_augmentation_with_room_but_no_valid_mod_fails_and_changes_nothing() {
+        let mut workbench = magic_with_room();
+        workbench.pool.clear();
+        let before = workbench.item().clone();
+        assert!(workbench.applicable(AUGMENTATION));
+        assert_eq!(workbench.apply(AUGMENTATION), Err(CraftError::NoValidMod));
+        assert_eq!(workbench.item(), &before);
     }
 
     #[test]

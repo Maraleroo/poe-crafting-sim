@@ -11,11 +11,20 @@ pub enum CraftError {
     ItemNotNormal,
     /// The currency needs a magic item.
     ItemNotMagic,
+    /// The item has no room for another mod: neither side has room under both affix limits.
+    NoSpaceForMods,
+    /// The currency added no mod because the valid pool was empty.
+    NoValidMod,
 }
 
 impl CraftError {
     /// Every reason code.
-    pub(crate) const ALL: [CraftError; 2] = [CraftError::ItemNotNormal, CraftError::ItemNotMagic];
+    pub(crate) const ALL: [CraftError; 4] = [
+        CraftError::ItemNotNormal,
+        CraftError::ItemNotMagic,
+        CraftError::NoSpaceForMods,
+        CraftError::NoValidMod,
+    ];
 
     /// The identifier of the reason in lower snake case. It is the key of the failure
     /// messages in the game data (ADR 0012).
@@ -23,6 +32,8 @@ impl CraftError {
         match self {
             CraftError::ItemNotNormal => "item_not_normal",
             CraftError::ItemNotMagic => "item_not_magic",
+            CraftError::NoSpaceForMods => "no_space_for_mods",
+            CraftError::NoValidMod => "no_valid_mod",
         }
     }
 }
@@ -58,6 +69,20 @@ pub fn valid_pool(item: &Item, base_pool: &[ExplicitModDefinition]) -> Vec<Expli
         .collect()
 }
 
+/// Whether the prefix side and the suffix side of `item` have room under both affix limits.
+/// An item without affix limits (a unique item) has no room. This is the only place of the
+/// room rule.
+fn sides_with_room(item: &Item) -> (bool, bool) {
+    let Some(limits) = item.affix_limits() else {
+        return (false, false);
+    };
+    let total_has_room = item.prefixes.len() + item.suffixes.len() < limits.mods;
+    (
+        total_has_room && item.prefixes.len() < limits.prefixes,
+        total_has_room && item.suffixes.len() < limits.suffixes,
+    )
+}
+
 /// The mods of the valid pool as references into `base_pool`. `valid_pool` and
 /// `add_random_mod` build the pool here; the references avoid copying the pool for every
 /// mod that is added.
@@ -65,12 +90,7 @@ fn valid_candidates<'a>(
     item: &Item,
     base_pool: &'a [ExplicitModDefinition],
 ) -> Vec<&'a ExplicitModDefinition> {
-    let Some(limits) = item.affix_limits() else {
-        return Vec::new();
-    };
-    let total_has_room = item.prefixes.len() + item.suffixes.len() < limits.mods;
-    let prefix_has_room = total_has_room && item.prefixes.len() < limits.prefixes;
-    let suffix_has_room = total_has_room && item.suffixes.len() < limits.suffixes;
+    let (prefix_has_room, suffix_has_room) = sides_with_room(item);
     let blocked = blocked_tags(item);
     base_pool
         .iter()
@@ -183,6 +203,41 @@ pub fn apply_orb_of_alteration(
     Ok(())
 }
 
+/// Whether the orb can be applied to `item`, without looking at any mod pool. The rarity is
+/// checked first, then the room.
+pub fn can_apply_orb_of_augmentation(item: &Item) -> Result<(), CraftError> {
+    if item.rarity != Rarity::Magic {
+        return Err(CraftError::ItemNotMagic);
+    }
+    let (prefix_has_room, suffix_has_room) = sides_with_room(item);
+    if prefix_has_room || suffix_has_room {
+        Ok(())
+    } else {
+        Err(CraftError::NoSpaceForMods)
+    }
+}
+
+/// Adds one random mod (`add_random_mod`) to a magic item with room, from `pool`, the pool of
+/// its base. The mods already on the item stay.
+///
+/// If the valid pool is empty, no mod is added and the result is `NoValidMod`. On an error the
+/// item stays unchanged.
+///
+/// # Panics
+/// If a mod of the valid pool has weight zero.
+pub fn apply_orb_of_augmentation(
+    item: &mut Item,
+    pool: &[ExplicitModDefinition],
+    rng: &mut impl Rng,
+) -> Result<(), CraftError> {
+    can_apply_orb_of_augmentation(item)?;
+    if add_random_mod(item, pool, rng) {
+        Ok(())
+    } else {
+        Err(CraftError::NoValidMod)
+    }
+}
+
 /// The rule of both orbs: choose a target of 1 or 2 mods, each with a chance of 50 %, then add
 /// random mods until the item has that many prefixes and suffixes or no mod is added.
 fn add_random_mods(item: &mut Item, pool: &[ExplicitModDefinition], rng: &mut impl Rng) {
@@ -257,7 +312,10 @@ mod tests {
         // The exhaustive match makes a new variant a compile error until it is listed.
         for error in CraftError::ALL {
             match error {
-                CraftError::ItemNotNormal | CraftError::ItemNotMagic => {}
+                CraftError::ItemNotNormal
+                | CraftError::ItemNotMagic
+                | CraftError::NoSpaceForMods
+                | CraftError::NoValidMod => {}
             }
         }
         let codes: std::collections::BTreeSet<&str> =
@@ -532,5 +590,106 @@ mod tests {
             apply_orb_of_transmutation(&mut item, &pool, &mut rng).unwrap();
             assert_eq!(item.prefixes.len() + item.suffixes.len(), 1);
         }
+    }
+
+    fn full_magic_item(rng: &mut SeededRng) -> Item {
+        let mut item = magic_item(rng);
+        item.prefixes
+            .push(roll_explicit(&mod_of("p", AffixType::Prefix, 1), rng));
+        item.suffixes
+            .push(roll_explicit(&mod_of("s", AffixType::Suffix, 1), rng));
+        item
+    }
+
+    #[test]
+    fn items_that_are_not_magic_cannot_take_the_orb_of_augmentation() {
+        for rarity in [Rarity::Normal, Rarity::Rare, Rarity::Unique] {
+            let mut item = magic_item(&mut SeededRng::new(1));
+            item.rarity = rarity;
+            assert_eq!(
+                can_apply_orb_of_augmentation(&item),
+                Err(CraftError::ItemNotMagic)
+            );
+        }
+    }
+
+    #[test]
+    fn a_magic_item_can_take_the_orb_of_augmentation_while_a_side_has_room() {
+        let mut rng = SeededRng::new(1);
+        let mut item = magic_item(&mut rng);
+        assert_eq!(can_apply_orb_of_augmentation(&item), Ok(()));
+        item.prefixes
+            .push(roll_explicit(&mod_of("p", AffixType::Prefix, 1), &mut rng));
+        assert_eq!(can_apply_orb_of_augmentation(&item), Ok(()));
+        let full = full_magic_item(&mut rng);
+        assert_eq!(
+            can_apply_orb_of_augmentation(&full),
+            Err(CraftError::NoSpaceForMods)
+        );
+    }
+
+    #[test]
+    fn the_orb_of_augmentation_adds_one_mod_and_keeps_the_others() {
+        let mut rng = SeededRng::new(2);
+        let held = mod_of("held", AffixType::Prefix, 1);
+        let pool = [held.clone(), mod_of("new", AffixType::Suffix, 3)];
+        let mut item = magic_item(&mut rng);
+        item.prefixes.push(roll_explicit(&held, &mut rng));
+        let before = item.clone();
+        assert_eq!(
+            apply_orb_of_augmentation(&mut item, &pool, &mut rng),
+            Ok(())
+        );
+        assert_eq!(item.prefixes, before.prefixes);
+        assert_eq!(names(&item.suffixes), ["new"]);
+    }
+
+    #[test]
+    fn a_failed_orb_of_augmentation_leaves_the_item_unchanged() {
+        let mut rng = SeededRng::new(1);
+        let pool = [mod_of("a", AffixType::Prefix, 1)];
+        let mut normal = normal_item(&mut rng);
+        let mut full = full_magic_item(&mut rng);
+        for (item, error) in [
+            (&mut normal, CraftError::ItemNotMagic),
+            (&mut full, CraftError::NoSpaceForMods),
+        ] {
+            let before = item.clone();
+            assert_eq!(apply_orb_of_augmentation(item, &pool, &mut rng), Err(error));
+            assert_eq!(item, &before);
+        }
+    }
+
+    #[test]
+    fn with_room_but_an_empty_valid_pool_the_orb_of_augmentation_reports_no_valid_mod() {
+        let mut rng = SeededRng::new(1);
+        let mut high = mod_of("high", AffixType::Prefix, 1);
+        high.definition.level = 2;
+        let mut item = magic_item(&mut rng);
+        item.item_level = 1;
+        item.suffixes
+            .push(roll_explicit(&mod_of("s", AffixType::Suffix, 1), &mut rng));
+        let before = item.clone();
+        // The pool has only a prefix that is too high and a suffix of the held family.
+        let pool = [high, mod_of("s", AffixType::Suffix, 1)];
+        // The orb applies: it does not look at the pool.
+        assert_eq!(can_apply_orb_of_augmentation(&item), Ok(()));
+        for pool in [&pool[..], &[]] {
+            assert_eq!(
+                apply_orb_of_augmentation(&mut item, pool, &mut rng),
+                Err(CraftError::NoValidMod)
+            );
+            assert_eq!(item, before);
+        }
+    }
+
+    #[test]
+    fn a_non_magic_item_is_reported_before_an_empty_pool_by_the_orb_of_augmentation() {
+        let mut rng = SeededRng::new(1);
+        let mut item = normal_item(&mut rng);
+        assert_eq!(
+            apply_orb_of_augmentation(&mut item, &[], &mut rng),
+            Err(CraftError::ItemNotMagic)
+        );
     }
 }

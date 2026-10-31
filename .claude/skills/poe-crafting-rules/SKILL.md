@@ -55,6 +55,7 @@ One file per currency, linked here, e.g. `currencies/orb-of-transmutation.md`:
 Currency rules:
 - [Orb of Transmutation](currencies/orb-of-transmutation.md)
 - [Orb of Alteration](currencies/orb-of-alteration.md)
+- [Orb of Augmentation](currencies/orb-of-augmentation.md)
 
 ## Sources
 - https://www.poewiki.net/
