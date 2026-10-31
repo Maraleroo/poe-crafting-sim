@@ -28,6 +28,11 @@
 //! - AC3: that the unavailable slots show "Not available yet" and cannot be chosen.
 //! - AC5: that choosing a base closes the picker and shows the item on the page.
 //! - AC7: the wording of the UI texts (also in the review against the criterion, ADR 0014).
+//!
+//! Adapted for AB#248 (PO-confirmed): criterion 5 of AB#248 replaces the fields `prefix` and
+//! `suffix` of `Item` by the lists `prefixes` and `suffixes` (ADR 0021). The tests read the
+//! lists; what they check is unchanged. Criterion 4 of AB#248 replaces the check in AC5 that the
+//! page builds the pool with `valid_mods`.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -392,7 +397,7 @@ fn assert_from_pool(
 
 /// The rolled prefix and suffix of a magic item.
 fn explicit_mods_of(item: &Item) -> Vec<&ExplicitMod> {
-    item.prefix.iter().chain(item.suffix.iter()).collect()
+    item.prefixes.iter().chain(item.suffixes.iter()).collect()
 }
 
 // ---------------------------------------------------------------------------------------
@@ -479,6 +484,9 @@ fn ac3_the_ring_slot_holds_all_ring_bases_and_every_other_slot_has_none() {
 // and the item, which becomes `Item::new` of the base, like Reset (ADR 0018). Closing the
 // picker and the page are checked in the local preview; `Workbench::select` is covered by the
 // developer's unit tests in `web`.)
+// (Adapted for AB#248, PO-confirmed: criterion 4 of AB#248 replaces the check that the page
+// builds the pool with `valid_mods`. The page passes the base's pool from `mod_pool`, and the
+// orbs apply the item level rule themselves (ADR 0021, `story_248::ac4`). The rest stays.)
 #[test]
 fn ac5_a_chosen_ring_is_a_normal_item_and_the_orbs_roll_from_its_own_pool() {
     let mut rng = SeededRng::new(SEED);
@@ -498,7 +506,10 @@ fn ac5_a_chosen_ring_is_a_normal_item_and_the_orbs_roll_from_its_own_pool() {
         // Then the item is a normal item of this base with its implicit
         assert_eq!(item.rarity, Rarity::Normal, "{what}");
         assert_eq!(item.base, base, "{what}");
-        assert!(item.prefix.is_none() && item.suffix.is_none(), "{what}");
+        assert!(
+            item.prefixes.is_empty() && item.suffixes.is_empty(),
+            "{what}"
+        );
         assert_eq!(item.implicits.len(), base.implicits.len(), "{what}");
         for (rolled, definition) in item.implicits.iter().zip(&base.implicits) {
             assert_eq!(rolled.family, definition.family, "{what}");
@@ -588,10 +599,6 @@ fn ac5_a_chosen_ring_is_a_normal_item_and_the_orbs_roll_from_its_own_pool() {
     // And the page builds the item and the pool of the chosen base with crafting-core
     assert_web_src_uses("Item::new", "the chosen base becomes a new normal item");
     assert_web_src_uses("mod_pool", "the orbs roll from the chosen base's own pool");
-    assert_web_src_uses(
-        "valid_mods",
-        "the pool of the chosen base follows the item level rule",
-    );
 }
 
 // AC6: „Two-Stone Rings und Shadowed Rings sind in Vorschlägen und Liste durch ihren

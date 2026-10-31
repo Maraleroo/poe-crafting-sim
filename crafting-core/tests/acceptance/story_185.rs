@@ -2488,6 +2488,9 @@ fn ac5_negated_values_appear_with_reversed_sign_in_the_wording_of_the_game_data(
 // (Tech lead's plan: the page builds its pool with `valid_mods` from `mod_pool` of its start
 // base, the Iron Ring, so the Iron Ring keeps its own pool and rolls no other base's mods. The
 // page itself is checked by the PO in the local preview.)
+// (Adapted for AB#248, PO-confirmed: criterion 4 of AB#248 replaces the check that the page
+// builds the pool with `valid_mods`. The page passes the base's pool from `mod_pool`, and the
+// orbs apply the item level rule themselves (ADR 0021, `story_248::ac4`). The rest stays.)
 #[test]
 fn ac6_the_website_still_shows_the_iron_ring_with_its_own_pool() {
     // Given the Iron Ring's pool in the data file
@@ -2539,8 +2542,4 @@ fn ac6_the_website_still_shows_the_iron_ring_with_its_own_pool() {
     // And the page starts with the Iron Ring and builds its pool from the Iron Ring's own pool
     assert_web_src_uses(IRON_RING_ID, "the page starts with the Iron Ring");
     assert_web_src_uses("mod_pool", "the page takes the Iron Ring's own pool");
-    assert_web_src_uses(
-        "valid_mods",
-        "the page builds the pool with the item level rule",
-    );
 }

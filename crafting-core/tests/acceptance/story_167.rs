@@ -27,6 +27,11 @@
 //! - AC1: that the developer's second converter run on the raw files gives no diff, and that
 //!   the binary writes nothing when the conversion fails (the binary needs the raw files).
 //! - AC4 and AC5: the rendering on the page, by the PO in the local preview.
+//!
+//! Adapted for AB#248 (PO-confirmed): criterion 5 of AB#248 replaces the fields `prefix` and
+//! `suffix` of `Item` by the lists `prefixes` and `suffixes` (ADR 0021). The tests read and set
+//! the lists; what they check is unchanged. Criterion 4 of AB#248 replaces the check in AC3 that
+//! the page builds the pool with `valid_mods`.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -791,8 +796,8 @@ fn magic_item(base: &BaseItem, explicit_levels: &[u32], rng: &mut SeededRng) -> 
         };
         item.rarity = Rarity::Magic;
         match affix_type {
-            AffixType::Prefix => item.prefix = Some(rolled),
-            AffixType::Suffix => item.suffix = Some(rolled),
+            AffixType::Prefix => item.prefixes.push(rolled),
+            AffixType::Suffix => item.suffixes.push(rolled),
         }
     }
     item
@@ -807,8 +812,8 @@ fn expected_required_level(item: &Item) -> Option<u32> {
     let highest_mod_level = item
         .implicits
         .iter()
-        .chain(item.prefix.iter().map(|explicit| &explicit.modifier))
-        .chain(item.suffix.iter().map(|explicit| &explicit.modifier))
+        .chain(item.prefixes.iter().map(|explicit| &explicit.modifier))
+        .chain(item.suffixes.iter().map(|explicit| &explicit.modifier))
         .map(|rolled| rolled.level)
         .max()
         .unwrap_or(0);
@@ -1876,6 +1881,9 @@ fn ac2_converter_is_deterministic_and_stops_with_a_message_on_unconvertible_valu
 // (Adapted for AB#185, PO-confirmed: criterion 6 of AB#185 gives every base its own pool
 // (ADR 0017). The Iron Ring's pool comes from `mod_pool` instead of `explicit_mods()`, which
 // now offers the mods of all ring bases, and the page takes it from `mod_pool`.)
+// (Adapted for AB#248, PO-confirmed: criterion 4 of AB#248 replaces the check that the page
+// builds the pool with `valid_mods`. The page passes the base's pool from `mod_pool`, and the
+// orbs apply the item level rule themselves (ADR 0021, `story_248::ac4`). The rest stays.)
 #[test]
 fn ac3_both_orbs_roll_from_the_full_pool_at_item_level_100() {
     // Given the Iron Ring, its pool in the data file and the pool at the UI's item level
@@ -1937,11 +1945,11 @@ fn ac3_both_orbs_roll_from_the_full_pool_at_item_level_100() {
         for (orb, item) in [("transmutation", &transmuted), ("alteration", &altered)] {
             assert_eq!(item.rarity, Rarity::Magic, "{orb}: the ring is magic");
             // Then every new mod comes from the pool, in its slot
-            for (slot, explicit) in [
-                (AffixType::Prefix, &item.prefix),
-                (AffixType::Suffix, &item.suffix),
+            for (slot, explicits) in [
+                (AffixType::Prefix, &item.prefixes),
+                (AffixType::Suffix, &item.suffixes),
             ] {
-                if let Some(explicit) = explicit {
+                for explicit in explicits {
                     let definition = find_definition(&pool, &explicit.name);
                     assert_eq!(definition.affix_type, slot, "{orb}: {:?}", explicit.name);
                     assert_eq!(explicit.affix_type, slot, "{orb}: {:?}", explicit.name);
@@ -1951,10 +1959,10 @@ fn ac3_both_orbs_roll_from_the_full_pool_at_item_level_100() {
                         .insert(explicit.name.clone());
                 }
             }
-            if item.prefix.is_some() != item.suffix.is_some() {
+            if item.prefixes.is_empty() != item.suffixes.is_empty() {
                 let counts = one_mod_prefixes.entry(orb).or_default();
                 counts.1 += 1;
-                if item.prefix.is_some() {
+                if !item.prefixes.is_empty() {
                     counts.0 += 1;
                 }
             }
@@ -1981,11 +1989,7 @@ fn ac3_both_orbs_roll_from_the_full_pool_at_item_level_100() {
              {one_mod}), expected {p:.4} \u{b1} {tolerance:.4}"
         );
     }
-    // And the page builds the pool with the item level rule at item level 100
-    assert_web_src_uses(
-        "valid_mods",
-        "the page builds the pool with the item level rule",
-    );
+    // And the page takes the pool from crafting-core
     assert_web_src_uses("mod_pool", "the page takes the pool from crafting-core");
 }
 
@@ -2211,12 +2215,12 @@ fn ac5_level_requirement_follows_the_rule_and_a_normal_iron_ring_shows_none() {
     let gorilla = find_definition(&pool, "of the Gorilla");
     let mut item = Item::new(&base, &mut rng);
     item.rarity = Rarity::Magic;
-    item.suffix = Some(ExplicitMod {
+    item.suffixes = vec![ExplicitMod {
         name: gorilla.name.clone(),
         affix_type: gorilla.affix_type,
         modifier: Mod::roll(&gorilla.definition, &mut rng),
-    });
-    assert_eq!(item.suffix.as_ref().map(|m| m.modifier.level), Some(44));
+    }];
+    assert_eq!(item.suffixes.first().map(|m| m.modifier.level), Some(44));
     assert_eq!(item.required_level(), Some(35));
 
     // --- The examples of the rule's evidence, with invented bases ---
@@ -2270,7 +2274,7 @@ fn ac5_level_requirement_follows_the_rule_and_a_normal_iron_ring_shows_none() {
         apply_orb_of_alteration(&mut item, &pool, &mut rng).expect("the orb applies");
         for item in [&transmuted, &item] {
             // Then every rolled mod keeps the level of its definition
-            for explicit in item.prefix.iter().chain(item.suffix.iter()) {
+            for explicit in item.prefixes.iter().chain(item.suffixes.iter()) {
                 assert_eq!(
                     explicit.modifier.level,
                     find_definition(&pool, &explicit.name).definition.level,

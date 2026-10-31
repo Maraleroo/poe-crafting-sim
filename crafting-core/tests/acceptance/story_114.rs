@@ -21,6 +21,12 @@
 //! to `poe-crafting-rules` before these tests (369228c); those parts pass as soon as the
 //! module compiles.
 //!
+//! Adapted for AB#248 (PO-confirmed): criterion 5 of AB#248 replaces the fields `prefix` and
+//! `suffix` of `Item` by the lists `prefixes` and `suffixes` (ADR 0021). The tests read and set
+//! the lists; what they check is unchanged. Criteria 1 to 3 of AB#248 replace rule 4 in AC2 and
+//! the PO's old wording in AC5. Criterion 4 of AB#248 replaces the check in AC6 that the page
+//! builds the pool with `valid_mods`.
+//!
 //! What is checked outside `cargo test`, by the PO in the local preview:
 //! - AC1: the second button next to the Orb of Transmutation.
 //! - AC3 and AC4: the tooltip on hover and the message after a click.
@@ -55,39 +61,19 @@ const NO_VALID_MOD_MESSAGE: &str = "Failed to apply item: Could not generate Mod
 
 /// Reason codes from the tech lead's plan and ADR 0012, the keys of `messages`.
 const NOT_MAGIC_CODE: &str = "item_not_magic";
-const NO_VALID_MOD_CODE: &str = "no_valid_mod";
 
 /// The item level the UI uses by default ("Item level" in `poe-crafting-rules`).
 const UI_ITEM_LEVEL: u32 = 100;
 
-/// The PO's rule file for the Orb of Alteration (AC5), line by line, with "±" (U+00B1) and
-/// "≈" (U+2248) in the evidence. The indentation of rules 1 to 4 is two spaces, as in the
-/// Markdown file; the work item shows it with non-breaking spaces.
-const ORB_RULE_LINES: [&str; 9] = [
+/// The lines of the PO's rule file for the Orb of Alteration (AC5) that AB#248 does not
+/// replace: the first three lines of the file. Adapted for AB#248 (PO-confirmed): criterion 3
+/// of AB#248 replaces the "Effect" line, rules 1 to 4 and the sentence on the empty pool in the
+/// evidence. Their wording is checked at the acceptance of AB#248.
+const ORB_RULE_LINES: [&str; 3] = [
     "**Orb of Alteration**",
     "- Applies to: magic items.",
     "- Not applicable when: the item is not magic. The reason shown is the game's message \
      \"Failed to apply item: Target is not Magic.\"",
-    "- Effect: all prefixes and suffixes of the item are replaced by new ones, rolled exactly \
-     as with the Orb of Transmutation, rules 1 to 3. By chance the new mods can be the same as \
-     the old ones.",
-    "  1. The item gets 1 or 2 mods, each with a 50% chance.",
-    "  2. One mod: it is chosen from one pool of all valid prefixes and all valid suffixes \
-     together. The chance of a mod is its weight divided by the sum of the weights of all mods \
-     in this pool.",
-    "  3. Two mods: one prefix is chosen from the valid prefixes and one suffix from the valid \
-     suffixes. Within each pool, the chance of a mod is its weight divided by the sum of the \
-     weights in that pool. If one type has no valid mod, that mod is left out; no second mod \
-     of the other type is chosen instead.",
-    "  4. If there is no valid mod at all, applying the orb fails with the game's message \
-     \"Failed to apply item: Could not generate Mod.\" and the item stays unchanged.",
-    "- Evidence: measured by the PO on 2026-10-21 with 2000 Orbs of Alteration on a Bone Ring \
-     (item level 83): 2 mods 50.6 % (\u{b1}2.2 %); with one mod, 70.6 % suffixes against 69.4 % \
-     expected from the weights; a 50:50 choice between prefix and suffix is ruled out \
-     (z \u{2248} 13); the frequencies of all 40 mod groups match their weights. The \
-     replacement of the old mods, the not-magic case and both messages are known from the \
-     game. The empty-pool case in rule 3 is the PO's assumption and not measured. Not \
-     documented by GGG.",
 ];
 const ORB_RULE_LINK: &str = "currencies/orb-of-alteration.md";
 const CURRENCY_RULES_HEADING: &str = "Currency rules:";
@@ -354,8 +340,8 @@ fn ring_with_old_mods(base: &BaseItem, rng: &mut SeededRng) -> Item {
     let old_suffix = test_mod("of the Old Suffix", AffixType::Suffix, 1000, 1);
     let mut item = Item::new(base, rng);
     item.rarity = Rarity::Magic;
-    item.prefix = Some(rolled(&old_prefix, rng));
-    item.suffix = Some(rolled(&old_suffix, rng));
+    item.prefixes = vec![rolled(&old_prefix, rng)];
+    item.suffixes = vec![rolled(&old_suffix, rng)];
     item
 }
 
@@ -453,14 +439,18 @@ fn alter_and_check(
         item.implicits, implicits_before,
         "{ctx}: the implicits stay unchanged"
     );
-    if let Some(prefix) = &item.prefix {
+    assert!(
+        item.prefixes.len() <= 1 && item.suffixes.len() <= 1,
+        "{ctx}: a magic item has at most one prefix and one suffix"
+    );
+    for prefix in &item.prefixes {
         assert_rolled_from_pool(pool, prefix, AffixType::Prefix, ctx);
     }
-    if let Some(suffix) = &item.suffix {
+    for suffix in &item.suffixes {
         assert_rolled_from_pool(pool, suffix, AffixType::Suffix, ctx);
     }
     assert!(
-        item.prefix.is_some() || item.suffix.is_some(),
+        !item.prefixes.is_empty() || !item.suffixes.is_empty(),
         "{ctx}: the altered item must have at least one mod"
     );
 }
@@ -512,8 +502,8 @@ impl Tally {
 
     fn add(&mut self, item: &Item) {
         self.trials += 1;
-        match (&item.prefix, &item.suffix) {
-            (Some(prefix), Some(suffix)) => {
+        match (item.prefixes.as_slice(), item.suffixes.as_slice()) {
+            ([prefix], [suffix]) => {
                 self.two_mods += 1;
                 *self
                     .two_mod_prefixes
@@ -524,14 +514,19 @@ impl Tally {
                     .entry(suffix.name.clone())
                     .or_default() += 1;
             }
-            (Some(only), None) | (None, Some(only)) => {
+            ([only], []) | ([], [only]) => {
                 self.one_mod += 1;
                 if only.affix_type == AffixType::Prefix {
                     self.one_mod_prefixes += 1;
                 }
                 *self.one_mod_by_name.entry(only.name.clone()).or_default() += 1;
             }
-            (None, None) => panic!("a magic item must have at least one mod"),
+            ([], []) => panic!("a magic item must have at least one mod"),
+            (prefixes, suffixes) => panic!(
+                "a magic item has at most one prefix and one suffix, found {} and {}",
+                prefixes.len(),
+                suffixes.len()
+            ),
         }
     }
 }
@@ -676,6 +671,10 @@ fn ac1_orb_of_alteration_exists_next_to_transmutation_with_its_game_name() {
 // deviations; a strongly unbalanced test pool; an empty prefix pool and an empty suffix pool;
 // rule 4 with an empty pool; the replacement of old mods, also when only one new mod rolls;
 // and that the new mods can be the same as the old ones, rolled again.)
+// (Adapted for AB#248, PO-confirmed: criterion 3 of AB#248 replaces rule 4. Without a valid
+// mod, the orb takes effect: it removes all prefixes and suffixes, adds no mod, and the ring
+// stays magic; the orb has no message "Could not generate Mod.". For a magic ring, criterion 3
+// gives the same chances as the old rules 1 to 3, so their checks stay.)
 #[test]
 fn ac2_orb_replaces_all_prefixes_and_suffixes_by_the_rule() {
     let base = iron_ring();
@@ -709,7 +708,7 @@ fn ac2_orb_replaces_all_prefixes_and_suffixes_by_the_rule() {
             &mut rng,
             &format!("old mods, item {trial}"),
         );
-        if item.prefix.is_none() || item.suffix.is_none() {
+        if item.prefixes.is_empty() || item.suffixes.is_empty() {
             one_mod_results += 1;
         }
     }
@@ -735,13 +734,13 @@ fn ac2_orb_replaces_all_prefixes_and_suffixes_by_the_rule() {
     let same_pool = vec![same_prefix.clone(), same_suffix.clone()];
     let mut item = Item::new(&base, &mut rng);
     item.rarity = Rarity::Magic;
-    item.prefix = Some(rolled(&same_prefix, &mut rng));
-    item.suffix = Some(rolled(&same_suffix, &mut rng));
+    item.prefixes = vec![rolled(&same_prefix, &mut rng)];
+    item.suffixes = vec![rolled(&same_suffix, &mut rng)];
     let stat_id = &same_prefix.definition.stats[0].id;
     let mut prefix_again = 0;
     let mut value_changed = 0;
     for trial in 0..ITEMS {
-        let prefix_before = item.prefix.clone();
+        let prefix_before = item.prefixes.first().cloned();
         // When the orb is applied many times in a row
         alter_and_check(
             &mut item,
@@ -750,7 +749,7 @@ fn ac2_orb_replaces_all_prefixes_and_suffixes_by_the_rule() {
             &format!("same mods, {trial}"),
         );
         // Then the old prefix can come again, with a newly rolled value
-        if let (Some(before), Some(after)) = (&prefix_before, &item.prefix) {
+        if let (Some(before), Some(after)) = (&prefix_before, item.prefixes.first()) {
             prefix_again += 1;
             if stat_value(&before.modifier, stat_id) != stat_value(&after.modifier, stat_id) {
                 value_changed += 1;
@@ -844,7 +843,7 @@ fn ac2_orb_replaces_all_prefixes_and_suffixes_by_the_rule() {
         }
     }
 
-    // --- Rule 4: no valid mod at all ---
+    // --- No valid mod at all (criterion 3 of AB#248) ---
     // Given magic Iron Rings and a pool without any valid mod
     let empty: Vec<ExplicitModDefinition> = Vec::new();
     for _ in 0..ITEMS {
@@ -857,19 +856,24 @@ fn ac2_orb_replaces_all_prefixes_and_suffixes_by_the_rule() {
             // When the orb is applied
             let result = apply_orb_of_alteration(&mut item, &empty, &mut rng);
 
-            // Then it fails because there is no valid mod, and the item is unchanged
-            assert_eq!(result, Err(CraftError::NoValidMod));
-            assert_eq!(item, before);
-            // And the message is exactly the game text
-            assert_eq!(
-                Currency::OrbOfAlteration.failure_message(CraftError::NoValidMod),
-                NO_VALID_MOD_MESSAGE
-            );
+            // Then it takes effect: all prefixes and suffixes are removed, no mod is added, and
+            // the ring stays magic
+            assert_eq!(result, Ok(()));
+            assert_eq!(item.rarity, Rarity::Magic);
+            assert!(item.prefixes.is_empty() && item.suffixes.is_empty());
+            assert_eq!(item.base, before.base);
+            assert_eq!(item.implicits, before.implicits);
         }
     }
-    // And the message is game data of the Orb of Alteration
-    assert_eq!(CraftError::NoValidMod.code(), NO_VALID_MOD_CODE);
-    assert_message_in_game_data(NO_VALID_MOD_CODE, NO_VALID_MOD_MESSAGE);
+    // And the Orb of Alteration has no message "Could not generate Mod."
+    let messages = definition(ORB_ID).messages;
+    assert!(
+        messages
+            .values()
+            .all(|message| message.as_str() != NO_VALID_MOD_MESSAGE),
+        "currencies(): {ORB_ID:?} must have no message {NO_VALID_MOD_MESSAGE:?}, found \
+         {messages:?}"
+    );
 }
 
 // AC3: „Ist der Orb anwendbar, zeigt das Überfahren mit der Maus genau den Text "Reforges a
@@ -888,9 +892,10 @@ fn ac3_applicable_orb_shows_the_game_description_on_hover() {
 
     for _ in 0..ITEMS {
         let item = transmuted_ring(&base, &pool, &mut rng);
-        match (&item.prefix, &item.suffix) {
-            (Some(_), Some(_)) => seen_two_mods = true,
-            _ => seen_one_mod = true,
+        if !item.prefixes.is_empty() && !item.suffixes.is_empty() {
+            seen_two_mods = true;
+        } else {
+            seen_one_mod = true;
         }
 
         // When the page asks whether the orb applies
@@ -974,24 +979,28 @@ fn ac4_orb_on_a_normal_item_shows_the_game_message_and_keeps_the_item() {
 
 // AC5: „`poe-crafting-rules`: Die neue Datei `currencies/orb-of-alteration.md` hat genau den
 // Inhalt unten und wird in der Liste "Currency rules" verlinkt."
-// (The full content is quoted in `ORB_RULE_LINES`.)
+// (The lines that AB#248 does not replace are quoted in `ORB_RULE_LINES`.)
+// (Adapted for AB#248, PO-confirmed: criterion 3 of AB#248 replaces the "Effect" line, rules 1
+// to 4 and the sentence on the empty pool in the evidence. Their wording is checked at the
+// acceptance of AB#248, so the test checks only that the file starts with the other lines of
+// the PO's content, and the link.)
 #[test]
 fn ac5_alteration_rule_file_has_the_po_content_and_is_linked() {
     // Given the PO's rules and the rule file for the Orb of Alteration
     let rules = read_text(CRAFTING_RULES);
     let orb_rules = read_text(ORB_RULE_FILE);
 
-    // When reading the file line by line, without trailing empty lines
-    let mut file_lines: Vec<&str> = orb_rules.lines().map(str::trim_end).collect();
-    while file_lines.last() == Some(&"") {
-        file_lines.pop();
-    }
+    // When reading the file line by line
+    let file_lines: Vec<&str> = orb_rules.lines().map(str::trim_end).collect();
 
-    // Then its content is exactly the PO's text
-    assert_eq!(
-        file_lines,
-        ORB_RULE_LINES.to_vec(),
-        "{ORB_RULE_FILE} must have exactly the PO's content"
+    // Then it starts with exactly the PO's lines that AB#248 does not replace
+    assert!(
+        file_lines.starts_with(&ORB_RULE_LINES),
+        "{ORB_RULE_FILE} must start with the PO's lines {ORB_RULE_LINES:#?}, found {:#?}",
+        file_lines
+            .iter()
+            .take(ORB_RULE_LINES.len())
+            .collect::<Vec<_>>()
     );
 
     // And the list "Currency rules" in the section "Currencies" links the file
@@ -1026,6 +1035,9 @@ fn ac5_alteration_rule_file_has_the_po_content_and_is_linked() {
 // `valid_mods`, the pool both orbs roll from, and the page building its pool with it.)
 // (Adapted for AB#185, PO-confirmed: criterion 6 of AB#185 gives every base its own pool
 // (ADR 0017). The page builds its pool from `mod_pool` instead of `explicit_mods`.)
+// (Adapted for AB#248, PO-confirmed: criterion 4 of AB#248 replaces the check that the page
+// builds the pool with `valid_mods`. The page passes the base's pool from `mod_pool`, and the
+// orbs apply the item level rule themselves (ADR 0021, `story_248::ac4`). The rest stays.)
 #[test]
 fn ac6_item_level_rule_is_written_down_and_decides_the_valid_mods() {
     // --- The PO's text ---
@@ -1117,7 +1129,7 @@ fn ac6_item_level_rule_is_written_down_and_decides_the_valid_mods() {
     for trial in 0..ITEMS {
         // When the Orb of Transmutation and then the Orb of Alteration are applied
         let mut item = transmuted_ring(&base, &pool_at_83, &mut rng);
-        for rolled in item.prefix.iter().chain(item.suffix.iter()) {
+        for rolled in item.prefixes.iter().chain(item.suffixes.iter()) {
             *rolled_names.entry(rolled.name.clone()).or_default() += 1;
         }
         alter_and_check(
@@ -1126,7 +1138,7 @@ fn ac6_item_level_rule_is_written_down_and_decides_the_valid_mods() {
             &mut rng,
             &format!("item level 83, {trial}"),
         );
-        for rolled in item.prefix.iter().chain(item.suffix.iter()) {
+        for rolled in item.prefixes.iter().chain(item.suffixes.iter()) {
             *rolled_names.entry(rolled.name.clone()).or_default() += 1;
         }
     }
@@ -1161,9 +1173,9 @@ fn ac6_item_level_rule_is_written_down_and_decides_the_valid_mods() {
             "valid mods of crafting-core at item level {item_level}"
         );
     }
-    // And the page builds the pool for both orbs with the item level rule
+    // And the page takes the pool for both orbs from crafting-core
     assert_web_src_uses(
-        &["valid_mods", "mod_pool"],
-        "the page builds the pool of valid mods with the item level rule (ADR 0013)",
+        &["mod_pool"],
+        "the page takes the pool for both orbs from crafting-core",
     );
 }
