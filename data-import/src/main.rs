@@ -11,7 +11,7 @@ use std::{env, fs};
 use data_import::{convert, RawFiles};
 
 /// The bases that the data files hold. A story that needs more bases adds them here.
-const BASES: [&str; 37] = [
+const BASES: [&str; 43] = [
     "Metadata/Items/Rings/Ring1",
     "Metadata/Items/Rings/Ring2",
     "Metadata/Items/Rings/Ring3",
@@ -49,6 +49,12 @@ const BASES: [&str; 37] = [
     "Metadata/Items/Rings/RingB5",
     "Metadata/Items/Rings/RingB6",
     "Metadata/Items/Rings/MirrorRing",
+    "Metadata/Items/Rings/RingE1",
+    "Metadata/Items/Rings/RingE2",
+    "Metadata/Items/Rings/RingE3",
+    "Metadata/Items/Rings/RingE4",
+    "Metadata/Items/Rings/RingE5",
+    "Metadata/Items/Rings/RingE6",
 ];
 
 fn main() -> ExitCode {
