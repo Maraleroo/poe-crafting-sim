@@ -12,7 +12,7 @@ use crate::model::{BaseItem, ExplicitModDefinition, ModDefinition};
 use crate::slot::Slot;
 
 pub(crate) const BASE_ITEMS_JSON: &str = include_str!("../../data/base_items.json");
-const MODS_JSON: &str = include_str!("../../data/mods.json");
+pub(crate) const MODS_JSON: &str = include_str!("../../data/mods.json");
 const CURRENCIES_JSON: &str = include_str!("../../data/currencies.json");
 const ITEM_SLOTS_JSON: &str = include_str!("../../data/item_slots.json");
 

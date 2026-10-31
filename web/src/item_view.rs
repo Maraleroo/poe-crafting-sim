@@ -4,7 +4,7 @@
 //! translations and takes the game texts (name, class, mod texts) over unchanged.
 
 use crate::i18n::Translations;
-use crafting_core::{ExplicitMod, Item, Mod, Rarity};
+use crafting_core::{Item, Mod, Rarity};
 
 /// All visible texts of one item.
 #[derive(Debug, PartialEq, Eq)]
@@ -18,7 +18,9 @@ pub struct ItemView {
     pub requires_level: Option<String>,
     /// One entry per line of the implicit mods.
     pub implicits: Vec<String>,
-    /// One entry per line of all prefixes, then of all suffixes.
+    /// One entry per line of the explicit mods in the normal view of the game: sorted by their
+    /// stats, with the lines of the same stats merged (ADR 0023). They come from
+    /// `crafting-core`.
     pub explicits: Vec<String>,
 }
 
@@ -33,12 +35,7 @@ impl ItemView {
                 translations.format("item.requires_level", &[("level", &level.to_string())])
             }),
             implicits: item.implicits.iter().flat_map(implicit_lines).collect(),
-            explicits: item
-                .prefixes
-                .iter()
-                .chain(&item.suffixes)
-                .flat_map(|explicit| explicit_lines(item, explicit))
-                .collect(),
+            explicits: item.explicit_texts(),
         }
     }
 }
@@ -47,12 +44,6 @@ impl ItemView {
 /// with line breaks.
 fn implicit_lines(modifier: &Mod) -> Vec<String> {
     text_lines(&modifier.display_text())
-}
-
-/// The lines of a prefix or suffix in the normal view of the item, with the values increased
-/// by the item's magnitude lines (ADR 0022).
-fn explicit_lines(item: &Item, explicit: &ExplicitMod) -> Vec<String> {
-    text_lines(&item.explicit_text(explicit))
 }
 
 fn text_lines(text: &str) -> Vec<String> {
@@ -81,14 +72,49 @@ fn rarity_class(rarity: Rarity) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-
     use super::*;
     use crate::workbench::Workbench;
     use crafting_core::{
-        AffixType, Currency, ExplicitMod, ExplicitModDefinition, ModDefinition, SeededRng,
-        StatDefinition,
+        mod_pool, AffixType, BaseItem, Currency, ExplicitMod, ExplicitModDefinition, SeededRng,
+        Slot,
     };
+
+    /// A magic item of `base` with the given mods of its pool.
+    fn magic_item_with(base: &BaseItem, mods: &[&ExplicitModDefinition]) -> Item {
+        let mut rng = SeededRng::new(1);
+        let mut item = Item::new(base, &mut rng);
+        item.rarity = Rarity::Magic;
+        for definition in mods {
+            let explicit = ExplicitMod {
+                name: definition.name.clone(),
+                affix_type: definition.affix_type,
+                modifier: Mod::roll(&definition.definition, &mut rng),
+            };
+            match explicit.affix_type {
+                AffixType::Prefix => item.prefixes.push(explicit),
+                AffixType::Suffix => item.suffixes.push(explicit),
+            }
+        }
+        item
+    }
+
+    /// The base item that the page starts with and its pool.
+    fn start_pool() -> (BaseItem, Vec<ExplicitModDefinition>) {
+        let base = Workbench::new(1).item().base.clone();
+        let pool = mod_pool(&base.id).expect("crafting-core has the pool of the start base");
+        (base, pool)
+    }
+
+    fn sides(
+        pool: &[ExplicitModDefinition],
+    ) -> (Vec<&ExplicitModDefinition>, Vec<&ExplicitModDefinition>) {
+        let of = |affix_type: AffixType| {
+            pool.iter()
+                .filter(|m| m.affix_type == affix_type)
+                .collect::<Vec<_>>()
+        };
+        (of(AffixType::Prefix), of(AffixType::Suffix))
+    }
 
     #[test]
     fn every_rarity_has_a_translation() {
@@ -152,21 +178,8 @@ mod tests {
         assert_eq!(view.name, item.name());
         assert_eq!(view.rarity, t.text("item.rarity.magic"));
         assert_eq!(view.implicits, implicits);
-        let expected: Vec<String> = item
-            .prefixes
-            .iter()
-            .chain(&item.suffixes)
-            .flat_map(|explicit| {
-                explicit
-                    .modifier
-                    .display_text()
-                    .split('\n')
-                    .map(str::to_owned)
-                    .collect::<Vec<_>>()
-            })
-            .collect();
-        assert!(!expected.is_empty());
-        assert_eq!(view.explicits, expected);
+        assert!(!view.explicits.is_empty());
+        assert_eq!(view.explicits, item.explicit_texts());
         assert!(view.explicits.iter().all(|line| !line.contains('{')));
     }
 
@@ -188,76 +201,99 @@ mod tests {
     }
 
     #[test]
-    fn view_shows_all_prefixes_then_all_suffixes_in_the_order_they_were_added() {
-        let mut rng = SeededRng::new(1);
-        let mut item = Workbench::new(1).item().clone();
-        item.rarity = Rarity::Rare;
-        for (name, affix_type) in [
-            ("first suffix", AffixType::Suffix),
-            ("first prefix", AffixType::Prefix),
-            ("second suffix", AffixType::Suffix),
-            ("second prefix", AffixType::Prefix),
-        ] {
-            let mut definition = invented_mod(name, 1);
-            definition.affix_type = affix_type;
-            definition.definition.text = name.to_owned();
-            definition.definition.placeholders.clear();
-            let explicit = ExplicitMod {
-                name: name.to_owned(),
-                affix_type,
-                modifier: Mod::roll(&definition.definition, &mut rng),
-            };
-            match affix_type {
-                AffixType::Prefix => item.prefixes.push(explicit),
-                AffixType::Suffix => item.suffixes.push(explicit),
-            }
-        }
+    fn view_shows_the_explicit_lines_sorted_by_their_stats_not_prefixes_before_suffixes() {
+        // Criterion 2 of AB#258 replaces criterion 6 of AB#189 (prefixes, then suffixes). The
+        // pair of a prefix and a suffix is found by what crafting-core shows: the suffix line
+        // first. Each line is the text of its mod alone, so the expectation is no copy of the
+        // result.
+        let (base, pool) = start_pool();
+        let (prefixes, suffixes) = sides(&pool);
+        let found = prefixes.iter().find_map(|prefix| {
+            suffixes.iter().find_map(|suffix| {
+                let item = magic_item_with(&base, &[prefix, suffix]);
+                let lines = [
+                    item.explicit_text(&item.suffixes[0]),
+                    item.explicit_text(&item.prefixes[0]),
+                ];
+                (item.explicit_texts() == lines).then_some((item, lines))
+            })
+        });
+        let (item, lines) = found.expect("a suffix whose line comes before the line of a prefix");
         let view = ItemView::new(&Translations::english(), &item);
-        assert_eq!(
-            view.explicits,
-            [
-                "first prefix",
-                "second prefix",
-                "first suffix",
-                "second suffix"
-            ]
-        );
+        assert_eq!(view.explicits, lines);
+    }
+
+    #[test]
+    fn view_shows_one_line_for_a_prefix_and_a_suffix_with_the_same_stat() {
+        let (base, pool) = start_pool();
+        let (prefixes, suffixes) = sides(&pool);
+        let item = prefixes
+            .iter()
+            .find_map(|prefix| {
+                suffixes.iter().find_map(|suffix| {
+                    let item = magic_item_with(&base, &[prefix, suffix]);
+                    (item.explicit_texts().len() == 1).then_some(item)
+                })
+            })
+            .expect("a prefix and a suffix that show one line together");
+        let view = ItemView::new(&Translations::english(), &item);
+        assert_eq!(view.explicits, item.explicit_texts());
+        assert_eq!(view.explicits.len(), 1);
+    }
+
+    #[test]
+    fn view_keeps_the_implicits_apart_from_a_mod_with_the_same_stat() {
+        // A ring base with a mod in its pool that shows a stat of one of its implicits
+        let (base, shared) = Slot::Ring
+            .base_items()
+            .into_iter()
+            .find_map(|base| {
+                let stats: Vec<String> = base
+                    .implicits
+                    .iter()
+                    .flat_map(|implicit| implicit.placeholders.values().cloned())
+                    .collect();
+                let shared = mod_pool(&base.id)
+                    .expect("every base has a pool")
+                    .into_iter()
+                    .find(|m| {
+                        m.definition
+                            .placeholders
+                            .values()
+                            .any(|s| stats.contains(s))
+                    })?;
+                Some((base, shared))
+            })
+            .expect("a ring base whose pool has a mod with the stat of its implicit");
+        let item = magic_item_with(&base, &[&shared]);
+        let view = ItemView::new(&Translations::english(), &item);
+        let implicits: Vec<String> = item.implicits.iter().flat_map(implicit_lines).collect();
+        assert!(!implicits.is_empty());
+        assert_eq!(view.implicits, implicits);
+        let own = item.prefixes.iter().chain(&item.suffixes).next().unwrap();
+        assert_eq!(view.explicits, text_lines(&item.explicit_text(own)));
     }
 
     #[test]
     fn view_shows_the_level_requirement_of_a_magic_item_with_a_high_mod() {
-        // 80 % of the mod level 44 is 35 (rounded down); the base item has no requirement of its own
-        let pool = vec![invented_mod("of Invention", 44)];
-        let mut workbench = Workbench::with_pool(1, pool);
+        // The pool holds only the mod with the highest level
+        let (_, pool) = start_pool();
+        let highest = pool
+            .into_iter()
+            .max_by_key(|m| m.definition.level)
+            .expect("the pool has mods");
+        let mut workbench = Workbench::with_pool(1, vec![highest]);
         workbench.apply(Currency::OrbOfTransmutation).unwrap();
+        let level = workbench
+            .item()
+            .required_level()
+            .expect("a high mod gives the item a level requirement");
         let t = Translations::english();
         let view = ItemView::new(&t, workbench.item());
         assert_eq!(
             view.requires_level,
-            Some(t.format("item.requires_level", &[("level", "35")]))
+            Some(t.format("item.requires_level", &[("level", &level.to_string())]))
         );
-    }
-
-    /// A suffix with one stat and the given level.
-    fn invented_mod(name: &str, level: u32) -> ExplicitModDefinition {
-        ExplicitModDefinition {
-            name: name.to_owned(),
-            affix_type: AffixType::Suffix,
-            weight: 1,
-            definition: ModDefinition {
-                family: "Invented".to_owned(),
-                level,
-                tags: Vec::new(),
-                stats: vec![StatDefinition {
-                    id: "invented stat".to_owned(),
-                    min: 1,
-                    max: 1,
-                }],
-                text: "+{value}".to_owned(),
-                placeholders: BTreeMap::from([("value".to_owned(), "invented stat".to_owned())]),
-                conversions: BTreeMap::new(),
-            },
-        }
     }
 
     #[test]
@@ -265,56 +301,60 @@ mod tests {
         // This ring base increases the values of its suffixes by 25 % (ADR 0022)
         let mut workbench = Workbench::new(1);
         workbench.select("Metadata/Items/Rings/RingE1");
-        let mut item = workbench.item().clone();
-        item.rarity = Rarity::Rare;
-        let mut rng = SeededRng::new(1);
-        for affix_type in [AffixType::Prefix, AffixType::Suffix] {
-            let mut definition = invented_mod("Invented", 1);
-            definition.definition.stats[0].min = 40;
-            definition.definition.stats[0].max = 40;
-            let explicit = ExplicitMod {
-                name: "Invented".to_owned(),
-                affix_type,
-                modifier: Mod::roll(&definition.definition, &mut rng),
-            };
-            match affix_type {
-                AffixType::Prefix => item.prefixes.push(explicit),
-                AffixType::Suffix => item.suffixes.push(explicit),
-            }
-        }
-        let view = ItemView::new(&Translations::english(), &item);
-        assert_eq!(view.explicits, ["+40", "+50"]);
+        let base = workbench.item().base.clone();
+        let pool = mod_pool(&base.id).expect("every base has a pool");
+        // A prefix and a suffix with one stat each, no conversion, and different stats
+        let (prefixes, suffixes) = sides(&pool);
+        let plain = |m: &&ExplicitModDefinition| -> bool {
+            m.definition.stats.len() == 1
+                && m.definition.conversions.is_empty()
+                && m.definition.text.matches('{').count() == 1
+        };
+        let (prefix, suffix) = prefixes
+            .iter()
+            .copied()
+            .filter(plain)
+            .find_map(|prefix| {
+                suffixes
+                    .iter()
+                    .copied()
+                    .filter(plain)
+                    .find(|s| s.definition.stats[0].id != prefix.definition.stats[0].id)
+                    .map(|suffix| (prefix, suffix))
+            })
+            .expect("a prefix and a suffix with different stats");
+        let mut item = magic_item_with(&base, &[prefix, suffix]);
+        item.prefixes[0].modifier.stats[0].value = 40;
+        item.suffixes[0].modifier.stats[0].value = 40;
+        // The prefix keeps its 40, the suffix shows 50
+        let mut increased = item.suffixes[0].modifier.clone();
+        increased.stats[0].value = 50;
+        let mut expected = vec![
+            item.prefixes[0].modifier.display_text(),
+            increased.display_text(),
+        ];
+        let mut shown = ItemView::new(&Translations::english(), &item).explicits;
+        // The order of the two lines is not the subject of this test
+        expected.sort();
+        shown.sort();
+        assert_eq!(shown, expected);
     }
 
     #[test]
     fn a_mod_with_two_lines_gives_one_entry_per_line() {
-        let stat = |id: &str, value: i32| StatDefinition {
-            id: id.to_owned(),
-            min: value,
-            max: value,
-        };
-        let pool = vec![ExplicitModDefinition {
-            name: "Invented".to_owned(),
-            affix_type: AffixType::Suffix,
-            weight: 1,
-            definition: ModDefinition {
-                family: "Invented".to_owned(),
-                level: 44,
-                tags: Vec::new(),
-                stats: vec![stat("second stat", 2), stat("first stat", 1)],
-                text: "first {a}
-second {b}"
-                    .to_owned(),
-                placeholders: BTreeMap::from([
-                    ("a".to_owned(), "first stat".to_owned()),
-                    ("b".to_owned(), "second stat".to_owned()),
-                ]),
-                conversions: BTreeMap::new(),
-            },
-        }];
-        let mut workbench = Workbench::with_pool(1, pool);
+        let two_lines = Slot::Ring
+            .base_items()
+            .into_iter()
+            .flat_map(|base| mod_pool(&base.id).expect("every base has a pool"))
+            .find(|m| m.definition.text.contains('\n'))
+            .expect("a mod with two lines");
+        let mut workbench = Workbench::with_pool(1, vec![two_lines.clone()]);
         workbench.apply(Currency::OrbOfTransmutation).unwrap();
         let view = ItemView::new(&Translations::english(), workbench.item());
-        assert_eq!(view.explicits, ["first 1", "second 2"]);
+        assert_eq!(
+            view.explicits.len(),
+            two_lines.definition.text.lines().count()
+        );
+        assert!(view.explicits.iter().all(|line| !line.contains('\n')));
     }
 }

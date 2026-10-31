@@ -7,6 +7,7 @@ use serde::Deserialize;
 use crate::base_effects::effects_of;
 use crate::conversion::Conversion;
 use crate::rng::{roll_in_range, Rng};
+use crate::stat_order::position_of;
 
 /// Rarity of an item.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -199,17 +200,19 @@ impl Mod {
     /// multiplied by (100 + percent), divided by 100 and rounded down (integer arithmetic).
     /// With 0 the value is unchanged.
     fn text_scaled_by(&self, percent: u32) -> String {
-        self.placeholders
-            .iter()
-            .fold(self.text.clone(), |text, (name, stat_id)| {
-                let stat = self
-                    .stats
-                    .iter()
-                    .find(|stat| stat.id == *stat_id)
-                    .unwrap_or_else(|| {
-                        panic!("placeholder {name:?} names the missing stat {stat_id:?}")
-                    });
-                let value = scaled(stat.value, percent);
+        self.fill(&self.text, |stat| scaled(stat.value, percent))
+    }
+
+    /// `text` with every placeholder in it replaced by the value that `value_of` gives for the
+    /// stat it names, converted where the mod has a conversion for the stat.
+    fn fill(&self, text: &str, value_of: impl Fn(&Stat) -> i32) -> String {
+        placeholder_names(text)
+            .into_iter()
+            .fold(text.to_owned(), |text, name| {
+                let stat_id = self.placeholders.get(name).unwrap_or_else(|| {
+                    panic!("the mod text uses the unmapped placeholder {name:?}")
+                });
+                let value = value_of(self.stat(name, stat_id));
                 let shown = match self.conversions.get(stat_id) {
                     Some(conversion) => conversion.show(value),
                     None => value.to_string(),
@@ -217,6 +220,32 @@ impl Mod {
                 text.replace(&format!("{{{name}}}"), &shown)
             })
     }
+
+    /// The stat with the identifier that the placeholder `name` names.
+    fn stat(&self, name: &str, stat_id: &str) -> &Stat {
+        self.stats
+            .iter()
+            .find(|stat| stat.id == stat_id)
+            .unwrap_or_else(|| panic!("placeholder {name:?} names the missing stat {stat_id:?}"))
+    }
+}
+
+/// The names of the placeholders in `text`, in their order.
+///
+/// # Panics
+/// If a placeholder is not closed. That is an error in the data.
+pub(crate) fn placeholder_names(text: &str) -> Vec<&str> {
+    let mut names = Vec::new();
+    let mut rest = text;
+    while let Some(start) = rest.find('{') {
+        let end = rest[start..]
+            .find('}')
+            .unwrap_or_else(|| panic!("unclosed placeholder in the mod text {text:?}"))
+            + start;
+        names.push(&rest[start + 1..end]);
+        rest = &rest[end + 1..];
+    }
+    names
 }
 
 /// `value` increased by `percent` percent and rounded down (ADR 0022). A result outside the
@@ -361,6 +390,83 @@ impl Item {
             .magnitude_increases
             .of(explicit.affix_type);
         explicit.modifier.text_scaled_by(percent)
+    }
+
+    /// The explicit lines of the item in the normal view (rule "In the normal view, ..." in
+    /// `poe-crafting-rules`, ADR 0023), one entry per line:
+    /// 1. every line of every prefix and suffix, with its stat values increased as
+    ///    `explicit_text` does;
+    /// 2. lines of different mods that show the same stats become one line, with the sum of
+    ///    the increased values for each stat;
+    /// 3. the lines are sorted by the position of their stats in the game's stat descriptions
+    ///    (the order of the data, prefixes before suffixes, decides between equal positions).
+    ///
+    /// Implicit mods are not part of it. `prefixes` and `suffixes` keep the order the mods
+    /// were added in; only this view sorts and merges. `explicit_text` is the text of one mod
+    /// alone.
+    ///
+    /// # Panics
+    /// If a line shows no stat or a stat without a position, or a placeholder names a stat the
+    /// mod does not have. That only happens for a mod that is not from the game data.
+    pub fn explicit_texts(&self) -> Vec<String> {
+        struct Line<'a> {
+            text: &'a str,
+            owner: &'a Mod,
+            /// The increased value of each stat the line shows.
+            values: BTreeMap<&'a str, i32>,
+        }
+        let mut lines: Vec<Line> = Vec::new();
+        for explicit in self.prefixes.iter().chain(&self.suffixes) {
+            let percent = effects_of(&self.base.id)
+                .magnitude_increases
+                .of(explicit.affix_type);
+            let owner = &explicit.modifier;
+            for text in owner.text.split('\n') {
+                let values: BTreeMap<&str, i32> = placeholder_names(text)
+                    .into_iter()
+                    .map(|name| {
+                        let stat_id = owner.placeholders.get(name).unwrap_or_else(|| {
+                            panic!("the mod text uses the unmapped placeholder {name:?}")
+                        });
+                        let stat = owner.stat(name, stat_id);
+                        (stat.id.as_str(), scaled(stat.value, percent))
+                    })
+                    .collect();
+                assert!(
+                    !values.is_empty(),
+                    "the line {text:?} shows no stat, so it has no place in the order"
+                );
+                match lines
+                    .iter_mut()
+                    .find(|line| line.values.keys().eq(values.keys()))
+                {
+                    Some(line) => {
+                        for (stat_id, value) in values {
+                            *line.values.get_mut(stat_id).expect("the same stats") += value;
+                        }
+                    }
+                    None => lines.push(Line {
+                        text,
+                        owner,
+                        values,
+                    }),
+                }
+            }
+        }
+        // The stats of a line share one position (checked when the data is read)
+        lines.sort_by_cached_key(|line| {
+            line.values
+                .keys()
+                .next()
+                .map(|stat_id| position_of(stat_id))
+        });
+        lines
+            .into_iter()
+            .map(|line| {
+                line.owner
+                    .fill(line.text, |stat| line.values[stat.id.as_str()])
+            })
+            .collect()
     }
 
     /// The name of the item: the names of all prefixes, the base name and the names of all
@@ -867,5 +973,117 @@ Second line"
         let rolled = Mod::roll(&converted, &mut SeededRng::new(1));
         assert_eq!(rolled.display_text(), "0.3");
         assert_eq!(rolled.text_scaled_by(25), "0.37");
+    }
+
+    /// The base of the first ring of the game data and its pool.
+    fn ring_and_pool() -> (BaseItem, Vec<ExplicitModDefinition>) {
+        let base = crate::slot::Slot::Ring
+            .base_items()
+            .into_iter()
+            .next()
+            .expect("the game data has a ring");
+        let pool = crate::data::mod_pool(&base.id).expect("the base is in the game data");
+        (base, pool)
+    }
+
+    /// A rare item of `base` with the given mods of its pool, added in the given order.
+    fn rare_item_with(base: &BaseItem, mods: &[&ExplicitModDefinition]) -> Item {
+        let mut rng = SeededRng::new(3);
+        let mut item = Item::new(base, &mut rng);
+        item.rarity = Rarity::Rare;
+        for definition in mods {
+            let explicit = ExplicitMod {
+                name: definition.name.clone(),
+                affix_type: definition.affix_type,
+                modifier: Mod::roll(&definition.definition, &mut rng),
+            };
+            match explicit.affix_type {
+                AffixType::Prefix => item.prefixes.push(explicit),
+                AffixType::Suffix => item.suffixes.push(explicit),
+            }
+        }
+        item
+    }
+
+    /// The mods of the pool with one stat and one placeholder, the first of each stat and side.
+    fn single_stat_mods(pool: &[ExplicitModDefinition]) -> Vec<&ExplicitModDefinition> {
+        let mut seen = Vec::new();
+        pool.iter()
+            .filter(|definition| {
+                definition.definition.stats.len() == 1
+                    && definition.definition.text.matches('{').count() == 1
+            })
+            .filter(|definition| {
+                let key = (
+                    definition.definition.stats[0].id.clone(),
+                    definition.affix_type,
+                );
+                let new = !seen.contains(&key);
+                seen.push(key);
+                new
+            })
+            .collect()
+    }
+
+    #[test]
+    fn an_item_without_mods_has_no_explicit_lines() {
+        let (base, _) = ring_and_pool();
+        assert!(rare_item_with(&base, &[]).explicit_texts().is_empty());
+    }
+
+    #[test]
+    fn explicit_lines_follow_the_stat_positions_whatever_the_order_added() {
+        let (base, pool) = ring_and_pool();
+        let single = single_stat_mods(&pool);
+        let mut checked = 0;
+        for first in &single {
+            for second in &single {
+                let position = |definition: &ExplicitModDefinition| {
+                    position_of(&definition.definition.stats[0].id)
+                };
+                if position(first) >= position(second) || first.affix_type == second.affix_type {
+                    continue;
+                }
+                for order in [[*first, *second], [*second, *first]] {
+                    let item = rare_item_with(&base, &order);
+                    let text = |definition: &ExplicitModDefinition| {
+                        let side = match definition.affix_type {
+                            AffixType::Prefix => &item.prefixes,
+                            AffixType::Suffix => &item.suffixes,
+                        };
+                        item.explicit_text(&side[0])
+                    };
+                    assert_eq!(item.explicit_texts(), [text(first), text(second)]);
+                    checked += 1;
+                }
+            }
+        }
+        assert!(checked > 0);
+    }
+
+    #[test]
+    fn lines_of_mods_that_show_the_same_stat_are_one_line_with_the_sum() {
+        let (base, pool) = ring_and_pool();
+        let single = single_stat_mods(&pool);
+        let both = single.iter().find_map(|prefix| {
+            single
+                .iter()
+                .find(|suffix| {
+                    prefix.affix_type == AffixType::Prefix
+                        && suffix.affix_type == AffixType::Suffix
+                        && prefix.definition.stats[0].id == suffix.definition.stats[0].id
+                })
+                .map(|suffix| [*prefix, *suffix])
+        });
+        let both = both.expect("a stat that a prefix and a suffix of the pool show");
+        let mut item = rare_item_with(&base, &both);
+        item.prefixes[0].modifier.stats[0].value = 20;
+        item.suffixes[0].modifier.stats[0].value = 8;
+        let mut summed = item.prefixes[0].modifier.clone();
+        summed.stats[0].value = 28;
+        assert_eq!(item.explicit_texts(), [summed.display_text()]);
+        // The mods themselves keep their values and their order
+        assert_eq!(item.prefixes[0].modifier.stats[0].value, 20);
+        assert_eq!(item.suffixes[0].modifier.stats[0].value, 8);
     }
 }

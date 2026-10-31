@@ -78,6 +78,9 @@ pub struct OutBaseItems {
 #[derive(Serialize)]
 pub struct OutMods {
     pub mods: Vec<OutMod>,
+    /// The position (0-based) of the entry of `stat_translations.json` that shows each stat of
+    /// the mods, by stat identifier (ADR 0023).
+    pub stat_order: BTreeMap<String, usize>,
 }
 
 /// The text of a data file: indented JSON with a final line break.

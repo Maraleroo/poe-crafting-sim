@@ -143,7 +143,7 @@ implicit texts with ranges (`ModDefinition::range_text`).
 ## mods.json
 
 ```
-{ "mods": [ ExplicitMod, ... ] }
+{ "mods": [ ExplicitMod, ... ], "stat_order": { "<stat id>": <position> } }
 ```
 
 ExplicitMod has the fields of a Mod (see above) and:
@@ -155,6 +155,12 @@ ExplicitMod has the fields of a Mod (see above) and:
 
 The file holds every mod that is in the pool of a base item of `base_items.json`, sorted by
 affix type (prefixes first), family, level and identifier.
+
+`stat_order` maps every stat that a line of an ExplicitMod shows (every stat that a placeholder
+names) to the position (counted from 0) of the entry of RePoE's `stat_translations.json` that
+shows it (ADR 0023). Stats of one entry share the position, so the order of the positions is the
+order of the stats in the game's normal view. The keys are sorted. Stats that only implicits show
+are not in it. The converter stops if one stat would get two positions.
 
 ## currencies.json
 
