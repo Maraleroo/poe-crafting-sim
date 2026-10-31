@@ -71,6 +71,8 @@ impl<'a> Translator<'a> {
                     stat.id
                 )
             })?;
+            // Within an entry the first translation that holds is used, as in the game data's
+            // order (ADR 0022); across entries exactly one entry must have such a translation.
             let mut matches = Vec::new();
             for &position in positions {
                 let entry = match entries.entry(position) {
@@ -83,10 +85,15 @@ impl<'a> Translator<'a> {
                 for (index, translation) in entry.english.iter().flatten().enumerate() {
                     if applies(owner, &entry.ids, translation, stats)? {
                         matches.push((position, index));
+                        break;
                     }
                 }
             }
             let [(position, index)] = matches.as_slice() else {
+                // A stat that is exactly 0 and has no translation that holds shows no line.
+                if matches.is_empty() && stat.min == 0 && stat.max == 0 {
+                    continue;
+                }
                 return Err(format!(
                     "{owner}: {} English translations of the stat {:?} hold for its range {} \
                      to {}, but exactly one must",
@@ -139,6 +146,8 @@ impl<'a> Translator<'a> {
             shown.push(match translation.format[index].as_str() {
                 "#" => format!("{{{id}}}"),
                 "+#" if min >= 0 => format!("+{{{id}}}"),
+                // The value shows its own minus sign (ADR 0022)
+                "+#" if max < 0 => format!("{{{id}}}"),
                 "+#" => {
                     return Err(format!(
                         "{owner}: the stat {id:?} has the format \"+#\" but can be negative \
@@ -359,6 +368,16 @@ mod tests {
              "index_handlers": [[]], "string": "Has 1 Socket"},
             {"condition": [{"min": 2, "max": null, "negated": null}], "format": ["ignore"],
              "index_handlers": [[]], "string": "Has {0} Sockets"}]},
+        {"ids": ["allowed"], "English": [
+            {"condition": [{"min": -1, "max": 1, "negated": null}], "format": ["+#"],
+             "index_handlers": [[]], "string": "{0} Slot allowed"},
+            {"condition": [{"min": null, "max": null, "negated": null}], "format": ["+#"],
+             "index_handlers": [[]], "string": "{0} Slots allowed"}]},
+        {"ids": ["magnitude"], "English": [
+            {"condition": [{"min": 1, "max": null, "negated": null}], "format": ["#"],
+             "index_handlers": [[]], "string": "{0}% increased magnitudes"},
+            {"condition": [{"min": null, "max": -1, "negated": null}], "format": ["#"],
+             "index_handlers": [["negate"]], "string": "{0}% reduced magnitudes"}]},
         {"ids": ["negated"], "English": [
             {"condition": [{"min": 1, "max": null, "negated": true}], "format": ["#"],
              "index_handlers": [[]], "string": "{0} negated"}]}
@@ -457,6 +476,74 @@ mod tests {
     fn a_stat_without_an_entry_is_rejected() {
         let message = display(stat("unknown", 1, 2)).err().unwrap();
         assert!(message.contains("unknown"), "{message}");
+    }
+
+    #[test]
+    fn the_first_translation_that_holds_in_an_entry_is_used() {
+        // Both hold at 1 and at -1; the entry's order decides (ADR 0022)
+        assert_eq!(
+            display(stat("allowed", 1, 1)).unwrap().text,
+            "+{allowed} Slot allowed"
+        );
+        assert_eq!(
+            display(stat("allowed", -1, -1)).unwrap().text,
+            "{allowed} Slot allowed"
+        );
+        assert_eq!(
+            display(stat("allowed", 0, 1)).unwrap().text,
+            "+{allowed} Slot allowed"
+        );
+        // Only the second holds outside -1 to 1
+        assert_eq!(
+            display(stat("allowed", 3, 3)).unwrap().text,
+            "+{allowed} Slots allowed"
+        );
+        assert_eq!(
+            display(stat("allowed", -3, -3)).unwrap().text,
+            "{allowed} Slots allowed"
+        );
+        // A range that no single translation covers still stops the converter
+        assert!(display(stat("magnitude", -2, 9)).is_err());
+    }
+
+    #[test]
+    fn a_plus_format_has_no_plus_below_zero_and_stops_across_zero() {
+        let shown = display(stat("allowed", -2, -1)).unwrap();
+        assert_eq!(shown.text, "{allowed} Slots allowed");
+        assert_eq!(shown.placeholders["allowed"], "allowed");
+        assert!(display(stat("allowed", -2, 1)).is_err());
+        assert_eq!(
+            display(stat("life", -9, -3)).unwrap().text,
+            "{life} to Life"
+        );
+    }
+
+    #[test]
+    fn a_stat_that_is_exactly_zero_without_a_translation_shows_no_line() {
+        let shown = display(stat("magnitude", 0, 0)).unwrap();
+        assert_eq!(shown.text, "");
+        assert!(shown.placeholders.is_empty());
+        assert!(shown.conversions.is_empty());
+    }
+
+    #[test]
+    fn only_a_stat_of_exactly_zero_may_lack_a_translation() {
+        for (min, max) in [(0, 1), (-1, 0), (-5, 5)] {
+            let message = display(stat("magnitude", min, max)).err().unwrap();
+            assert!(message.contains("magnitude"), "{message}");
+        }
+        // A stat without any entry still stops the converter, also with the value 0
+        assert!(display(stat("unknown", 0, 0)).is_err());
+    }
+
+    #[test]
+    fn a_zero_stat_does_not_remove_the_line_of_another_stat() {
+        let translator = Translator::new(TRANSLATIONS, HANDLERS).unwrap();
+        let shown = translator
+            .display("the mod", &[stat("magnitude", 0, 0), stat("allowed", 3, 3)])
+            .unwrap();
+        assert_eq!(shown.text, "+{allowed} Slots allowed");
+        assert!(!shown.placeholders.contains_key("magnitude"));
     }
 
     #[test]

@@ -66,9 +66,10 @@ const RING_SLOT_ID: &str = "ring";
 
 /// The item class of every ring base in the game data.
 const RINGS_CLASS: &str = "Rings";
-/// Number of ring bases imported in AB#185 (31) and AB#188 (the six Breach rings, which
-/// replace criterion 2 of AB#185 for them, PO confirmation on AB#188).
-const RING_BASES: usize = 37;
+/// Number of ring bases imported in AB#185 (31), AB#188 (the six Breach rings, which replace
+/// criterion 2 of AB#185 for them, PO confirmation on AB#188) and AB#189 (the six Heist rings,
+/// which replace criterion 2 of AB#185 for them, PO confirmation on AB#189).
+const RING_BASES: usize = 43;
 
 const IRON_RING_ID: &str = "Metadata/Items/Rings/Ring1";
 const BONE_RING_ID: &str = "Metadata/Items/Rings/Ring16";

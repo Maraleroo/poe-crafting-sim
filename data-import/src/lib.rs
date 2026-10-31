@@ -7,12 +7,14 @@
 
 mod output;
 mod raw;
+mod side_lines;
 mod translate;
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use output::{to_file, OutBase, OutBaseItems, OutMod, OutModDefinition, OutMods, OutStat};
 use raw::{parse_map, parse_value, RawBase, RawItemClass, RawMap, RawMod, RawPool};
+use side_lines::side_lines;
 use translate::Translator;
 
 /// The contents of the six raw files of one RePoE export.
@@ -189,6 +191,7 @@ impl Converter<'_> {
             .map(|mod_id| self.definition(mod_id))
             .collect::<Result<Vec<_>, _>>()?;
         let damage_type_lock = damage_type_lock(id, &implicits)?;
+        let side_lines = side_lines(id, &implicits)?;
         let out = OutBase {
             id: id.to_owned(),
             name: base.name,
@@ -197,6 +200,8 @@ impl Converter<'_> {
             tags: base.tags,
             implicits,
             damage_type_lock,
+            affix_limit_changes: side_lines.limit_changes,
+            magnitude_increases: side_lines.magnitude_increases,
             mod_pool: weights.keys().cloned().collect(),
         };
         Ok((out, weights))

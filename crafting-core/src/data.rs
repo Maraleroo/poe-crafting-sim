@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Deserialize;
 
+use crate::base_effects::parse_effects;
 use crate::craft::CraftError;
 use crate::currency::CurrencyDefinition;
 use crate::damage_lock::parse_locks;
@@ -242,6 +243,8 @@ fn parse_base_items(json: &str) -> Vec<BaseItem> {
         .unwrap_or_else(|error| panic!("invalid base item data: {error}"));
     // Checks the damage type locks (ADR 0020).
     parse_locks(json);
+    // Checks the affix limit changes and magnitude increases (ADR 0022).
+    parse_effects(json);
     let mut ids = BTreeSet::new();
     for base in &file.base_items {
         assert!(ids.insert(&base.id), "duplicate base item {:?}", base.id);
