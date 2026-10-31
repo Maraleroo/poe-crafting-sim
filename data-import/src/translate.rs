@@ -17,6 +17,9 @@ pub struct Display {
     pub text: String,
     pub placeholders: BTreeMap<String, String>,
     pub conversions: BTreeMap<String, OutConversion>,
+    /// The position of the entry of `stat_translations.json` that shows each stat of the
+    /// placeholders (ADR 0023).
+    pub positions: BTreeMap<String, usize>,
 }
 
 /// `stat_translations.json` and `stat_value_handlers.json`.
@@ -108,6 +111,7 @@ impl<'a> Translator<'a> {
         let mut lines = Vec::new();
         let mut placeholders = BTreeMap::new();
         let mut conversions = BTreeMap::new();
+        let mut positions = BTreeMap::new();
         for (position, index) in chosen {
             let entry = &entries[&position];
             let translation = &entry.english.as_deref().unwrap_or_default()[index];
@@ -119,11 +123,18 @@ impl<'a> Translator<'a> {
                 &mut placeholders,
                 &mut conversions,
             )?);
+            // Every stat of the entry that the line shows has a placeholder now
+            for id in &entry.ids {
+                if placeholders.contains_key(id) {
+                    positions.insert(id.clone(), position);
+                }
+            }
         }
         Ok(Display {
             text: lines.join("\n"),
             placeholders,
             conversions,
+            positions,
         })
     }
 
@@ -409,6 +420,25 @@ mod tests {
         assert_eq!(shown.text, "+{life} to Life");
         assert_eq!(shown.placeholders["life"], "life");
         assert!(shown.conversions.is_empty());
+    }
+
+    #[test]
+    fn the_positions_are_those_of_the_entries_that_show_the_stats() {
+        let translator = Translator::new(TRANSLATIONS, HANDLERS).unwrap();
+        let shown = translator
+            .display(
+                "the mod",
+                &[
+                    stat("allowed", 3, 3),
+                    stat("life", 3, 9),
+                    stat("sockets", 1, 1),
+                ],
+            )
+            .unwrap();
+        // "sockets" shows no value, so it has no placeholder and no position
+        let expected: BTreeMap<String, usize> =
+            [("life".to_owned(), 0), ("allowed".to_owned(), 6)].into();
+        assert_eq!(shown.positions, expected);
     }
 
     #[test]

@@ -67,10 +67,22 @@ pub fn convert(raw: &RawFiles, base_ids: &[&str]) -> Result<Converted, String> {
         }
         bases.push(base);
     }
-    let mut mods = pooled
-        .iter()
-        .map(|(id, weight)| converter.explicit(id, *weight))
-        .collect::<Result<Vec<_>, _>>()?;
+    let mut mods = Vec::new();
+    let mut stat_order: BTreeMap<String, usize> = BTreeMap::new();
+    for (id, weight) in &pooled {
+        let (entry, positions) = converter.explicit(id, *weight)?;
+        for (stat, position) in positions {
+            match stat_order.insert(stat.clone(), position) {
+                Some(other) if other != position => {
+                    return Err(format!(
+                        "the stat {stat:?} is shown by the entries {other} and {position} of                          stat_translations.json"
+                    ))
+                }
+                _ => {}
+            }
+        }
+        mods.push(entry);
+    }
     check_unique_names(&mods)?;
     mods.sort_by(|a, b| sort_key(a).cmp(&sort_key(b)));
     let order: BTreeMap<&str, usize> = mods
@@ -83,7 +95,7 @@ pub fn convert(raw: &RawFiles, base_ids: &[&str]) -> Result<Converted, String> {
     }
     Ok(Converted {
         base_items_json: to_file(&OutBaseItems { base_items: bases })?,
-        mods_json: to_file(&OutMods { mods })?,
+        mods_json: to_file(&OutMods { mods, stat_order })?,
     })
 }
 
@@ -263,8 +275,9 @@ impl Converter<'_> {
         Ok(weights)
     }
 
-    /// A prefix or suffix of a pool.
-    fn explicit(&self, id: &str, weight: u32) -> Result<OutMod, String> {
+    /// A prefix or suffix of a pool, with the positions of the entries of
+    /// `stat_translations.json` that show its stats.
+    fn explicit(&self, id: &str, weight: u32) -> Result<(OutMod, BTreeMap<String, usize>), String> {
         let raw = self.raw_mod(id)?;
         if raw.generation_type != "prefix" && raw.generation_type != "suffix" {
             return Err(format!(
@@ -274,18 +287,20 @@ impl Converter<'_> {
         }
         let name = raw.name.clone();
         let affix_type = raw.generation_type.clone();
-        Ok(OutMod {
+        let (definition, positions) = self.convert_mod(id, raw)?;
+        let entry = OutMod {
             id: id.to_owned(),
             name,
             affix_type,
             weight,
-            definition: self.convert_mod(id, raw)?,
-        })
+            definition,
+        };
+        Ok((entry, positions))
     }
 
     /// A mod without name, affix type and weight, for example an implicit.
     fn definition(&self, id: &str) -> Result<OutModDefinition, String> {
-        self.convert_mod(id, self.raw_mod(id)?)
+        Ok(self.convert_mod(id, self.raw_mod(id)?)?.0)
     }
 
     fn raw_mod(&self, id: &str) -> Result<RawMod, String> {
@@ -296,7 +311,11 @@ impl Converter<'_> {
         parse_value(&format!("the mod {id}"), entry)
     }
 
-    fn convert_mod(&self, id: &str, raw: RawMod) -> Result<OutModDefinition, String> {
+    fn convert_mod(
+        &self,
+        id: &str,
+        raw: RawMod,
+    ) -> Result<(OutModDefinition, BTreeMap<String, usize>), String> {
         let [family] = raw.groups.as_slice() else {
             return Err(format!(
                 "the mod {id} has {} groups, but must have exactly one",
@@ -319,7 +338,7 @@ impl Converter<'_> {
             ));
         }
         let display = self.translator.display(&format!("the mod {id}"), &stats)?;
-        Ok(OutModDefinition {
+        let definition = OutModDefinition {
             family: family.clone(),
             level: raw.required_level,
             tags: raw.implicit_tags,
@@ -327,7 +346,8 @@ impl Converter<'_> {
             text: display.text,
             placeholders: display.placeholders,
             conversions: display.conversions,
-        })
+        };
+        Ok((definition, display.positions))
     }
 }
 
