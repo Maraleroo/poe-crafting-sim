@@ -4,7 +4,7 @@
 //! translations and takes the game texts (name, class, mod texts) over unchanged.
 
 use crate::i18n::Translations;
-use crafting_core::{Item, Mod, Rarity};
+use crafting_core::{ExplicitMod, Item, Mod, Rarity};
 
 /// All visible texts of one item.
 #[derive(Debug, PartialEq, Eq)]
@@ -32,21 +32,31 @@ impl ItemView {
             requires_level: item.required_level().map(|level| {
                 translations.format("item.requires_level", &[("level", &level.to_string())])
             }),
-            implicits: item.implicits.iter().flat_map(lines).collect(),
+            implicits: item.implicits.iter().flat_map(implicit_lines).collect(),
             explicits: item
                 .prefixes
                 .iter()
                 .chain(&item.suffixes)
-                .flat_map(|explicit| lines(&explicit.modifier))
+                .flat_map(|explicit| explicit_lines(item, explicit))
                 .collect(),
         }
     }
 }
 
-/// The lines of the display text of a mod; a text with several lines separates them with
-/// line breaks.
-fn lines(modifier: &Mod) -> Vec<String> {
-    modifier.display_text().lines().map(str::to_owned).collect()
+/// The lines of the display text of an implicit mod; a text with several lines separates them
+/// with line breaks.
+fn implicit_lines(modifier: &Mod) -> Vec<String> {
+    text_lines(&modifier.display_text())
+}
+
+/// The lines of a prefix or suffix in the normal view of the item, with the values increased
+/// by the item's magnitude lines (ADR 0022).
+fn explicit_lines(item: &Item, explicit: &ExplicitMod) -> Vec<String> {
+    text_lines(&item.explicit_text(explicit))
+}
+
+fn text_lines(text: &str) -> Vec<String> {
+    text.lines().map(str::to_owned).collect()
 }
 
 /// Translation key of the label for a rarity.
@@ -248,6 +258,32 @@ mod tests {
                 conversions: BTreeMap::new(),
             },
         }
+    }
+
+    #[test]
+    fn view_shows_the_increased_values_of_the_side_that_the_base_increases() {
+        // This ring base increases the values of its suffixes by 25 % (ADR 0022)
+        let mut workbench = Workbench::new(1);
+        workbench.select("Metadata/Items/Rings/RingE1");
+        let mut item = workbench.item().clone();
+        item.rarity = Rarity::Rare;
+        let mut rng = SeededRng::new(1);
+        for affix_type in [AffixType::Prefix, AffixType::Suffix] {
+            let mut definition = invented_mod("Invented", 1);
+            definition.definition.stats[0].min = 40;
+            definition.definition.stats[0].max = 40;
+            let explicit = ExplicitMod {
+                name: "Invented".to_owned(),
+                affix_type,
+                modifier: Mod::roll(&definition.definition, &mut rng),
+            };
+            match affix_type {
+                AffixType::Prefix => item.prefixes.push(explicit),
+                AffixType::Suffix => item.suffixes.push(explicit),
+            }
+        }
+        let view = ItemView::new(&Translations::english(), &item);
+        assert_eq!(view.explicits, ["+40", "+50"]);
     }
 
     #[test]
