@@ -15,6 +15,16 @@
       "messages": {
         "item_not_magic": "Failed to apply item: Target is not Magic."
       }
+    },
+    {
+      "id": "orb_of_augmentation",
+      "name": "Orb of Augmentation",
+      "description": "Augments a magic item with a new random modifier",
+      "messages": {
+        "item_not_magic": "Failed to apply item: Target is not Magic.",
+        "no_space_for_mods": "Failed to apply item: Item has no space for more Mods.",
+        "no_valid_mod": "Failed to apply item: Could not generate Mod."
+      }
     }
   ]
 }
