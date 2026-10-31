@@ -16,6 +16,7 @@ pub struct PageText {
     /// Labels of the currency buttons: the currencies' names, game texts from `crafting-core`.
     pub transmutation_button: String,
     pub alteration_button: String,
+    pub augmentation_button: String,
     pub reset_button: String,
 }
 
@@ -32,6 +33,7 @@ impl PageText {
             english_version_link: translations.text("privacy.english_version").to_owned(),
             transmutation_button: Currency::OrbOfTransmutation.name(),
             alteration_button: Currency::OrbOfAlteration.name(),
+            augmentation_button: Currency::OrbOfAugmentation.name(),
             reset_button: translations.text("craft.reset").to_owned(),
         }
     }
@@ -69,5 +71,6 @@ mod tests {
             Currency::OrbOfTransmutation.name()
         );
         assert_eq!(text.alteration_button, Currency::OrbOfAlteration.name());
+        assert_eq!(text.augmentation_button, Currency::OrbOfAugmentation.name());
     }
 }
