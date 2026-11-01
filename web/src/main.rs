@@ -164,6 +164,7 @@ impl StartPage {
                 Currency::OrbOfAugmentation,
                 button(document, &text.augmentation_button)?,
             ),
+            (Currency::RegalOrb, button(document, &text.regal_button)?),
         ];
         let reset = button(document, &text.reset_button)?;
         let buttons = element(document, "div", None)?;
