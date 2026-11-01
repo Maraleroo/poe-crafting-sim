@@ -169,6 +169,7 @@ impl StartPage {
                 Currency::ExaltedOrb,
                 button(document, &text.exalted_button)?,
             ),
+            (Currency::ChaosOrb, button(document, &text.chaos_button)?),
         ];
         let reset = button(document, &text.reset_button)?;
         let buttons = element(document, "div", None)?;

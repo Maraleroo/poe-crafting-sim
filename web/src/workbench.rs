@@ -5,11 +5,11 @@
 
 use crate::item_level;
 use crafting_core::{
-    apply_exalted_orb, apply_orb_of_alteration, apply_orb_of_augmentation,
-    apply_orb_of_transmutation, apply_regal_orb, base_item, can_apply_exalted_orb,
-    can_apply_orb_of_alteration, can_apply_orb_of_augmentation, can_apply_orb_of_transmutation,
-    can_apply_regal_orb, mod_pool, BaseItem, CraftError, Currency, ExplicitModDefinition, Item,
-    SeededRng,
+    apply_chaos_orb, apply_exalted_orb, apply_orb_of_alteration, apply_orb_of_augmentation,
+    apply_orb_of_transmutation, apply_regal_orb, base_item, can_apply_chaos_orb,
+    can_apply_exalted_orb, can_apply_orb_of_alteration, can_apply_orb_of_augmentation,
+    can_apply_orb_of_transmutation, can_apply_regal_orb, mod_pool, BaseItem, CraftError, Currency,
+    ExplicitModDefinition, Item, SeededRng,
 };
 
 /// The base item on the workbench (a reference, not item data).
@@ -92,6 +92,7 @@ impl Workbench {
             }
             Currency::RegalOrb => apply_regal_orb(&mut self.item, &self.pool, &mut self.rng),
             Currency::ExaltedOrb => apply_exalted_orb(&mut self.item, &self.pool, &mut self.rng),
+            Currency::ChaosOrb => apply_chaos_orb(&mut self.item, &self.pool, &mut self.rng),
         }
     }
 
@@ -147,6 +148,7 @@ impl Workbench {
             Currency::OrbOfAugmentation => can_apply_orb_of_augmentation(&self.item),
             Currency::RegalOrb => can_apply_regal_orb(&self.item),
             Currency::ExaltedOrb => can_apply_exalted_orb(&self.item, &self.pool),
+            Currency::ChaosOrb => can_apply_chaos_orb(&self.item),
         }
     }
 }
@@ -454,6 +456,48 @@ mod tests {
         );
         assert_eq!(workbench.apply(EXALTED), Err(CraftError::NoValidMod));
         assert_eq!(workbench.item(), &before);
+    }
+
+    const CHAOS: Currency = Currency::ChaosOrb;
+
+    #[test]
+    fn the_chaos_orb_on_a_normal_or_magic_item_fails_and_changes_nothing() {
+        let mut normal = Workbench::new(1);
+        let mut magic = magic_with_room();
+        for workbench in [&mut normal, &mut magic] {
+            let before = workbench.item().clone();
+            assert!(!workbench.applicable(CHAOS));
+            assert_eq!(
+                workbench.tooltip(CHAOS),
+                CHAOS.failure_message(CraftError::ItemNotRare)
+            );
+            assert_eq!(workbench.apply(CHAOS), Err(CraftError::ItemNotRare));
+            assert_eq!(workbench.item(), &before);
+        }
+    }
+
+    #[test]
+    fn the_chaos_orb_reforges_a_rare_item_and_keeps_it_rare_and_its_implicits() {
+        let mut workbench = rare_with_room();
+        let before = workbench.item().clone();
+        assert!(workbench.applicable(CHAOS));
+        assert_eq!(workbench.tooltip(CHAOS), CHAOS.description());
+        assert_eq!(workbench.apply(CHAOS), Ok(()));
+        let item = workbench.item();
+        assert_eq!(item.rarity, Rarity::Rare);
+        assert_eq!(item.implicits, before.implicits);
+        assert!((4..=6).contains(&(item.prefixes.len() + item.suffixes.len())));
+    }
+
+    #[test]
+    fn the_chaos_orb_still_applies_to_a_rare_item_without_a_valid_mod() {
+        let mut workbench = rare_with_room();
+        workbench.pool.clear();
+        assert!(workbench.applicable(CHAOS));
+        assert_eq!(workbench.apply(CHAOS), Ok(()));
+        let item = workbench.item();
+        assert_eq!(item.rarity, Rarity::Rare);
+        assert!(item.prefixes.is_empty() && item.suffixes.is_empty());
     }
 
     #[test]

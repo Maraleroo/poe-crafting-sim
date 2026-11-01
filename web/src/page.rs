@@ -19,6 +19,7 @@ pub struct PageText {
     pub augmentation_button: String,
     pub regal_button: String,
     pub exalted_button: String,
+    pub chaos_button: String,
     pub reset_button: String,
 }
 
@@ -38,6 +39,7 @@ impl PageText {
             augmentation_button: Currency::OrbOfAugmentation.name(),
             regal_button: Currency::RegalOrb.name(),
             exalted_button: Currency::ExaltedOrb.name(),
+            chaos_button: Currency::ChaosOrb.name(),
             reset_button: translations.text("craft.reset").to_owned(),
         }
     }
@@ -78,5 +80,6 @@ mod tests {
         assert_eq!(text.augmentation_button, Currency::OrbOfAugmentation.name());
         assert_eq!(text.regal_button, Currency::RegalOrb.name());
         assert_eq!(text.exalted_button, Currency::ExaltedOrb.name());
+        assert_eq!(text.chaos_button, Currency::ChaosOrb.name());
     }
 }
