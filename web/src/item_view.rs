@@ -4,7 +4,7 @@
 //! translations and takes the game texts (name, class, mod texts) over unchanged.
 
 use crate::i18n::Translations;
-use crafting_core::{Item, Mod, Rarity};
+use crafting_core::{Item, Mod, ModBlock, ModKind, Rarity, TextPart};
 
 /// All visible texts of one item.
 #[derive(Debug, PartialEq, Eq)]
@@ -22,6 +22,57 @@ pub struct ItemView {
     /// stats, with the lines of the same stats merged (ADR 0023). They come from
     /// `crafting-core`.
     pub explicits: Vec<String>,
+    /// One entry per mod of the advanced view (ADR 0024). They come from `crafting-core`.
+    pub blocks: Vec<BlockView>,
+}
+
+/// All visible texts of one mod in the advanced view.
+#[derive(Debug, PartialEq, Eq)]
+pub struct BlockView {
+    /// The CSS class for the kind of mod. It is neither visible text nor a translation.
+    pub kind_class: &'static str,
+    /// The short label that is shown on the left of the block.
+    pub short_label: String,
+    /// The name of the kind, for screen readers and as a tooltip.
+    pub kind_name: String,
+    /// The tier box; none for an implicit.
+    pub tier: Option<String>,
+    /// One entry per line; the range of a value is a part of its own.
+    pub lines: Vec<Vec<TextPart>>,
+    /// The name of a prefix or suffix, a game text.
+    pub name: Option<String>,
+    /// The separator between name and tags; none unless both are shown.
+    pub separator: Option<String>,
+    /// The tags, a game text; empty if the mod shows none.
+    pub tags: String,
+    /// The mark of a mod whose values the base increases.
+    pub increase: Option<String>,
+}
+
+impl BlockView {
+    fn new(translations: &Translations, block: &ModBlock) -> Self {
+        let (kind_class, short_key, name_key) = match block.kind {
+            ModKind::Implicit => ("implicit", "mod.label.implicit", "mod.kind.implicit"),
+            ModKind::Prefix => ("prefix", "mod.label.prefix", "mod.kind.prefix"),
+            ModKind::Suffix => ("suffix", "mod.label.suffix", "mod.kind.suffix"),
+        };
+        Self {
+            kind_class,
+            short_label: translations.text(short_key).to_owned(),
+            kind_name: translations.text(name_key).to_owned(),
+            tier: block
+                .tier
+                .map(|tier| translations.format("mod.tier", &[("tier", &tier.to_string())])),
+            lines: block.lines.clone(),
+            name: block.name.clone(),
+            separator: (block.name.is_some() && !block.tags.is_empty())
+                .then(|| translations.text("mod.separator").to_owned()),
+            tags: block.tags.clone(),
+            increase: block.magnitude_increase.map(|percent| {
+                translations.format("mod.increase", &[("percent", &percent.to_string())])
+            }),
+        }
+    }
 }
 
 impl ItemView {
@@ -36,6 +87,11 @@ impl ItemView {
             }),
             implicits: item.implicits.iter().flat_map(implicit_lines).collect(),
             explicits: item.explicit_texts(),
+            blocks: item
+                .advanced_mods()
+                .iter()
+                .map(|block| BlockView::new(translations, block))
+                .collect(),
         }
     }
 }
@@ -356,5 +412,90 @@ mod tests {
             two_lines.definition.text.lines().count()
         );
         assert!(view.explicits.iter().all(|line| !line.contains('\n')));
+    }
+
+    #[test]
+    fn the_blocks_come_from_crafting_core_with_texts_from_the_translations() {
+        let t = Translations::english();
+        let (base, pool) = start_pool();
+        let (prefixes, suffixes) = sides(&pool);
+        let item = magic_item_with(&base, &[prefixes[0], suffixes[0]]);
+        let view = ItemView::new(&t, &item);
+        let blocks = item.advanced_mods();
+        assert_eq!(view.blocks.len(), blocks.len());
+        let kinds: Vec<&str> = view.blocks.iter().map(|b| b.kind_class).collect();
+        assert_eq!(kinds, ["implicit", "prefix", "suffix"]);
+        let labels: Vec<(&str, &str)> = view
+            .blocks
+            .iter()
+            .map(|b| (b.short_label.as_str(), b.kind_name.as_str()))
+            .collect();
+        assert_eq!(
+            labels,
+            [
+                (t.text("mod.label.implicit"), t.text("mod.kind.implicit")),
+                (t.text("mod.label.prefix"), t.text("mod.kind.prefix")),
+                (t.text("mod.label.suffix"), t.text("mod.kind.suffix")),
+            ]
+        );
+        for (shown, block) in view.blocks.iter().zip(&blocks) {
+            assert_eq!(shown.lines, block.lines);
+            assert_eq!(shown.name, block.name);
+            assert_eq!(shown.tags, block.tags);
+            assert_eq!(
+                shown.tier,
+                block
+                    .tier
+                    .map(|tier| t.format("mod.tier", &[("tier", &tier.to_string())]))
+            );
+        }
+        assert_eq!(view.blocks[0].tier, None);
+        assert_eq!(view.blocks[0].name, None);
+        assert_eq!(view.blocks[0].separator, None);
+    }
+
+    #[test]
+    fn the_separator_is_shown_only_between_a_name_and_tags() {
+        let t = Translations::english();
+        let (base, pool) = start_pool();
+        let item = magic_item_with(&base, &pool.iter().take(1).collect::<Vec<_>>());
+        let view = ItemView::new(&t, &item);
+        let explicit = view.blocks.last().unwrap();
+        assert!(explicit.name.is_some());
+        assert_eq!(
+            explicit.separator.is_some(),
+            !explicit.tags.is_empty(),
+            "a mod without tags has no separator"
+        );
+        if let Some(separator) = &explicit.separator {
+            assert_eq!(separator, t.text("mod.separator"));
+        }
+    }
+
+    #[test]
+    fn a_block_of_an_increased_side_shows_the_increase_from_the_translations() {
+        // This ring base increases the values of its suffixes by 25 %
+        let mut workbench = Workbench::new(1);
+        workbench.select("Metadata/Items/Rings/RingE1");
+        let base = workbench.item().base.clone();
+        let pool = mod_pool(&base.id).expect("every base has a pool");
+        let (prefixes, suffixes) = sides(&pool);
+        let item = magic_item_with(&base, &[prefixes[0], suffixes[0]]);
+        let t = Translations::english();
+        let view = ItemView::new(&t, &item);
+        let increases: Vec<(&str, Option<&str>)> = view
+            .blocks
+            .iter()
+            .map(|b| (b.kind_class, b.increase.as_deref()))
+            .collect();
+        let expected = t.format("mod.increase", &[("percent", "25")]);
+        assert_eq!(
+            increases,
+            [
+                ("implicit", None),
+                ("prefix", None),
+                ("suffix", Some(expected.as_str()))
+            ]
+        );
     }
 }

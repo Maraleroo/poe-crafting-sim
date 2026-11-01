@@ -11,6 +11,10 @@
   --gold-light: #f3d9a8;
   --magic: #a3b5ff;
   --error: #ff9b8a;
+  --text-strong: #f2f4f6;
+  --range: #7d8796;
+  --active-surface: #2d2717;
+  --tier-surface: #4a3b1a;
   color-scheme: dark;
 }
 
@@ -324,4 +328,128 @@ article {
   margin: 0.75rem 0 0;
   color: var(--text-muted);
   font-size: 0.875rem;
+}
+
+/* The toggle between the default and the advanced view of the mods: two segments next to each
+   other. Their texts wrap inside the segments, so the toggle fits a narrow page. */
+.view-toggle {
+  display: inline-flex;
+  max-width: 100%;
+  margin: 0.75rem 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0.25rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.view-toggle button + button {
+  border-left: 1px solid var(--border-strong);
+}
+
+.view-toggle button:hover {
+  color: var(--gold-light);
+}
+
+.view-toggle button[aria-pressed="true"] {
+  background: var(--active-surface);
+  color: var(--gold-light);
+  font-weight: 600;
+}
+
+/* The advanced view: one block per mod. A grid of the short label, the lines and the tier box;
+   the lines wrap, and the name and tags are a small line below them. */
+.item ul.blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.block {
+  display: grid;
+  grid-template-columns: 1.375rem minmax(0, 1fr) auto;
+  column-gap: 0.5rem;
+  row-gap: 0.125rem;
+  align-items: start;
+}
+
+.block .kind {
+  grid-column: 1;
+  display: inline-grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.block .lines {
+  grid-column: 2;
+  padding-top: 1px;
+}
+
+.block .line {
+  display: block;
+}
+
+.block .tier {
+  grid-column: 3;
+  grid-row: 1;
+  padding: 1px 0.375rem;
+  border-radius: 4px;
+  background: var(--tier-surface);
+  color: var(--gold-light);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.block .meta {
+  grid-column: 2 / -1;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.block .name {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+/* The range is set apart by its colour and a small gap; the text has no added space. */
+.block .range {
+  margin-left: 0.125rem;
+  color: var(--range);
+}
+
+.block .increase {
+  margin-left: 0.375rem;
+  color: var(--gold);
+}
+
+.block.implicit .kind {
+  background: #2a2f37;
+  color: #c3c9d0;
+}
+
+.block.prefix .kind {
+  background: #2b3550;
+  color: #c8d3ff;
+}
+
+.block.suffix .kind {
+  background: #43361f;
+  color: var(--gold-light);
 }

@@ -10,6 +10,15 @@
   "item.rarity.unique": "Unique",
   "item.requires_level": "Requires Level {level}",
   "item_level.field": "Item level",
+  "mod.increase": "— {percent}% Increased",
+  "mod.kind.implicit": "Implicit",
+  "mod.kind.prefix": "Prefix",
+  "mod.kind.suffix": "Suffix",
+  "mod.label.implicit": "I",
+  "mod.label.prefix": "P",
+  "mod.label.suffix": "S",
+  "mod.separator": "·",
+  "mod.tier": "T{tier}",
   "picker.base_label": "{base} ({class})",
   "picker.field": "Item",
   "picker.hint": "Type two letters for suggestions, or click through the slots.",
@@ -31,5 +40,7 @@
   "picker.slot.weapon": "Weapon",
   "privacy.title": "Privacy Policy",
   "privacy.german_version": "German version",
-  "privacy.english_version": "English version"
+  "privacy.english_version": "English version",
+  "view.advanced": "Advanced Mod Descriptions",
+  "view.default": "Default Mod Descriptions"
 }

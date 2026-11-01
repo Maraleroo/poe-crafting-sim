@@ -6,6 +6,7 @@ use serde::Deserialize;
 
 use crate::base_effects::effects_of;
 use crate::conversion::Conversion;
+use crate::data::mod_pool;
 use crate::rng::{roll_in_range, Rng};
 use crate::stat_order::position_of;
 
@@ -149,6 +150,25 @@ pub struct Stat {
     pub value: i32,
 }
 
+/// The tags that the advanced view never shows (rule "Advanced mod descriptions" in
+/// `poe-crafting-rules`, ADR 0024). This is the only place of the list.
+const HIDDEN_TAGS: [&str; 5] = [
+    "elemental_damage",
+    "physical_damage",
+    "chaos_damage",
+    "flat_life_regen",
+    "resource",
+];
+
+/// `word` with an uppercase first letter.
+fn capitalised(word: &str) -> String {
+    let mut chars = word.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().chain(chars).collect(),
+        None => String::new(),
+    }
+}
+
 /// A mod of an item, with rolled stat values.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Mod {
@@ -213,12 +233,95 @@ impl Mod {
                     panic!("the mod text uses the unmapped placeholder {name:?}")
                 });
                 let value = value_of(self.stat(name, stat_id));
-                let shown = match self.conversions.get(stat_id) {
-                    Some(conversion) => conversion.show(value),
-                    None => value.to_string(),
-                };
-                text.replace(&format!("{{{name}}}"), &shown)
+                text.replace(&format!("{{{name}}}"), &self.shown(stat_id, value))
             })
+    }
+
+    /// The raw value of the stat `stat_id` as the game shows it: converted where the mod has a
+    /// conversion for the stat.
+    fn shown(&self, stat_id: &str, raw: i32) -> String {
+        match self.conversions.get(stat_id) {
+            Some(conversion) => conversion.show(raw),
+            None => raw.to_string(),
+        }
+    }
+
+    /// The lines of the mod as the extended item text (Ctrl+Alt+C) shows them, with the rolled
+    /// values unscaled (rules "In an extended item text ..." and "Values with decimals ..." in
+    /// `poe-crafting-rules`, ADR 0024). A line is a list of pieces that, put together, give the
+    /// line: the text with each value converted as `display_text` does, and after the value of a
+    /// stat with a range (minimum less than maximum) a `TextPart::Range` `(minimum-maximum)`
+    /// with both bounds converted the same way. A fixed value has no range.
+    ///
+    /// # Panics
+    /// If a stat with a range has a negative minimum or a negative divisor: the rules do not
+    /// define the range of a negative or negated value. Or if a placeholder names a stat the mod
+    /// does not have. That is an error in the data.
+    pub fn extended_lines(&self) -> Vec<Vec<TextPart>> {
+        self.text
+            .split('\n')
+            .map(|line| self.extended_line(line))
+            .collect()
+    }
+
+    fn extended_line(&self, line: &str) -> Vec<TextPart> {
+        let mut parts = Vec::new();
+        let mut text = String::new();
+        let mut rest = line;
+        while let Some(start) = rest.find('{') {
+            let end = start
+                + rest[start..]
+                    .find('}')
+                    .unwrap_or_else(|| panic!("unclosed placeholder in the mod text {line:?}"));
+            text.push_str(&rest[..start]);
+            let name = &rest[start + 1..end];
+            let stat_id = self
+                .placeholders
+                .get(name)
+                .unwrap_or_else(|| panic!("the mod text uses the unmapped placeholder {name:?}"));
+            let stat = self.stat(name, stat_id);
+            text.push_str(&self.shown(stat_id, stat.value));
+            if stat.min < stat.max {
+                let negated = self
+                    .conversions
+                    .get(stat_id)
+                    .is_some_and(|conversion| conversion.divisor < 0);
+                assert!(
+                    stat.min >= 0 && !negated,
+                    "the range of stat {stat_id:?} is not defined by poe-crafting-rules: \
+                     ranges of negative or negated values"
+                );
+                parts.push(TextPart::Text(std::mem::take(&mut text)));
+                parts.push(TextPart::Range(format!(
+                    "({}-{})",
+                    self.shown(stat_id, stat.min),
+                    self.shown(stat_id, stat.max)
+                )));
+            }
+            rest = &rest[end + 1..];
+        }
+        text.push_str(rest);
+        if !text.is_empty() {
+            parts.push(TextPart::Text(text));
+        }
+        parts
+    }
+
+    /// The tags of the mod's header (rule "Advanced mod descriptions" in `poe-crafting-rules`):
+    /// the tags of the game data in their order, without the hidden tags, each word (split at
+    /// `_`) with an uppercase first letter, separated by ", ". Empty if no tag is shown.
+    pub fn tag_text(&self) -> String {
+        self.tags
+            .iter()
+            .filter(|tag| !HIDDEN_TAGS.contains(&tag.as_str()))
+            .map(|tag| {
+                tag.split('_')
+                    .map(capitalised)
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            })
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 
     /// The stat with the identifier that the placeholder `name` names.
@@ -261,6 +364,42 @@ pub struct ExplicitMod {
     pub name: String,
     pub affix_type: AffixType,
     pub modifier: Mod,
+}
+
+/// What a block of the advanced view shows: an implicit, a prefix or a suffix.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ModKind {
+    Implicit,
+    Prefix,
+    Suffix,
+}
+
+/// A piece of a line in the extended item text. The pieces of a line, put together, are the
+/// line as the extended item text shows it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TextPart {
+    /// Text of the line and the value, e.g. `+15`.
+    Text(String),
+    /// The range directly after a value, with its brackets, e.g. `(12-16)`.
+    Range(String),
+}
+
+/// One mod in the advanced view (ADR 0024).
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct ModBlock {
+    pub kind: ModKind,
+    /// Name of a prefix or suffix; none for an implicit.
+    pub name: Option<String>,
+    /// Tier of a prefix or suffix; none for an implicit.
+    pub tier: Option<u32>,
+    /// The shown tags, separated by ", "; empty if the mod shows none.
+    pub tags: String,
+    /// One entry per line of the mod, unscaled values.
+    pub lines: Vec<Vec<TextPart>>,
+    /// X of "— X% Increased" if the base increases the values of the mod's side; none for an
+    /// implicit and for a side without an increase.
+    pub magnitude_increase: Option<u32>,
 }
 
 /// The item level a new item has: the default of the rule "Item level" in
@@ -469,6 +608,57 @@ impl Item {
             .collect()
     }
 
+    /// The mods of the item in the advanced view (rule "Advanced mod descriptions" in
+    /// `poe-crafting-rules`, ADR 0024), one block per mod, nothing merged: the implicits in the
+    /// order of the base, then the prefixes, then the suffixes, each in the order they were
+    /// added. The lines show the unscaled values; `magnitude_increase` holds the increase of
+    /// the mod's side. The base's pool is read once per call, and only if the item has a prefix
+    /// or a suffix.
+    ///
+    /// # Panics
+    /// As `Mod::extended_lines`.
+    pub fn advanced_mods(&self) -> Vec<ModBlock> {
+        let pool = if self.prefixes.is_empty() && self.suffixes.is_empty() {
+            Vec::new()
+        } else {
+            mod_pool(&self.base.id).unwrap_or_default()
+        };
+        let implicits = self.implicits.iter().map(|implicit| ModBlock {
+            kind: ModKind::Implicit,
+            name: None,
+            tier: None,
+            tags: implicit.tag_text(),
+            lines: implicit.extended_lines(),
+            magnitude_increase: None,
+        });
+        let explicits = self.prefixes.iter().chain(&self.suffixes).map(|explicit| {
+            let increase = effects_of(&self.base.id)
+                .magnitude_increases
+                .of(explicit.affix_type);
+            ModBlock {
+                kind: match explicit.affix_type {
+                    AffixType::Prefix => ModKind::Prefix,
+                    AffixType::Suffix => ModKind::Suffix,
+                },
+                name: Some(explicit.name.clone()),
+                tier: Some(tier_in(&pool, explicit)),
+                tags: explicit.modifier.tag_text(),
+                lines: explicit.modifier.extended_lines(),
+                magnitude_increase: (increase > 0).then_some(increase),
+            }
+        });
+        implicits.chain(explicits).collect()
+    }
+
+    /// The tier of a prefix or suffix (rule "Advanced mod descriptions" in
+    /// `poe-crafting-rules`, ADR 0024): 1 plus the number of mods in the base's pool on the
+    /// same side, of the same family and with a higher level. The pool is the one of the game
+    /// data, filtered neither by the item level nor by the damage type lock. A base without a
+    /// pool counts as an empty pool.
+    pub fn tier(&self, explicit: &ExplicitMod) -> u32 {
+        tier_in(&mod_pool(&self.base.id).unwrap_or_default(), explicit)
+    }
+
     /// The name of the item: the names of all prefixes, the base name and the names of all
     /// suffixes, each list in the order its mods were added, separated by spaces (rule "Item
     /// basics" in `poe-crafting-rules`). A side without mods leaves its part out. Names of
@@ -482,6 +672,20 @@ impl Item {
             .collect::<Vec<_>>()
             .join(" ")
     }
+}
+
+/// 1 plus the number of mods in `pool` on the same side as `explicit`, of the same family and
+/// with a higher level.
+fn tier_in(pool: &[ExplicitModDefinition], explicit: &ExplicitMod) -> u32 {
+    let higher = pool
+        .iter()
+        .filter(|definition| {
+            definition.affix_type == explicit.affix_type
+                && definition.definition.family == explicit.modifier.family
+                && definition.definition.level > explicit.modifier.level
+        })
+        .count();
+    1 + u32::try_from(higher).unwrap_or(u32::MAX - 1)
 }
 
 #[cfg(test)]
@@ -1085,5 +1289,203 @@ Second line"
         // The mods themselves keep their values and their order
         assert_eq!(item.prefixes[0].modifier.stats[0].value, 20);
         assert_eq!(item.suffixes[0].modifier.stats[0].value, 8);
+    }
+
+    #[test]
+    fn extended_lines_put_the_range_directly_after_a_value_with_a_range() {
+        let ranged = definition(vec![
+            StatDefinition {
+                id: LOW.to_owned(),
+                min: 3,
+                max: 3,
+            },
+            StatDefinition {
+                id: HIGH.to_owned(),
+                min: 10,
+                max: 14,
+            },
+        ]);
+        let mut rolled = Mod::roll(&ranged, &mut SeededRng::new(1));
+        rolled.stats[1].value = 12;
+        assert_eq!(
+            rolled.extended_lines(),
+            [vec![
+                TextPart::Text("Adds 3 to 12".to_owned()),
+                TextPart::Range("(10-14)".to_owned()),
+                TextPart::Text(" Physical Damage to Attacks".to_owned()),
+            ]]
+        );
+    }
+
+    #[test]
+    fn extended_lines_convert_the_value_and_both_bounds() {
+        let mut converted = definition(vec![
+            StatDefinition {
+                id: LOW.to_owned(),
+                min: 120,
+                max: 240,
+            },
+            stat(HIGH, 210),
+        ]);
+        converted.text = "Regenerate {low} Life per second\n{high} Life".to_owned();
+        for id in [LOW, HIGH] {
+            converted.conversions.insert(
+                id.to_owned(),
+                Conversion {
+                    divisor: 60,
+                    precision: Some(1),
+                },
+            );
+        }
+        let mut rolled = Mod::roll(&converted, &mut SeededRng::new(1));
+        rolled.stats[0].value = 210;
+        assert_eq!(
+            rolled.extended_lines(),
+            [
+                vec![
+                    TextPart::Text("Regenerate 3.5".to_owned()),
+                    TextPart::Range("(2-4)".to_owned()),
+                    TextPart::Text(" Life per second".to_owned()),
+                ],
+                vec![TextPart::Text("3.5 Life".to_owned())],
+            ]
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "not defined by poe-crafting-rules")]
+    fn extended_lines_do_not_guess_the_range_of_a_negated_value() {
+        let mut negated = definition(vec![
+            stat(LOW, 1),
+            StatDefinition {
+                id: HIGH.to_owned(),
+                min: 5,
+                max: 8,
+            },
+        ]);
+        negated.conversions.insert(
+            HIGH.to_owned(),
+            Conversion {
+                divisor: -1,
+                precision: None,
+            },
+        );
+        Mod::roll(&negated, &mut SeededRng::new(1)).extended_lines();
+    }
+
+    #[test]
+    #[should_panic(expected = "not defined by poe-crafting-rules")]
+    fn extended_lines_do_not_guess_the_range_of_a_negative_value() {
+        let negative = definition(vec![
+            stat(LOW, 1),
+            StatDefinition {
+                id: HIGH.to_owned(),
+                min: -5,
+                max: -3,
+            },
+        ]);
+        Mod::roll(&negative, &mut SeededRng::new(1)).extended_lines();
+    }
+
+    #[test]
+    fn no_mod_of_the_data_has_a_range_of_a_negative_or_negated_value() {
+        let implicits = crate::slot::Slot::Ring
+            .base_items()
+            .into_iter()
+            .flat_map(|base| base.implicits);
+        let explicits = crate::data::explicit_mods()
+            .into_iter()
+            .map(|explicit| explicit.definition);
+        for definition in implicits.chain(explicits) {
+            // Panics on a range that the rules do not define
+            Mod::roll(&definition, &mut SeededRng::new(1)).extended_lines();
+        }
+    }
+
+    #[test]
+    fn tags_are_capitalised_per_word_and_the_hidden_ones_are_left_out() {
+        let mut tagged = Mod::roll(&definition(vec![stat(LOW, 1)]), &mut SeededRng::new(1));
+        tagged.tags = ["resource", "test_new_tag", "life", "chaos_damage"]
+            .map(str::to_owned)
+            .to_vec();
+        assert_eq!(tagged.tag_text(), "Test New Tag, Life");
+        tagged.tags = HIDDEN_TAGS.map(str::to_owned).to_vec();
+        assert_eq!(tagged.tag_text(), "");
+    }
+
+    #[test]
+    fn no_family_of_a_locked_base_mixes_blocked_and_unblocked_mods() {
+        // Otherwise the rule would leave open which pool counts for the tier
+        for base in crate::slot::Slot::Ring.base_items() {
+            let pool = crate::data::mod_pool(&base.id).expect("every base has a pool");
+            let unblocked = crate::damage_lock::unblocked_mods(&base.id, &pool);
+            for definition in &pool {
+                let same_family = |other: &&ExplicitModDefinition| {
+                    other.affix_type == definition.affix_type
+                        && other.definition.family == definition.definition.family
+                };
+                let all = pool.iter().filter(same_family).count();
+                let free = unblocked.iter().filter(same_family).count();
+                assert!(
+                    free == 0 || free == all,
+                    "{}: the family {} mixes blocked and unblocked mods",
+                    base.name,
+                    definition.definition.family
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_tier_counts_mods_of_the_same_side_and_family_with_a_higher_level() {
+        let (base, pool) = ring_and_pool();
+        let lowest = pool
+            .iter()
+            .min_by_key(|definition| definition.definition.level)
+            .expect("the pool has mods");
+        let item = rare_item_with(&base, &[lowest]);
+        let explicit = item.prefixes.iter().chain(&item.suffixes).next().unwrap();
+        let higher = pool
+            .iter()
+            .filter(|other| {
+                other.affix_type == lowest.affix_type
+                    && other.definition.family == lowest.definition.family
+                    && other.definition.level > lowest.definition.level
+            })
+            .count();
+        assert_eq!(item.tier(explicit), 1 + higher as u32);
+        // The item level does not matter
+        let mut low = item.clone();
+        low.item_level = 1;
+        assert_eq!(low.tier(explicit), item.tier(explicit));
+    }
+
+    #[test]
+    fn a_base_without_a_pool_counts_as_an_empty_pool() {
+        let item = item_with(Some("Prefix"), Some("of Suffix"));
+        assert_eq!(item.tier(&item.prefixes[0]), 1);
+        let tiers: Vec<Option<u32>> = item.advanced_mods().iter().map(|b| b.tier).collect();
+        assert_eq!(tiers, [Some(1), Some(1)]);
+    }
+
+    #[test]
+    fn advanced_mods_put_implicits_first_then_prefixes_then_suffixes() {
+        let mut item = leveled_item(0, Some(1), Some(10));
+        item.suffixes.push(explicit("of One", AffixType::Suffix));
+        item.prefixes.push(explicit("Second", AffixType::Prefix));
+        let kinds: Vec<(ModKind, Option<String>)> = item
+            .advanced_mods()
+            .into_iter()
+            .map(|block| (block.kind, block.name))
+            .collect();
+        assert_eq!(
+            kinds,
+            [
+                (ModKind::Implicit, None),
+                (ModKind::Prefix, Some("Prefix".to_owned())),
+                (ModKind::Prefix, Some("Second".to_owned())),
+                (ModKind::Suffix, Some("of One".to_owned())),
+            ]
+        );
     }
 }

@@ -3,6 +3,7 @@
 //! The page is built at runtime from translated texts. The crate also compiles natively
 //! so that `cargo clippy` and `cargo test` cover it; only `main` needs a browser.
 
+mod blocks_ui;
 mod i18n;
 mod item_level;
 mod item_view;
@@ -14,9 +15,10 @@ mod picker_ui;
 mod route;
 mod workbench;
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+use blocks_ui::ViewToggle;
 use crafting_core::Currency;
 use i18n::Translations;
 use item_view::ItemView;
@@ -126,6 +128,10 @@ struct StartPage {
     catalog: Catalog,
     picker_elements: PickerElements,
     level_elements: LevelElements,
+    /// The toggle between the default and the advanced view of the mods. The choice is kept in
+    /// memory only: a new page starts with the default view.
+    view_toggle: ViewToggle,
+    advanced: Cell<bool>,
 }
 
 impl StartPage {
@@ -170,6 +176,8 @@ impl StartPage {
         message.set_class_name("message");
         append(parent, buttons)?;
         append(parent, message.clone())?;
+        let view_toggle = blocks_ui::build_toggle(document, &Translations::english())?;
+        append(parent, view_toggle.root.clone())?;
         append(parent, item_host.clone())?;
 
         let page = Rc::new(StartPage {
@@ -183,6 +191,8 @@ impl StartPage {
             catalog: Catalog::new(),
             picker_elements,
             level_elements,
+            view_toggle: view_toggle.clone(),
+            advanced: Cell::new(false),
         });
         picker_ui::wire(&page)?;
         level_ui::wire(&page)?;
@@ -192,15 +202,37 @@ impl StartPage {
             let currency = *currency;
             listen(orb, &page, move |page| page.apply(currency))?;
         }
+        listen(&view_toggle.default_button, &page, |page| {
+            page.show_view(false)
+        })?;
+        listen(&view_toggle.advanced_button, &page, |page| {
+            page.show_view(true)
+        })?;
         listen(&reset, &page, StartPage::reset)
+    }
+
+    /// Switches between the default and the advanced view of the mods.
+    fn show_view(&self, advanced: bool) -> Result<(), JsValue> {
+        self.advanced.set(advanced);
+        self.show_item()
+    }
+
+    /// Renders the item in the chosen view and marks the pressed button of the toggle.
+    fn show_item(&self) -> Result<(), JsValue> {
+        let workbench = self.workbench.borrow();
+        let view = ItemView::new(&self.translations, workbench.item());
+        self.item_host.set_text_content(None);
+        append(
+            &self.item_host,
+            item_section(&self.document, &view, self.advanced.get())?,
+        )?;
+        self.view_toggle.show(self.advanced.get())
     }
 
     /// Renders the item again and updates the currency buttons and the message.
     fn show(&self, message: Option<&str>) -> Result<(), JsValue> {
+        self.show_item()?;
         let workbench = self.workbench.borrow();
-        let view = ItemView::new(&self.translations, workbench.item());
-        self.item_host.set_text_content(None);
-        append(&self.item_host, item_section(&self.document, &view)?)?;
         // A currency stays clickable when it does not apply: the click shows the reason. The
         // HTML attribute `disabled` would swallow the click, so the state is `aria-disabled`.
         for (currency, orb) in &self.currencies {
@@ -253,9 +285,10 @@ fn listen(
     Ok(())
 }
 
-/// The item as a section: name, class, rarity, level requirement, implicit mods and the
-/// mods of its prefix and suffix.
-fn item_section(document: &Document, item: &ItemView) -> Result<Element, JsValue> {
+/// The item as a section: name, class, rarity, level requirement and its mods, in the default
+/// view (implicit mods and the merged lines of the prefixes and suffixes) or in the advanced
+/// view (one block per mod).
+fn item_section(document: &Document, item: &ItemView, advanced: bool) -> Result<Element, JsValue> {
     let section = element(document, "section", None)?;
     section.set_class_name(&format!("item {}", item.rarity_class));
     append(&section, element(document, "h2", Some(&item.name))?)?;
@@ -264,9 +297,13 @@ fn item_section(document: &Document, item: &ItemView) -> Result<Element, JsValue
     if let Some(requires_level) = &item.requires_level {
         append(&section, element(document, "p", Some(requires_level))?)?;
     }
-    append(&section, mod_list(document, &item.implicits)?)?;
-    if !item.explicits.is_empty() {
-        append(&section, mod_list(document, &item.explicits)?)?;
+    if advanced {
+        append(&section, blocks_ui::blocks_list(document, &item.blocks)?)?;
+    } else {
+        append(&section, mod_list(document, &item.implicits)?)?;
+        if !item.explicits.is_empty() {
+            append(&section, mod_list(document, &item.explicits)?)?;
+        }
     }
     Ok(section)
 }

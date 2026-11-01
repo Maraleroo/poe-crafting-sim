@@ -25,8 +25,8 @@ pub use currency::{Currency, CurrencyDefinition};
 pub use damage_lock::unblocked_mods;
 pub use data::{base_item, base_items, currencies, explicit_mods, mod_pool};
 pub use model::{
-    AffixLimits, AffixType, BaseItem, ExplicitMod, ExplicitModDefinition, Item, Mod, ModDefinition,
-    Rarity, Stat, StatDefinition, DEFAULT_ITEM_LEVEL,
+    AffixLimits, AffixType, BaseItem, ExplicitMod, ExplicitModDefinition, Item, Mod, ModBlock,
+    ModDefinition, ModKind, Rarity, Stat, StatDefinition, TextPart, DEFAULT_ITEM_LEVEL,
 };
 pub use rng::{Rng, SeededRng};
 pub use slot::Slot;
