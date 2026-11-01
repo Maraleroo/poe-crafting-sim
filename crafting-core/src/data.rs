@@ -1,6 +1,7 @@
 //! The game data files, embedded at build time (ADR 0008).
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::OnceLock;
 
 use serde::Deserialize;
 
@@ -67,17 +68,69 @@ struct CurrenciesFile {
     currencies: Vec<CurrencyDefinition>,
 }
 
+/// The parsed and validated game data. It is read once, at the first access.
+struct GameData {
+    bases: Vec<BaseItem>,
+    mods: Vec<ExplicitModDefinition>,
+    /// The position in `mods` of each mod, by the `id` in `mods.json`.
+    mod_positions: BTreeMap<String, usize>,
+    /// The pool of each base, by base id.
+    pools: BTreeMap<String, Pool>,
+    currencies: Vec<CurrencyDefinition>,
+    item_classes: BTreeMap<String, Vec<String>>,
+}
+
+/// The pool of a base: the ids of its mods, in the order of the game data, and the mods
+/// themselves, resolved at the first access to this pool.
+struct Pool {
+    mod_ids: Vec<String>,
+    mods: OnceLock<Vec<ExplicitModDefinition>>,
+}
+
+impl GameData {
+    fn parse() -> GameData {
+        let bases = parse_base_items(BASE_ITEMS_JSON);
+        let mods = parse_mods(MODS_JSON);
+        let mod_positions = mod_positions(MODS_JSON);
+        let pools = read_pools(BASE_ITEMS_JSON)
+            .into_iter()
+            .map(|entry| {
+                let pool = Pool {
+                    mod_ids: entry.mod_pool,
+                    mods: OnceLock::new(),
+                };
+                (entry.id, pool)
+            })
+            .collect();
+        let item_classes = parse_item_slots(ITEM_SLOTS_JSON, &bases);
+        let currencies = parse_currencies(CURRENCIES_JSON);
+        GameData {
+            bases,
+            mods,
+            mod_positions,
+            pools,
+            currencies,
+            item_classes,
+        }
+    }
+}
+
+fn game_data() -> &'static GameData {
+    static DATA: OnceLock<GameData> = OnceLock::new();
+    DATA.get_or_init(GameData::parse)
+}
+
 /// All base items of the game data.
 ///
 /// # Panics
 /// If the embedded data is invalid. That is a programming error, caught by the unit tests.
 pub fn base_items() -> Vec<BaseItem> {
-    parse_base_items(BASE_ITEMS_JSON)
+    game_data().bases.clone()
 }
 
 /// The base item with the given identifier, if there is one.
 pub fn base_item(id: &str) -> Option<BaseItem> {
-    base_items().into_iter().find(|base| base.id == id)
+    all_base_items().iter().find(|base| base.id == id).cloned()
 }
 
 /// All prefixes and suffixes of the game data.
@@ -85,7 +138,7 @@ pub fn base_item(id: &str) -> Option<BaseItem> {
 /// # Panics
 /// If the embedded data is invalid. That is a programming error, caught by the unit tests.
 pub fn explicit_mods() -> Vec<ExplicitModDefinition> {
-    parse_mods(MODS_JSON)
+    game_data().mods.clone()
 }
 
 /// The mods that can roll on the base item with the given identifier, in the order of the
@@ -95,7 +148,7 @@ pub fn explicit_mods() -> Vec<ExplicitModDefinition> {
 /// If the embedded data is invalid, for example a pool names a mod that does not exist. That is
 /// a programming error, caught by the unit tests.
 pub fn mod_pool(base_id: &str) -> Option<Vec<ExplicitModDefinition>> {
-    parse_mod_pool(BASE_ITEMS_JSON, MODS_JSON, base_id)
+    pool_of(base_id).map(<[ExplicitModDefinition]>::to_vec)
 }
 
 /// All currencies of the game data.
@@ -103,7 +156,30 @@ pub fn mod_pool(base_id: &str) -> Option<Vec<ExplicitModDefinition>> {
 /// # Panics
 /// If the embedded data is invalid. That is a programming error, caught by the unit tests.
 pub fn currencies() -> Vec<CurrencyDefinition> {
-    parse_currencies(CURRENCIES_JSON)
+    currency_definitions().to_vec()
+}
+
+/// All base items, read from the game data once and not copied.
+pub(crate) fn all_base_items() -> &'static [BaseItem] {
+    &game_data().bases
+}
+
+/// Like [`mod_pool`], read from the game data once and not copied.
+pub(crate) fn pool_of(base_id: &str) -> Option<&'static [ExplicitModDefinition]> {
+    let data = game_data();
+    let pool = data.pools.get(base_id)?;
+    let mods = pool.mods.get_or_init(|| {
+        pool.mod_ids
+            .iter()
+            .map(|id| resolve_mod(base_id, id, &data.mod_positions, &data.mods))
+            .collect()
+    });
+    Some(mods)
+}
+
+/// Like [`currencies`], read from the game data once and not copied.
+pub(crate) fn currency_definitions() -> &'static [CurrencyDefinition] {
+    &game_data().currencies
 }
 
 /// The item classes of the slot with the given identifier (`Slot::id`): those of its entry in
@@ -111,9 +187,11 @@ pub fn currencies() -> Vec<CurrencyDefinition> {
 ///
 /// # Panics
 /// If the embedded data is invalid. That is a programming error, caught by the unit tests.
-pub(crate) fn slot_item_classes(slot_id: &str) -> Vec<String> {
-    let mut by_slot = parse_item_slots(ITEM_SLOTS_JSON, &base_items());
-    by_slot.remove(slot_id).unwrap_or_default()
+pub(crate) fn slot_item_classes(slot_id: &str) -> &'static [String] {
+    game_data()
+        .item_classes
+        .get(slot_id)
+        .map_or(&[], Vec::as_slice)
 }
 
 /// Reads `item_slots.json` and checks it against the bases: every slot id is known and listed
@@ -175,39 +253,61 @@ fn parse_mods(json: &str) -> Vec<ExplicitModDefinition> {
     file.mods
 }
 
+/// Reads the pool entries of `base_items.json`.
+fn read_pools(base_items_json: &str) -> Vec<PoolEntry> {
+    let pools: PoolsFile = serde_json::from_str(base_items_json)
+        .unwrap_or_else(|error| panic!("invalid base item data: {error}"));
+    pools.base_items
+}
+
+/// The position of each mod of `mods.json` by its `id`, the same as in [`parse_mods`].
+fn mod_positions(mods_json: &str) -> BTreeMap<String, usize> {
+    let ids: ModIdsFile =
+        serde_json::from_str(mods_json).unwrap_or_else(|error| panic!("invalid mod data: {error}"));
+    let mut positions = BTreeMap::new();
+    for (position, entry) in ids.mods.into_iter().enumerate() {
+        assert!(
+            !positions.contains_key(&entry.id),
+            "duplicate mod id {:?} in the mod data",
+            entry.id
+        );
+        positions.insert(entry.id, position);
+    }
+    positions
+}
+
+/// The mod with the given id, for the pool of `base_id`.
+fn resolve_mod(
+    base_id: &str,
+    id: &str,
+    positions: &BTreeMap<String, usize>,
+    mods: &[ExplicitModDefinition],
+) -> ExplicitModDefinition {
+    positions
+        .get(id)
+        .map(|position| mods[*position].clone())
+        .unwrap_or_else(|| {
+            panic!(
+                "the pool of {base_id:?} names the mod {id:?},                  which the mod data does not have"
+            )
+        })
+}
+
+#[cfg(test)]
 fn parse_mod_pool(
     base_items_json: &str,
     mods_json: &str,
     base_id: &str,
 ) -> Option<Vec<ExplicitModDefinition>> {
-    let pools: PoolsFile = serde_json::from_str(base_items_json)
-        .unwrap_or_else(|error| panic!("invalid base item data: {error}"));
-    let pool = pools
-        .base_items
+    let pool = read_pools(base_items_json)
         .into_iter()
         .find(|base| base.id == base_id)?;
-    let ids: ModIdsFile =
-        serde_json::from_str(mods_json).unwrap_or_else(|error| panic!("invalid mod data: {error}"));
-    let mut mods: BTreeMap<String, ExplicitModDefinition> = BTreeMap::new();
-    for (entry, explicit) in ids.mods.into_iter().zip(parse_mods(mods_json)) {
-        assert!(
-            !mods.contains_key(&entry.id),
-            "duplicate mod id {:?} in the mod data",
-            entry.id
-        );
-        mods.insert(entry.id, explicit);
-    }
+    let mods = parse_mods(mods_json);
+    let positions = mod_positions(mods_json);
     Some(
         pool.mod_pool
             .iter()
-            .map(|id| {
-                mods.get(id).cloned().unwrap_or_else(|| {
-                    panic!(
-                        "the pool of {base_id:?} names the mod {id:?}, \
-                         which the mod data does not have"
-                    )
-                })
-            })
+            .map(|id| resolve_mod(base_id, id, &positions, &mods))
             .collect(),
     )
 }
