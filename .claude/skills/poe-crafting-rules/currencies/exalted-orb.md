@@ -1,0 +1,6 @@
+**Exalted Orb**
+- Applies to: rare items.
+- Not applicable when: the item is not rare. The reason shown is the game's message "Failed to apply item: Target is not Rare."
+- Not applicable when: the item is rare and neither side has room under both affix limits. The reason shown is the game's message "Failed to apply item: Item has no space for more Mods."
+- Effect: one random mod is added as described in "Adding a random mod". If the valid pool is empty, no mod is added, the item does not change and the reason shown is the game's message "Failed to apply item: Could not generate Mod."
+- Evidence: tested by the PO on 2026-11-01. A normal item and a magic item: "Failed to apply item: Target is not Rare.". A rare item with 6 mods: "Failed to apply item: Item has no space for more Mods.". A rare Unset Ring with 1 prefix and 2 suffixes got the prefix "Dancer's" (Tier 6); its other mods and their values did not change. A rare Spectral Sword (item level 47) with 0 prefixes and 3 suffixes, one of them the crafted suffix "Cannot roll Attack Modifiers"; every prefix of this base up to item level 47 has the tag attack: "Failed to apply item: Could not generate Mod.". In the simulator the same case occurs on a rare Composite Ring of item level 1 or 2, whose base has fewer prefix families than its prefix limit of 6.
