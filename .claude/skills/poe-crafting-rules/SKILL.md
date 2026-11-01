@@ -65,6 +65,7 @@ Currency rules:
 - [Orb of Transmutation](currencies/orb-of-transmutation.md)
 - [Orb of Alteration](currencies/orb-of-alteration.md)
 - [Orb of Augmentation](currencies/orb-of-augmentation.md)
+- [Regal Orb](currencies/regal-orb.md)
 
 ## Sources
 - https://www.poewiki.net/

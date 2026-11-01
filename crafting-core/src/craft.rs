@@ -238,6 +238,53 @@ pub fn apply_orb_of_augmentation(
     }
 }
 
+/// The item as it is under the regal orb: the same item with the rarity rare, so the room is
+/// counted under the affix limits of a rare item.
+fn as_rare(item: &Item) -> Item {
+    Item {
+        rarity: Rarity::Rare,
+        ..item.clone()
+    }
+}
+
+/// Whether the orb can be applied to `item`, without looking at any mod pool. The rarity is
+/// checked first, then the room under the affix limits of a rare item.
+pub fn can_apply_regal_orb(item: &Item) -> Result<(), CraftError> {
+    if item.rarity != Rarity::Magic {
+        return Err(CraftError::ItemNotMagic);
+    }
+    let (prefix_has_room, suffix_has_room) = sides_with_room(&as_rare(item));
+    if prefix_has_room || suffix_has_room {
+        Ok(())
+    } else {
+        Err(CraftError::NoSpaceForMods)
+    }
+}
+
+/// Makes a magic item rare and adds one random mod (`add_random_mod`) under the affix limits of
+/// a rare item, from `pool`, the pool of its base. The mods already on the item stay with their
+/// values.
+///
+/// If the valid pool is empty, no mod is added and the result is `NoValidMod`. On an error the
+/// item stays unchanged, also magic.
+///
+/// # Panics
+/// If a mod of the valid pool has weight zero.
+pub fn apply_regal_orb(
+    item: &mut Item,
+    pool: &[ExplicitModDefinition],
+    rng: &mut impl Rng,
+) -> Result<(), CraftError> {
+    can_apply_regal_orb(item)?;
+    item.rarity = Rarity::Rare;
+    if add_random_mod(item, pool, rng) {
+        Ok(())
+    } else {
+        item.rarity = Rarity::Magic;
+        Err(CraftError::NoValidMod)
+    }
+}
+
 /// The rule of both orbs: choose a target of 1 or 2 mods, each with a chance of 50 %, then add
 /// random mods until the item has that many prefixes and suffixes or no mod is added.
 fn add_random_mods(item: &mut Item, pool: &[ExplicitModDefinition], rng: &mut impl Rng) {
@@ -689,6 +736,105 @@ mod tests {
         let mut item = normal_item(&mut rng);
         assert_eq!(
             apply_orb_of_augmentation(&mut item, &[], &mut rng),
+            Err(CraftError::ItemNotMagic)
+        );
+    }
+
+    #[test]
+    fn items_that_are_not_magic_cannot_take_the_regal_orb() {
+        for rarity in [Rarity::Normal, Rarity::Rare, Rarity::Unique] {
+            let mut item = full_magic_item(&mut SeededRng::new(1));
+            item.rarity = rarity;
+            assert_eq!(can_apply_regal_orb(&item), Err(CraftError::ItemNotMagic));
+        }
+    }
+
+    #[test]
+    fn the_regal_orb_counts_the_room_under_the_limits_of_a_rare_item() {
+        let mut rng = SeededRng::new(1);
+        // A full magic item has room under the limits of a rare item.
+        let mut item = full_magic_item(&mut rng);
+        assert_eq!(can_apply_regal_orb(&item), Ok(()));
+        // Three prefixes and three suffixes fill both sides of a rare item.
+        for name in ["p2", "p3"] {
+            item.prefixes
+                .push(roll_explicit(&mod_of(name, AffixType::Prefix, 1), &mut rng));
+        }
+        for name in ["s2", "s3"] {
+            item.suffixes
+                .push(roll_explicit(&mod_of(name, AffixType::Suffix, 1), &mut rng));
+        }
+        assert_eq!(can_apply_regal_orb(&item), Err(CraftError::NoSpaceForMods));
+        // A side that is full leaves the other side.
+        item.suffixes.truncate(2);
+        assert_eq!(can_apply_regal_orb(&item), Ok(()));
+    }
+
+    #[test]
+    fn the_regal_orb_makes_the_item_rare_and_adds_one_mod_at_the_end_of_its_side() {
+        let mut rng = SeededRng::new(2);
+        let held = mod_of("held", AffixType::Prefix, 1);
+        let pool = [held.clone(), mod_of("new", AffixType::Prefix, 3)];
+        let mut item = full_magic_item(&mut rng);
+        item.prefixes[0] = roll_explicit(&held, &mut rng);
+        let before = item.clone();
+        assert_eq!(apply_regal_orb(&mut item, &pool, &mut rng), Ok(()));
+        assert_eq!(item.rarity, Rarity::Rare);
+        assert_eq!(item.suffixes, before.suffixes);
+        assert_eq!(item.prefixes.len(), 2);
+        assert_eq!(item.prefixes[0], before.prefixes[0]);
+        assert_eq!(item.prefixes[1].name, "new");
+    }
+
+    #[test]
+    fn a_failed_regal_orb_leaves_the_item_unchanged() {
+        let mut rng = SeededRng::new(1);
+        let pool = [mod_of("a", AffixType::Prefix, 1)];
+        let mut normal = normal_item(&mut rng);
+        let mut full = full_magic_item(&mut rng);
+        for _ in 0..2 {
+            full.prefixes
+                .push(roll_explicit(&mod_of("p", AffixType::Prefix, 1), &mut rng));
+            full.suffixes
+                .push(roll_explicit(&mod_of("s", AffixType::Suffix, 1), &mut rng));
+        }
+        for (item, error) in [
+            (&mut normal, CraftError::ItemNotMagic),
+            (&mut full, CraftError::NoSpaceForMods),
+        ] {
+            let before = item.clone();
+            assert_eq!(apply_regal_orb(item, &pool, &mut rng), Err(error));
+            assert_eq!(item, &before);
+        }
+    }
+
+    #[test]
+    fn with_room_but_an_empty_valid_pool_the_regal_orb_reports_no_valid_mod_and_the_item_stays_magic(
+    ) {
+        let mut rng = SeededRng::new(1);
+        let mut high = mod_of("high", AffixType::Prefix, 1);
+        high.definition.level = 2;
+        let mut item = magic_item(&mut rng);
+        item.item_level = 1;
+        let before = item.clone();
+        // The orb applies: it does not look at the pool.
+        assert_eq!(can_apply_regal_orb(&item), Ok(()));
+        for pool in [&[high][..], &[]] {
+            assert_eq!(
+                apply_regal_orb(&mut item, pool, &mut rng),
+                Err(CraftError::NoValidMod)
+            );
+            assert_eq!(item, before);
+            assert_eq!(item.rarity, Rarity::Magic);
+        }
+    }
+
+    #[test]
+    fn a_non_magic_item_is_reported_before_an_empty_pool_by_the_regal_orb() {
+        let mut rng = SeededRng::new(1);
+        let mut item = normal_item(&mut rng);
+        assert_eq!(
+            apply_regal_orb(&mut item, &[], &mut rng),
             Err(CraftError::ItemNotMagic)
         );
     }

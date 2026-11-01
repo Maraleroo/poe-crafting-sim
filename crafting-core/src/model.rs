@@ -659,11 +659,15 @@ impl Item {
         tier_in(&mod_pool(&self.base.id).unwrap_or_default(), explicit)
     }
 
-    /// The name of the item: the names of all prefixes, the base name and the names of all
-    /// suffixes, each list in the order its mods were added, separated by spaces (rule "Item
-    /// basics" in `poe-crafting-rules`). A side without mods leaves its part out. Names of
-    /// rare items are not defined by a rule yet; the formula is the same for them.
+    /// The name of the item. For a rare item it is only the base name: the simulator gives no
+    /// random names (PO decision on AB#299). For the other rarities it is the names of all
+    /// prefixes, the base name and the names of all suffixes, each list in the order its mods
+    /// were added, separated by spaces (rule "Item basics" in `poe-crafting-rules`). A side
+    /// without mods leaves its part out.
     pub fn name(&self) -> String {
+        if self.rarity == Rarity::Rare {
+            return self.base.name.clone();
+        }
         self.prefixes
             .iter()
             .map(|prefix| prefix.name.as_str())
@@ -1061,6 +1065,13 @@ Second line"
         assert_eq!(leveled_item(0, Some(2), None).required_level(), None);
         assert_eq!(leveled_item(1, None, None).required_level(), None);
         assert_eq!(leveled_item(0, None, None).required_level(), None);
+    }
+
+    #[test]
+    fn the_name_of_a_rare_item_is_only_the_base_name() {
+        let mut item = item_with(Some("Prefix"), Some("of Suffix"));
+        item.rarity = Rarity::Rare;
+        assert_eq!(item.name(), "Invented Base");
     }
 
     #[test]

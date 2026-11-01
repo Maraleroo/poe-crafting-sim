@@ -5,9 +5,10 @@
 
 use crate::item_level;
 use crafting_core::{
-    apply_orb_of_alteration, apply_orb_of_augmentation, apply_orb_of_transmutation, base_item,
-    can_apply_orb_of_alteration, can_apply_orb_of_augmentation, can_apply_orb_of_transmutation,
-    mod_pool, BaseItem, CraftError, Currency, ExplicitModDefinition, Item, SeededRng,
+    apply_orb_of_alteration, apply_orb_of_augmentation, apply_orb_of_transmutation,
+    apply_regal_orb, base_item, can_apply_orb_of_alteration, can_apply_orb_of_augmentation,
+    can_apply_orb_of_transmutation, can_apply_regal_orb, mod_pool, BaseItem, CraftError, Currency,
+    ExplicitModDefinition, Item, SeededRng,
 };
 
 /// The base item on the workbench (a reference, not item data).
@@ -88,6 +89,7 @@ impl Workbench {
             Currency::OrbOfAugmentation => {
                 apply_orb_of_augmentation(&mut self.item, &self.pool, &mut self.rng)
             }
+            Currency::RegalOrb => apply_regal_orb(&mut self.item, &self.pool, &mut self.rng),
         }
     }
 
@@ -141,6 +143,7 @@ impl Workbench {
             Currency::OrbOfTransmutation => can_apply_orb_of_transmutation(&self.item),
             Currency::OrbOfAlteration => can_apply_orb_of_alteration(&self.item),
             Currency::OrbOfAugmentation => can_apply_orb_of_augmentation(&self.item),
+            Currency::RegalOrb => can_apply_regal_orb(&self.item),
         }
     }
 }
@@ -309,6 +312,75 @@ mod tests {
         let before = workbench.item().clone();
         assert!(workbench.applicable(AUGMENTATION));
         assert_eq!(workbench.apply(AUGMENTATION), Err(CraftError::NoValidMod));
+        assert_eq!(workbench.item(), &before);
+    }
+
+    const REGAL: Currency = Currency::RegalOrb;
+
+    #[test]
+    fn the_regal_orb_on_a_normal_item_fails_and_changes_nothing() {
+        let mut workbench = Workbench::new(1);
+        let normal = workbench.item().clone();
+        assert!(!workbench.applicable(REGAL));
+        assert_eq!(
+            workbench.tooltip(REGAL),
+            REGAL.failure_message(CraftError::ItemNotMagic)
+        );
+        assert_eq!(workbench.apply(REGAL), Err(CraftError::ItemNotMagic));
+        assert_eq!(workbench.item(), &normal);
+    }
+
+    #[test]
+    fn the_regal_orb_makes_a_magic_item_rare_and_then_does_not_apply() {
+        let mut workbench = magic_with_room();
+        let before = workbench.item().clone();
+        assert!(workbench.applicable(REGAL));
+        assert_eq!(workbench.tooltip(REGAL), REGAL.description());
+        assert_eq!(workbench.apply(REGAL), Ok(()));
+        let item = workbench.item();
+        assert_eq!(item.rarity, Rarity::Rare);
+        assert_eq!(item.name(), item.base.name);
+        assert_eq!(
+            item.prefixes.len() + item.suffixes.len(),
+            before.prefixes.len() + before.suffixes.len() + 1
+        );
+        assert!(item.prefixes.starts_with(&before.prefixes));
+        assert!(item.suffixes.starts_with(&before.suffixes));
+
+        let rare = workbench.item().clone();
+        assert!(!workbench.applicable(REGAL));
+        assert_eq!(
+            workbench.tooltip(REGAL),
+            REGAL.failure_message(CraftError::ItemNotMagic)
+        );
+        assert_eq!(workbench.apply(REGAL), Err(CraftError::ItemNotMagic));
+        assert_eq!(workbench.item(), &rare);
+    }
+
+    #[test]
+    fn the_other_orbs_do_not_apply_to_a_rare_item() {
+        let mut workbench = magic_with_room();
+        workbench.apply(REGAL).unwrap();
+        let rare = workbench.item().clone();
+        for (currency, error) in [
+            (TRANSMUTATION, CraftError::ItemNotNormal),
+            (ALTERATION, CraftError::ItemNotMagic),
+            (AUGMENTATION, CraftError::ItemNotMagic),
+        ] {
+            assert!(!workbench.applicable(currency));
+            assert_eq!(workbench.tooltip(currency), currency.failure_message(error));
+            assert_eq!(workbench.apply(currency), Err(error));
+            assert_eq!(workbench.item(), &rare);
+        }
+    }
+
+    #[test]
+    fn the_regal_orb_with_room_but_no_valid_mod_fails_and_the_item_stays_magic() {
+        let mut workbench = magic_with_room();
+        workbench.pool.clear();
+        let before = workbench.item().clone();
+        assert!(workbench.applicable(REGAL));
+        assert_eq!(workbench.apply(REGAL), Err(CraftError::NoValidMod));
         assert_eq!(workbench.item(), &before);
     }
 
