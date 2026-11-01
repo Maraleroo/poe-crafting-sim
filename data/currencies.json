@@ -35,6 +35,16 @@
         "no_space_for_mods": "Failed to apply item: Item has no space for more Mods.",
         "no_valid_mod": "Failed to apply item: Could not generate Mod."
       }
+    },
+    {
+      "id": "exalted_orb",
+      "name": "Exalted Orb",
+      "description": "Augments a rare item with a new random modifier",
+      "messages": {
+        "item_not_rare": "Failed to apply item: Target is not Rare.",
+        "no_space_for_mods": "Failed to apply item: Item has no space for more Mods.",
+        "no_valid_mod": "Failed to apply item: Could not generate Mod."
+      }
     }
   ]
 }

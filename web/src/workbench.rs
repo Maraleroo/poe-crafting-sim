@@ -5,10 +5,11 @@
 
 use crate::item_level;
 use crafting_core::{
-    apply_orb_of_alteration, apply_orb_of_augmentation, apply_orb_of_transmutation,
-    apply_regal_orb, base_item, can_apply_orb_of_alteration, can_apply_orb_of_augmentation,
-    can_apply_orb_of_transmutation, can_apply_regal_orb, mod_pool, BaseItem, CraftError, Currency,
-    ExplicitModDefinition, Item, SeededRng,
+    apply_exalted_orb, apply_orb_of_alteration, apply_orb_of_augmentation,
+    apply_orb_of_transmutation, apply_regal_orb, base_item, can_apply_exalted_orb,
+    can_apply_orb_of_alteration, can_apply_orb_of_augmentation, can_apply_orb_of_transmutation,
+    can_apply_regal_orb, mod_pool, BaseItem, CraftError, Currency, ExplicitModDefinition, Item,
+    SeededRng,
 };
 
 /// The base item on the workbench (a reference, not item data).
@@ -90,6 +91,7 @@ impl Workbench {
                 apply_orb_of_augmentation(&mut self.item, &self.pool, &mut self.rng)
             }
             Currency::RegalOrb => apply_regal_orb(&mut self.item, &self.pool, &mut self.rng),
+            Currency::ExaltedOrb => apply_exalted_orb(&mut self.item, &self.pool, &mut self.rng),
         }
     }
 
@@ -144,6 +146,7 @@ impl Workbench {
             Currency::OrbOfAlteration => can_apply_orb_of_alteration(&self.item),
             Currency::OrbOfAugmentation => can_apply_orb_of_augmentation(&self.item),
             Currency::RegalOrb => can_apply_regal_orb(&self.item),
+            Currency::ExaltedOrb => can_apply_exalted_orb(&self.item, &self.pool),
         }
     }
 }
@@ -381,6 +384,75 @@ mod tests {
         let before = workbench.item().clone();
         assert!(workbench.applicable(REGAL));
         assert_eq!(workbench.apply(REGAL), Err(CraftError::NoValidMod));
+        assert_eq!(workbench.item(), &before);
+    }
+
+    const EXALTED: Currency = Currency::ExaltedOrb;
+
+    /// A workbench with a rare item that has two mods and room for more.
+    fn rare_with_room() -> Workbench {
+        let mut workbench = magic_with_room();
+        workbench.apply(REGAL).unwrap();
+        workbench
+    }
+
+    #[test]
+    fn the_exalted_orb_on_a_magic_item_fails_and_changes_nothing() {
+        let mut workbench = magic_with_room();
+        let magic = workbench.item().clone();
+        assert!(!workbench.applicable(EXALTED));
+        assert_eq!(
+            workbench.tooltip(EXALTED),
+            EXALTED.failure_message(CraftError::ItemNotRare)
+        );
+        assert_eq!(workbench.apply(EXALTED), Err(CraftError::ItemNotRare));
+        assert_eq!(workbench.item(), &magic);
+    }
+
+    #[test]
+    fn the_exalted_orb_adds_one_mod_to_a_rare_item_and_keeps_the_others() {
+        let mut workbench = rare_with_room();
+        let before = workbench.item().clone();
+        assert!(workbench.applicable(EXALTED));
+        assert_eq!(workbench.tooltip(EXALTED), EXALTED.description());
+        assert_eq!(workbench.apply(EXALTED), Ok(()));
+        let item = workbench.item();
+        assert_eq!(item.rarity, Rarity::Rare);
+        assert_eq!(
+            item.prefixes.len() + item.suffixes.len(),
+            before.prefixes.len() + before.suffixes.len() + 1
+        );
+        assert!(item.prefixes.starts_with(&before.prefixes));
+        assert!(item.suffixes.starts_with(&before.suffixes));
+    }
+
+    #[test]
+    fn the_exalted_orb_stops_applying_when_the_rare_item_is_full() {
+        let mut workbench = rare_with_room();
+        while workbench.applicable(EXALTED) {
+            workbench.apply(EXALTED).unwrap();
+        }
+        let item = workbench.item().clone();
+        assert_eq!(item.prefixes.len() + item.suffixes.len(), 6);
+        assert_eq!(
+            workbench.tooltip(EXALTED),
+            EXALTED.failure_message(CraftError::NoSpaceForMods)
+        );
+        assert_eq!(workbench.apply(EXALTED), Err(CraftError::NoSpaceForMods));
+        assert_eq!(workbench.item(), &item);
+    }
+
+    #[test]
+    fn the_exalted_orb_with_room_but_no_valid_mod_does_not_apply() {
+        let mut workbench = rare_with_room();
+        workbench.pool.clear();
+        let before = workbench.item().clone();
+        assert!(!workbench.applicable(EXALTED));
+        assert_eq!(
+            workbench.tooltip(EXALTED),
+            EXALTED.failure_message(CraftError::NoValidMod)
+        );
+        assert_eq!(workbench.apply(EXALTED), Err(CraftError::NoValidMod));
         assert_eq!(workbench.item(), &before);
     }
 
