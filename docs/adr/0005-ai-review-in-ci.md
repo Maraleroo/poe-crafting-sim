@@ -190,6 +190,8 @@ Facts from the action's documentation and source (v1):
   dependencies and does not change the user-visible behaviour of the website is not a
   release; the version stays unchanged. This applies only to Dependabot PRs: a dependency
   update made by an agent is a release under criterion 8 of `reviewing-code`.
+  The PO closes a Dependabot PR that changes the user-visible behaviour of the website; the
+  update is then done in a story that raises the version.
 - `review.yml` stays unchanged, and the job `review` keeps no condition. A condition that
   skips Dependabot PRs would make the check count as passed (see Decision), so a Dependabot
   PR could be merged without anyone having checked it. The red check and `review-override`
