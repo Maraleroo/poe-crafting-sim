@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 
 use crate::craft::CraftError;
-use crate::data::currencies;
+use crate::data::currency_definitions;
 
 /// A currency in the game data (ADR 0011).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -49,7 +49,7 @@ impl Currency {
     /// If the game data has no entry for the currency. That is a programming error, caught
     /// by the unit tests.
     pub fn name(self) -> String {
-        self.definition().name
+        self.definition().name.clone()
     }
 
     /// The description of the currency from the game data.
@@ -58,7 +58,7 @@ impl Currency {
     /// If the game data has no entry for the currency. That is a programming error, caught
     /// by the unit tests.
     pub fn description(self) -> String {
-        self.definition().description
+        self.definition().description.clone()
     }
 
     /// The game's message for a failure of this currency, from the game data.
@@ -71,14 +71,15 @@ impl Currency {
         let code = error.code();
         self.definition()
             .messages
-            .remove(code)
+            .get(code)
+            .cloned()
             .unwrap_or_else(|| panic!("the game data has no message of {id:?} for {code:?}"))
     }
 
-    fn definition(self) -> CurrencyDefinition {
+    fn definition(self) -> &'static CurrencyDefinition {
         let id = self.id();
-        currencies()
-            .into_iter()
+        currency_definitions()
+            .iter()
             .find(|currency| currency.id == id)
             .unwrap_or_else(|| panic!("the game data has no currency {id:?}"))
     }
@@ -87,6 +88,7 @@ impl Currency {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::currencies;
 
     /// Every variant of [`Currency`]. The exhaustive match makes a new variant a compile
     /// error here until it is added to the list.

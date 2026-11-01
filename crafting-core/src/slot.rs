@@ -1,6 +1,6 @@
 //! The equipment slots of the inventory and the item classes that belong to them (ADR 0018).
 
-use crate::data::{base_items, slot_item_classes};
+use crate::data::{all_base_items, slot_item_classes};
 use crate::model::BaseItem;
 
 /// An equipment slot, as the game's inventory arranges them. A slot has no name here: the
@@ -54,7 +54,7 @@ impl Slot {
     /// # Panics
     /// If the embedded data is invalid. That is a programming error, caught by the unit tests.
     pub fn item_classes(self) -> Vec<String> {
-        slot_item_classes(self.id())
+        slot_item_classes(self.id()).to_vec()
     }
 
     /// The base items of the slot: those whose item class is one of the slot's, in the order of
@@ -63,10 +63,11 @@ impl Slot {
     /// # Panics
     /// If the embedded data is invalid. That is a programming error, caught by the unit tests.
     pub fn base_items(self) -> Vec<BaseItem> {
-        let classes = self.item_classes();
-        base_items()
-            .into_iter()
+        let classes = slot_item_classes(self.id());
+        all_base_items()
+            .iter()
             .filter(|base| classes.contains(&base.item_class))
+            .cloned()
             .collect()
     }
 }
@@ -74,6 +75,7 @@ impl Slot {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::base_items;
     use std::collections::BTreeSet;
 
     #[test]

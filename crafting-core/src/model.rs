@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use crate::base_effects::effects_of;
 use crate::conversion::Conversion;
-use crate::data::mod_pool;
+use crate::data::pool_of;
 use crate::rng::{roll_in_range, Rng};
 use crate::stat_order::position_of;
 
@@ -612,16 +612,16 @@ impl Item {
     /// `poe-crafting-rules`, ADR 0024), one block per mod, nothing merged: the implicits in the
     /// order of the base, then the prefixes, then the suffixes, each in the order they were
     /// added. The lines show the unscaled values; `magnitude_increase` holds the increase of
-    /// the mod's side. The base's pool is read once per call, and only if the item has a prefix
-    /// or a suffix.
+    /// the mod's side. The base's pool is read without a copy, and only if the item has a
+    /// prefix or a suffix.
     ///
     /// # Panics
     /// As `Mod::extended_lines`.
     pub fn advanced_mods(&self) -> Vec<ModBlock> {
         let pool = if self.prefixes.is_empty() && self.suffixes.is_empty() {
-            Vec::new()
+            &[]
         } else {
-            mod_pool(&self.base.id).unwrap_or_default()
+            pool_of(&self.base.id).unwrap_or_default()
         };
         let implicits = self.implicits.iter().map(|implicit| ModBlock {
             kind: ModKind::Implicit,
@@ -641,7 +641,7 @@ impl Item {
                     AffixType::Suffix => ModKind::Suffix,
                 },
                 name: Some(explicit.name.clone()),
-                tier: Some(tier_in(&pool, explicit)),
+                tier: Some(tier_in(pool, explicit)),
                 tags: explicit.modifier.tag_text(),
                 lines: explicit.modifier.extended_lines(),
                 magnitude_increase: (increase > 0).then_some(increase),
@@ -656,7 +656,7 @@ impl Item {
     /// data, filtered neither by the item level nor by the damage type lock. A base without a
     /// pool counts as an empty pool.
     pub fn tier(&self, explicit: &ExplicitMod) -> u32 {
-        tier_in(&mod_pool(&self.base.id).unwrap_or_default(), explicit)
+        tier_in(pool_of(&self.base.id).unwrap_or_default(), explicit)
     }
 
     /// The name of the item. For a rare item it is only the base name: the simulator gives no
