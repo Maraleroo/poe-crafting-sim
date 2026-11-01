@@ -174,6 +174,33 @@ Facts from the action's documentation and source (v1):
   the tool calls and the execution file was not kept. The cause is determined after the merge
   from the log of the denied calls.
 
+## Amendment (AB#289, 2026-11-01)
+- Dependabot PRs are not reviewed by Claude. Workflow runs that Dependabot starts receive
+  only Dependabot secrets, not the repository's Actions secrets, so `CLAUDE_CODE_OAUTH_TOKEN`
+  is empty and the `Claude review` check is red on every Dependabot PR (the amendment for
+  AB#25 lists two further reasons).
+- The PO checks every Dependabot PR himself: CI is green, and the diff and the release notes
+  of the updated dependencies show nothing that stands against the merge. Then the PO adds
+  `review-override`, re-runs the `Claude review` job and merges. The local `reviewer`
+  subagent, named as an option in the amendment for AB#25, is not used for them: its
+  criterion 8 treats every change to `Cargo.lock` as a release, while `CLAUDE.md` says that
+  a Dependabot PR without a user-visible change is not one.
+- Dependabot PRs need no work item, do not follow the branch naming and contain no
+  `Fixes AB#<id>` (`CLAUDE.md`, section Workflow). Merging a Dependabot PR that only updates
+  dependencies and does not change the user-visible behaviour of the website is not a
+  release; the version stays unchanged. This applies only to Dependabot PRs: a dependency
+  update made by an agent is a release under criterion 8 of `reviewing-code`.
+- `review.yml` stays unchanged, and the job `review` keeps no condition. A condition that
+  skips Dependabot PRs would make the check count as passed (see Decision), so a Dependabot
+  PR could be merged without anyone having checked it. The red check and `review-override`
+  keep the PO's own check visible on every Dependabot PR.
+- Rejected: storing the Claude access (`CLAUDE_CODE_OAUTH_TOKEN`) as a Dependabot secret.
+  Dependabot PRs change exactly the actions that run with this access
+  (`anthropics/claude-code-action`, `actions/checkout`), and a `pull_request` run uses the
+  workflow and action versions of the PR. The PO's Claude access would therefore be handed
+  to action code that nobody has reviewed yet. On its own, the secret would not make the
+  review work either (`allowed_bots`, validation mismatch; amendment for AB#25).
+
 ## Alternatives considered
 - Passing `github_token: ${{ secrets.GITHUB_TOKEN }}`: works on the PR that adds the
   workflow, but comments appear as `github-actions[bot]`, not as the Claude bot.
