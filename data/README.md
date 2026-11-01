@@ -165,7 +165,7 @@ are not in it. The converter stops if one stat would get two positions.
 ## currencies.json
 
 Source: names from the story texts of AB#62 and AB#114 (ADR 0011); descriptions and failure
-messages from the story texts of AB#113 and AB#114 (ADR 0012).
+messages from the story texts of AB#113, AB#114, AB#276, AB#299 and AB#306 (ADR 0012).
 
 ```
 { "currencies": [ { "id": "...", "name": "...", "description": "...", "messages": { ... } }, ... ] }
@@ -176,5 +176,5 @@ messages from the story texts of AB#113 and AB#114 (ADR 0012).
 - `description`: the currency's English game description (game text, shown unchanged)
 - `messages`: maps a reason code to the game's failure message for this currency (game text,
   shown unchanged). The keys are the codes of `CraftError` (`item_not_normal`,
-  `item_not_magic`); a currency has a message for every reason it can fail
+  `item_not_magic`, `item_not_rare`, `no_space_for_mods`, `no_valid_mod`); a currency has a message for every reason it can fail
   with, and for no other.

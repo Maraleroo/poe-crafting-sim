@@ -28,6 +28,7 @@ pub enum Currency {
     OrbOfAlteration,
     OrbOfAugmentation,
     RegalOrb,
+    ExaltedOrb,
 }
 
 impl Currency {
@@ -38,6 +39,7 @@ impl Currency {
             Currency::OrbOfAlteration => "orb_of_alteration",
             Currency::OrbOfAugmentation => "orb_of_augmentation",
             Currency::RegalOrb => "regal_orb",
+            Currency::ExaltedOrb => "exalted_orb",
         }
     }
 
@@ -94,13 +96,15 @@ mod tests {
             Currency::OrbOfAlteration,
             Currency::OrbOfAugmentation,
             Currency::RegalOrb,
+            Currency::ExaltedOrb,
         ];
         for variant in variants {
             match variant {
                 Currency::OrbOfTransmutation
                 | Currency::OrbOfAlteration
                 | Currency::OrbOfAugmentation
-                | Currency::RegalOrb => {}
+                | Currency::RegalOrb
+                | Currency::ExaltedOrb => {}
             }
         }
         variants.to_vec()
@@ -113,6 +117,11 @@ mod tests {
             Currency::OrbOfAlteration => vec![CraftError::ItemNotMagic],
             Currency::OrbOfAugmentation | Currency::RegalOrb => vec![
                 CraftError::ItemNotMagic,
+                CraftError::NoSpaceForMods,
+                CraftError::NoValidMod,
+            ],
+            Currency::ExaltedOrb => vec![
+                CraftError::ItemNotRare,
                 CraftError::NoSpaceForMods,
                 CraftError::NoValidMod,
             ],

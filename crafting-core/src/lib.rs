@@ -17,9 +17,10 @@ mod stat_order;
 
 pub use conversion::Conversion;
 pub use craft::{
-    add_random_mod, apply_orb_of_alteration, apply_orb_of_augmentation, apply_orb_of_transmutation,
-    apply_regal_orb, can_apply_orb_of_alteration, can_apply_orb_of_augmentation,
-    can_apply_orb_of_transmutation, can_apply_regal_orb, valid_mods, valid_pool, CraftError,
+    add_random_mod, apply_exalted_orb, apply_orb_of_alteration, apply_orb_of_augmentation,
+    apply_orb_of_transmutation, apply_regal_orb, can_apply_exalted_orb,
+    can_apply_orb_of_alteration, can_apply_orb_of_augmentation, can_apply_orb_of_transmutation,
+    can_apply_regal_orb, valid_mods, valid_pool, CraftError,
 };
 pub use currency::{Currency, CurrencyDefinition};
 pub use damage_lock::unblocked_mods;

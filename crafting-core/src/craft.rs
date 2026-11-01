@@ -11,6 +11,8 @@ pub enum CraftError {
     ItemNotNormal,
     /// The currency needs a magic item.
     ItemNotMagic,
+    /// The currency needs a rare item.
+    ItemNotRare,
     /// The item has no room for another mod: neither side has room under both affix limits.
     NoSpaceForMods,
     /// The currency added no mod because the valid pool was empty.
@@ -19,9 +21,10 @@ pub enum CraftError {
 
 impl CraftError {
     /// Every reason code.
-    pub(crate) const ALL: [CraftError; 4] = [
+    pub(crate) const ALL: [CraftError; 5] = [
         CraftError::ItemNotNormal,
         CraftError::ItemNotMagic,
+        CraftError::ItemNotRare,
         CraftError::NoSpaceForMods,
         CraftError::NoValidMod,
     ];
@@ -32,6 +35,7 @@ impl CraftError {
         match self {
             CraftError::ItemNotNormal => "item_not_normal",
             CraftError::ItemNotMagic => "item_not_magic",
+            CraftError::ItemNotRare => "item_not_rare",
             CraftError::NoSpaceForMods => "no_space_for_mods",
             CraftError::NoValidMod => "no_valid_mod",
         }
@@ -285,6 +289,46 @@ pub fn apply_regal_orb(
     }
 }
 
+/// Whether the orb can be applied to `item`, with `pool` the pool of its base. The rarity is
+/// checked first, then the room under the affix limits, then whether the valid pool has a mod.
+pub fn can_apply_exalted_orb(
+    item: &Item,
+    pool: &[ExplicitModDefinition],
+) -> Result<(), CraftError> {
+    if item.rarity != Rarity::Rare {
+        return Err(CraftError::ItemNotRare);
+    }
+    let (prefix_has_room, suffix_has_room) = sides_with_room(item);
+    if !prefix_has_room && !suffix_has_room {
+        return Err(CraftError::NoSpaceForMods);
+    }
+    if valid_candidates(item, pool).is_empty() {
+        return Err(CraftError::NoValidMod);
+    }
+    Ok(())
+}
+
+/// Adds one random mod (`add_random_mod`) to a rare item with room, from `pool`, the pool of its
+/// base. The mods already on the item stay with their values.
+///
+/// If the valid pool is empty, no mod is added and the result is `NoValidMod`. On an error the
+/// item stays unchanged.
+///
+/// # Panics
+/// If a mod of the valid pool has weight zero.
+pub fn apply_exalted_orb(
+    item: &mut Item,
+    pool: &[ExplicitModDefinition],
+    rng: &mut impl Rng,
+) -> Result<(), CraftError> {
+    can_apply_exalted_orb(item, pool)?;
+    if add_random_mod(item, pool, rng) {
+        Ok(())
+    } else {
+        Err(CraftError::NoValidMod)
+    }
+}
+
 /// The rule of both orbs: choose a target of 1 or 2 mods, each with a chance of 50 %, then add
 /// random mods until the item has that many prefixes and suffixes or no mod is added.
 fn add_random_mods(item: &mut Item, pool: &[ExplicitModDefinition], rng: &mut impl Rng) {
@@ -361,6 +405,7 @@ mod tests {
             match error {
                 CraftError::ItemNotNormal
                 | CraftError::ItemNotMagic
+                | CraftError::ItemNotRare
                 | CraftError::NoSpaceForMods
                 | CraftError::NoValidMod => {}
             }
@@ -837,5 +882,104 @@ mod tests {
             apply_regal_orb(&mut item, &[], &mut rng),
             Err(CraftError::ItemNotMagic)
         );
+    }
+
+    fn rare_item_with(rng: &mut SeededRng, prefixes: usize, suffixes: usize) -> Item {
+        let mut item = normal_item(rng);
+        item.rarity = Rarity::Rare;
+        for n in 0..prefixes {
+            item.prefixes.push(roll_explicit(
+                &mod_of(&format!("held p{n}"), AffixType::Prefix, 1),
+                rng,
+            ));
+        }
+        for n in 0..suffixes {
+            item.suffixes.push(roll_explicit(
+                &mod_of(&format!("held s{n}"), AffixType::Suffix, 1),
+                rng,
+            ));
+        }
+        item
+    }
+
+    #[test]
+    fn items_that_are_not_rare_cannot_take_the_exalted_orb() {
+        let pool = [mod_of("a", AffixType::Prefix, 1)];
+        for rarity in [Rarity::Normal, Rarity::Magic, Rarity::Unique] {
+            let mut item = rare_item_with(&mut SeededRng::new(1), 3, 3);
+            item.rarity = rarity;
+            assert_eq!(
+                can_apply_exalted_orb(&item, &pool),
+                Err(CraftError::ItemNotRare)
+            );
+        }
+    }
+
+    #[test]
+    fn the_exalted_orb_needs_room_under_the_limits_of_a_rare_item() {
+        let mut rng = SeededRng::new(1);
+        let pool = [
+            mod_of("a", AffixType::Prefix, 1),
+            mod_of("b", AffixType::Suffix, 1),
+        ];
+        let full = rare_item_with(&mut rng, 3, 3);
+        assert_eq!(
+            can_apply_exalted_orb(&full, &pool),
+            Err(CraftError::NoSpaceForMods)
+        );
+        let room = rare_item_with(&mut rng, 3, 2);
+        assert_eq!(can_apply_exalted_orb(&room, &pool), Ok(()));
+    }
+
+    #[test]
+    fn the_exalted_orb_reports_an_empty_valid_pool_already_when_applying_is_asked() {
+        let mut rng = SeededRng::new(1);
+        let mut item = rare_item_with(&mut rng, 1, 1);
+        // The only mod has the family of a mod on the item.
+        let mut suffix = mod_of("s", AffixType::Suffix, 1);
+        suffix.definition.family = "held s0".to_owned();
+        for pool in [&[suffix][..], &[]] {
+            assert_eq!(
+                can_apply_exalted_orb(&item, pool),
+                Err(CraftError::NoValidMod)
+            );
+        }
+        let before = item.clone();
+        assert_eq!(
+            apply_exalted_orb(&mut item, &[], &mut rng),
+            Err(CraftError::NoValidMod)
+        );
+        assert_eq!(item, before);
+    }
+
+    #[test]
+    fn the_exalted_orb_adds_one_mod_at_the_end_of_its_side_and_keeps_the_others() {
+        let mut rng = SeededRng::new(2);
+        let pool = [mod_of("new", AffixType::Prefix, 3)];
+        let mut item = rare_item_with(&mut rng, 2, 2);
+        let before = item.clone();
+        assert_eq!(apply_exalted_orb(&mut item, &pool, &mut rng), Ok(()));
+        assert_eq!(item.rarity, Rarity::Rare);
+        assert_eq!(item.suffixes, before.suffixes);
+        assert_eq!(item.prefixes.len(), 3);
+        assert_eq!(item.prefixes[..2], before.prefixes[..]);
+        assert_eq!(item.prefixes[2].name, "new");
+    }
+
+    #[test]
+    fn a_failed_exalted_orb_leaves_the_item_unchanged() {
+        let mut rng = SeededRng::new(1);
+        let pool = [mod_of("a", AffixType::Prefix, 1)];
+        let mut magic = rare_item_with(&mut rng, 1, 0);
+        magic.rarity = Rarity::Magic;
+        let mut full = rare_item_with(&mut rng, 3, 3);
+        for (item, error) in [
+            (&mut magic, CraftError::ItemNotRare),
+            (&mut full, CraftError::NoSpaceForMods),
+        ] {
+            let before = item.clone();
+            assert_eq!(apply_exalted_orb(item, &pool, &mut rng), Err(error));
+            assert_eq!(item, &before);
+        }
     }
 }
