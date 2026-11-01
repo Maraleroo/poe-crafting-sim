@@ -13,7 +13,7 @@ tags, and for a prefix or suffix its name and tier. The tier is 1 plus the numbe
 the base's pool on the same side and of the same family with a higher level; the item level
 does not matter. The tags are those of the game data in their order, each word capitalised,
 underscores replaced by spaces, separated by commas; `elemental_damage`, `physical_damage`,
-`flat_life_regen` and `resource` are never shown. The extended text rule now also covers
+`chaos_damage`, `flat_life_regen` and `resource` are never shown. The extended text rule now also covers
 values with decimals: the value and both bounds are converted and rounded, without trailing
 zeros. Ranges of negated values are still not defined. A mod whose values a base increases
 ("X% increased Suffix Modifier magnitudes", ADR 0022) shows the unscaled value and range and the
@@ -32,8 +32,8 @@ the order of RePoE. Nine explicit mods have ranges of converted values (life reg
 divisor 60 with one decimal; leech, divisor 100 without a precision). No mod and no implicit
 has a range of negative values or of a negated value. No family has mods on both sides. On the
 five Breach rings no family mixes mods that the damage type lock blocks with mods it does not
-block. The tag `chaos_damage` occurs only on the implicit of the Iolite Ring and is not in the
-list of hidden tags. The simulator has no fractured mods.
+block. The tag `chaos_damage` occurs only on the implicit of the Iolite Ring; the PO's copy
+of an Iolite Ring shows it hidden, and the rule lists it. The simulator has no fractured mods.
 
 Earlier decisions that limit the design: ADR 0017 (public types keep their fields, because the
 protected tests build them as struct literals), ADR 0020 (the PO's rule names tags; the only
@@ -124,8 +124,6 @@ mod names, mod texts or stat identifiers).
 - A new RePoE export with a family that mixes blocked and unblocked mods on a locked base, or
   with a range of a negative or negated value, fails a unit test in `crafting-core`; the
   question goes to the PO instead of being guessed.
-- The implicit of the Iolite Ring shows the tag `chaos_damage` as "Chaos Damage", as the rule
-  is written. The PO's evidence does not cover this tag.
 - Fractured mods are not modelled. When a story adds them, `advanced_mods` puts them first on
   their side, and `ModBlock` can get a field without breaking tests.
 - `mod_pool` parses the data on each call; one call per shown item. If that is too slow on the
