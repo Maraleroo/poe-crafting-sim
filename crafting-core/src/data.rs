@@ -288,7 +288,8 @@ fn resolve_mod(
         .map(|position| mods[*position].clone())
         .unwrap_or_else(|| {
             panic!(
-                "the pool of {base_id:?} names the mod {id:?},                  which the mod data does not have"
+                "the pool of {base_id:?} names the mod {id:?}, \
+                 which the mod data does not have"
             )
         })
 }
