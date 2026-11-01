@@ -179,7 +179,7 @@ Facts from the action's documentation and source (v1):
   only Dependabot secrets, not the repository's Actions secrets, so `CLAUDE_CODE_OAUTH_TOKEN`
   is empty and the `Claude review` check is red on every Dependabot PR (the amendment for
   AB#25 lists two further reasons).
-- The PO checks every Dependabot PR himself: CI is green, and the diff and the release notes
+- The PO checks every Dependabot PR: CI is green, and the diff and the release notes
   of the updated dependencies show nothing that stands against the merge. Then the PO adds
   `review-override`, re-runs the `Claude review` job and merges. The local `reviewer`
   subagent, named as an option in the amendment for AB#25, is not used for them: its
