@@ -1,0 +1,6 @@
+**Chaos Orb**
+- Applies to: rare items.
+- Not applicable when: the item is not rare. The reason shown is the game's message "Failed to apply item: Target is not Rare."
+- Effect: all prefixes and suffixes of the item are removed; then new mods are added as described below. By chance the new mods can be the same as the old ones. The item stays rare.
+  The orb chooses a target number of mods: 4, 5 or 6, with chances 8 : 3 : 1. It then adds random mods as described in "Adding a random mod", under the affix limits of a rare item, until the item has that many mods or no mod is added. The orb always takes effect, also when it adds fewer mods than its target; it never shows "Failed to apply item: Could not generate Mod."
+- Evidence: measured by the PO on 2026-10-21 with 1500 Chaos Orbs on a Bone Ring (item level 83): 4, 5 and 6 mods 1020, 355 and 125 times against 1000, 375 and 125 expected (χ² = 1.47, 2 degrees of freedom). The prefix/suffix counts (1/3: 657, 2/2: 295, 3/1: 68, 2/3: 301, 3/2: 54, 3/3: 125) match this rule (χ² = 2.27 over 6 cells against a simulation of the rule); choosing the side by a coin flip does not fit. Tested by the PO on 2026-11-01: a normal item and a magic item: "Failed to apply item: Target is not Rare."; a rare Focused Amulet (rare limits 2 prefixes and 1 suffix) got 2 prefixes and 1 suffix in two tries, without a message.
