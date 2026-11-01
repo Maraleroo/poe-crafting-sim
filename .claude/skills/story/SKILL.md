@@ -91,8 +91,11 @@ Copy this checklist into your reply and tick it off as you go:
    The CI review reads its criteria from `origin/main`. If the PR introduces a new review
    criterion, check the PR against it once by hand and mention the result in the report to
    the PO.
-7. Report to the PO: what changed, the PR link, open questions. Start the local preview (configuration `web` in
-   `.claude/launch.json`).
+7. Before you report, set every task of the story that is still open (state New or Active)
+   to Closed. Leave open the tasks for the PO (title starts with `PO:`) and the verification
+   task from the plan, which runs after the merge. If a task cannot be closed, name it in
+   the report. Then report to the PO: what changed, the PR link, open questions. Start the
+   local preview (configuration `web` in `.claude/launch.json`).
    The first build takes a while: before checking the preview, wait until it answers with
    HTTP 200, for example with a curl loop.
    Whoever checks the local preview loads it with a fresh request that bypasses the browser
