@@ -6,10 +6,11 @@
 use crate::item_level;
 use crafting_core::{
     apply_chaos_orb, apply_exalted_orb, apply_orb_of_alteration, apply_orb_of_augmentation,
-    apply_orb_of_transmutation, apply_regal_orb, base_item, can_apply_chaos_orb,
-    can_apply_exalted_orb, can_apply_orb_of_alteration, can_apply_orb_of_augmentation,
-    can_apply_orb_of_transmutation, can_apply_regal_orb, mod_pool, BaseItem, CraftError, Currency,
-    ExplicitModDefinition, Item, SeededRng,
+    apply_orb_of_scouring, apply_orb_of_transmutation, apply_regal_orb, base_item,
+    can_apply_chaos_orb, can_apply_exalted_orb, can_apply_orb_of_alteration,
+    can_apply_orb_of_augmentation, can_apply_orb_of_scouring, can_apply_orb_of_transmutation,
+    can_apply_regal_orb, mod_pool, BaseItem, CraftError, Currency, ExplicitModDefinition, Item,
+    SeededRng,
 };
 
 /// The base item on the workbench (a reference, not item data).
@@ -93,6 +94,7 @@ impl Workbench {
             Currency::RegalOrb => apply_regal_orb(&mut self.item, &self.pool, &mut self.rng),
             Currency::ExaltedOrb => apply_exalted_orb(&mut self.item, &self.pool, &mut self.rng),
             Currency::ChaosOrb => apply_chaos_orb(&mut self.item, &self.pool, &mut self.rng),
+            Currency::OrbOfScouring => apply_orb_of_scouring(&mut self.item),
         }
     }
 
@@ -149,6 +151,7 @@ impl Workbench {
             Currency::RegalOrb => can_apply_regal_orb(&self.item),
             Currency::ExaltedOrb => can_apply_exalted_orb(&self.item, &self.pool),
             Currency::ChaosOrb => can_apply_chaos_orb(&self.item),
+            Currency::OrbOfScouring => can_apply_orb_of_scouring(&self.item),
         }
     }
 }
@@ -499,6 +502,39 @@ mod tests {
         let item = workbench.item();
         assert_eq!(item.rarity, Rarity::Rare);
         assert!(item.prefixes.is_empty() && item.suffixes.is_empty());
+    }
+
+    const SCOURING: Currency = Currency::OrbOfScouring;
+
+    #[test]
+    fn the_orb_of_scouring_on_a_normal_item_fails_and_changes_nothing() {
+        let mut workbench = Workbench::new(1);
+        let before = workbench.item().clone();
+        assert!(!workbench.applicable(SCOURING));
+        assert_eq!(
+            workbench.tooltip(SCOURING),
+            SCOURING.failure_message(CraftError::ItemNotMagicOrRare)
+        );
+        assert_eq!(
+            workbench.apply(SCOURING),
+            Err(CraftError::ItemNotMagicOrRare)
+        );
+        assert_eq!(workbench.item(), &before);
+    }
+
+    #[test]
+    fn the_orb_of_scouring_removes_the_mods_of_a_magic_and_a_rare_item() {
+        for mut workbench in [magic_with_room(), rare_with_room()] {
+            let before = workbench.item().clone();
+            assert!(workbench.applicable(SCOURING));
+            assert_eq!(workbench.tooltip(SCOURING), SCOURING.description());
+            assert_eq!(workbench.apply(SCOURING), Ok(()));
+            let item = workbench.item();
+            assert_eq!(item.rarity, Rarity::Normal);
+            assert!(item.prefixes.is_empty() && item.suffixes.is_empty());
+            assert_eq!(item.implicits, before.implicits);
+            assert_eq!(item.item_level, before.item_level);
+        }
     }
 
     #[test]

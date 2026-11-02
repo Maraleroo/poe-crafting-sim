@@ -68,6 +68,7 @@ Currency rules:
 - [Regal Orb](currencies/regal-orb.md)
 - [Exalted Orb](currencies/exalted-orb.md)
 - [Chaos Orb](currencies/chaos-orb.md)
+- [Orb of Scouring](currencies/orb-of-scouring.md)
 
 ## Sources
 - https://www.poewiki.net/

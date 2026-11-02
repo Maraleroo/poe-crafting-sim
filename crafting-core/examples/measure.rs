@@ -28,8 +28,8 @@ use std::time::{Duration, Instant};
 
 use crafting_core::{
     apply_chaos_orb, apply_exalted_orb, apply_orb_of_alteration, apply_orb_of_augmentation,
-    apply_orb_of_transmutation, apply_regal_orb, base_item, base_items, mod_pool, BaseItem,
-    CraftError, Currency, ExplicitModDefinition, Item, SeededRng,
+    apply_orb_of_scouring, apply_orb_of_transmutation, apply_regal_orb, base_item, base_items,
+    mod_pool, BaseItem, CraftError, Currency, ExplicitModDefinition, Item, SeededRng,
 };
 
 /// Time spent before measuring an operation. It also resolves the lazy mod pools.
@@ -186,6 +186,7 @@ fn apply(
         Currency::RegalOrb => apply_regal_orb(item, pool, rng),
         Currency::ExaltedOrb => apply_exalted_orb(item, pool, rng),
         Currency::ChaosOrb => apply_chaos_orb(item, pool, rng),
+        Currency::OrbOfScouring => apply_orb_of_scouring(item),
     }
 }
 
@@ -245,6 +246,13 @@ fn item_operations() -> Vec<Operation> {
             bone_pool.clone(),
         ),
         currency_operation(Currency::ChaosOrb, 6, roomy_rare_bone_ring, bone_pool),
+        // The Orb of Scouring needs no pool.
+        currency_operation(
+            Currency::OrbOfScouring,
+            9,
+            full_rare_bone_ring.clone(),
+            Vec::new(),
+        ),
         Operation {
             key: DEFAULT_VIEW_KEY,
             seed: 7,
@@ -256,7 +264,7 @@ fn item_operations() -> Vec<Operation> {
         Operation {
             key: ADVANCED_VIEW_KEY,
             seed: 8,
-            start: full_rare_bone_ring,
+            start: full_rare_bone_ring.clone(),
             call: Box::new(|item, _| {
                 black_box(item.advanced_mods());
             }),

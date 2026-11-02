@@ -13,6 +13,8 @@ pub enum CraftError {
     ItemNotMagic,
     /// The currency needs a rare item.
     ItemNotRare,
+    /// The currency needs a magic or a rare item.
+    ItemNotMagicOrRare,
     /// The item has no room for another mod: neither side has room under both affix limits.
     NoSpaceForMods,
     /// The currency added no mod because the valid pool was empty.
@@ -21,10 +23,11 @@ pub enum CraftError {
 
 impl CraftError {
     /// Every reason code.
-    pub(crate) const ALL: [CraftError; 5] = [
+    pub(crate) const ALL: [CraftError; 6] = [
         CraftError::ItemNotNormal,
         CraftError::ItemNotMagic,
         CraftError::ItemNotRare,
+        CraftError::ItemNotMagicOrRare,
         CraftError::NoSpaceForMods,
         CraftError::NoValidMod,
     ];
@@ -36,6 +39,7 @@ impl CraftError {
             CraftError::ItemNotNormal => "item_not_normal",
             CraftError::ItemNotMagic => "item_not_magic",
             CraftError::ItemNotRare => "item_not_rare",
+            CraftError::ItemNotMagicOrRare => "item_not_magic_or_rare",
             CraftError::NoSpaceForMods => "no_space_for_mods",
             CraftError::NoValidMod => "no_valid_mod",
         }
@@ -372,6 +376,28 @@ pub fn apply_chaos_orb(
     Ok(())
 }
 
+/// Whether the Orb of Scouring can be applied to `item`: it needs a magic or a rare item. It
+/// takes effect on every such item, also one without mods.
+pub fn can_apply_orb_of_scouring(item: &Item) -> Result<(), CraftError> {
+    match item.rarity {
+        Rarity::Magic | Rarity::Rare => Ok(()),
+        Rarity::Normal | Rarity::Unique => Err(CraftError::ItemNotMagicOrRare),
+    }
+}
+
+/// Removes all prefixes and suffixes of a magic or rare item. Implicits, base and item level
+/// stay. On an error the item stays unchanged.
+///
+/// This is the only place that decides the rarity of the scoured item. Until mods that survive
+/// scouring exist (protected and fractured mods), no mod remains and the item becomes normal.
+pub fn apply_orb_of_scouring(item: &mut Item) -> Result<(), CraftError> {
+    can_apply_orb_of_scouring(item)?;
+    item.prefixes.clear();
+    item.suffixes.clear();
+    item.rarity = Rarity::Normal;
+    Ok(())
+}
+
 /// The rule of the Orb of Transmutation and the Orb of Alteration: choose a target of 1 or 2
 /// mods, each with a chance of 50 %, then add random mods until the item has that many prefixes
 /// and suffixes or no mod is added.
@@ -456,6 +482,7 @@ mod tests {
                 CraftError::ItemNotNormal
                 | CraftError::ItemNotMagic
                 | CraftError::ItemNotRare
+                | CraftError::ItemNotMagicOrRare
                 | CraftError::NoSpaceForMods
                 | CraftError::NoValidMod => {}
             }
@@ -1030,6 +1057,46 @@ mod tests {
             let before = item.clone();
             assert_eq!(apply_exalted_orb(item, &pool, &mut rng), Err(error));
             assert_eq!(item, &before);
+        }
+    }
+
+    #[test]
+    fn the_orb_of_scouring_needs_a_magic_or_rare_item_and_leaves_others_unchanged() {
+        let mut rng = SeededRng::new(1);
+        let mut unique = normal_item(&mut rng);
+        unique.rarity = Rarity::Unique;
+        let mut normal = normal_item(&mut rng);
+        for item in [&mut unique, &mut normal] {
+            let before = item.clone();
+            assert_eq!(
+                can_apply_orb_of_scouring(item),
+                Err(CraftError::ItemNotMagicOrRare)
+            );
+            assert_eq!(
+                apply_orb_of_scouring(item),
+                Err(CraftError::ItemNotMagicOrRare)
+            );
+            assert_eq!(item, &before);
+        }
+    }
+
+    #[test]
+    fn the_orb_of_scouring_removes_all_mods_and_makes_the_item_normal() {
+        let mut rng = SeededRng::new(1);
+        let mut rare = rare_item_with(&mut rng, 3, 3);
+        let mut magic = rare_item_with(&mut rng, 1, 1);
+        magic.rarity = Rarity::Magic;
+        let mut empty_magic = magic_item(&mut rng);
+        empty_magic.prefixes.clear();
+        empty_magic.suffixes.clear();
+        for item in [&mut rare, &mut magic, &mut empty_magic] {
+            let before = item.clone();
+            assert_eq!(can_apply_orb_of_scouring(item), Ok(()));
+            assert_eq!(apply_orb_of_scouring(item), Ok(()));
+            assert_eq!(item.rarity, Rarity::Normal);
+            assert!(item.prefixes.is_empty() && item.suffixes.is_empty());
+            assert_eq!(item.implicits, before.implicits);
+            assert_eq!(item.item_level, before.item_level);
         }
     }
 

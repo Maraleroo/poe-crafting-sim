@@ -53,6 +53,14 @@
       "messages": {
         "item_not_rare": "Failed to apply item: Target is not Rare."
       }
+    },
+    {
+      "id": "orb_of_scouring",
+      "name": "Orb of Scouring",
+      "description": "Removes all modifiers from an item",
+      "messages": {
+        "item_not_magic_or_rare": "Failed to apply item: Target is not Magic or Rare."
+      }
     }
   ]
 }
