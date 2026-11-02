@@ -164,8 +164,8 @@ are not in it. The converter stops if one stat would get two positions.
 
 ## currencies.json
 
-Source: names from the story texts of AB#62 and AB#114 (ADR 0011); descriptions and failure
-messages from the story texts of AB#113, AB#114, AB#276, AB#299 and AB#306 (ADR 0012).
+Source: names from the story texts of AB#62, AB#114 and AB#313 (ADR 0011); descriptions and failure
+messages from the story texts of AB#113, AB#114, AB#276, AB#299, AB#306 and AB#313 (ADR 0012).
 
 ```
 { "currencies": [ { "id": "...", "name": "...", "description": "...", "messages": { ... } }, ... ] }

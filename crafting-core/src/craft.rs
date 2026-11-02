@@ -329,10 +329,59 @@ pub fn apply_exalted_orb(
     }
 }
 
-/// The rule of both orbs: choose a target of 1 or 2 mods, each with a chance of 50 %, then add
-/// random mods until the item has that many prefixes and suffixes or no mod is added.
+/// The targets of the reforging orb for rare items and their chances (the PO's rule): 4, 5 or
+/// 6 mods, 8 : 3 : 1.
+const REFORGE_RARE_TARGETS: [usize; 3] = [4, 5, 6];
+const REFORGE_RARE_WEIGHTS: [u32; 3] = [8, 3, 1];
+
+/// Whether the orb can be applied to `item`, without looking at any mod pool. Only the rarity
+/// counts: the orb takes effect on every rare item, also when it can add fewer mods than its
+/// target or none.
+pub fn can_apply_chaos_orb(item: &Item) -> Result<(), CraftError> {
+    if item.rarity == Rarity::Rare {
+        Ok(())
+    } else {
+        Err(CraftError::ItemNotRare)
+    }
+}
+
+/// Removes all prefixes and suffixes of a rare item and adds new mods from `pool`, the pool of
+/// its base. By chance the new mods can be the same as the old ones. The implicits stay and the
+/// item stays rare.
+///
+/// The orb chooses a target number of mods, 4, 5 or 6, with chances 8 : 3 : 1. It then adds
+/// random mods (`add_random_mod`) under the affix limits of a rare item until the item has that
+/// many mods or no mod is added. The orb always takes effect on a rare item, also when it adds
+/// fewer mods than its target.
+///
+/// On an error the item stays unchanged.
+///
+/// # Panics
+/// If a mod of the valid pool has weight zero.
+pub fn apply_chaos_orb(
+    item: &mut Item,
+    pool: &[ExplicitModDefinition],
+    rng: &mut impl Rng,
+) -> Result<(), CraftError> {
+    can_apply_chaos_orb(item)?;
+    item.prefixes.clear();
+    item.suffixes.clear();
+    let target = REFORGE_RARE_TARGETS[choose_weighted(rng, &REFORGE_RARE_WEIGHTS)];
+    fill_up_to(item, pool, target, rng);
+    Ok(())
+}
+
+/// The rule of the orbs that reforge: choose a target of 1 or 2 mods, each with a chance of
+/// 50 %, then add random mods until the item has that many prefixes and suffixes or no mod is
+/// added.
 fn add_random_mods(item: &mut Item, pool: &[ExplicitModDefinition], rng: &mut impl Rng) {
     let target = 1 + roll_below(rng, 2) as usize;
+    fill_up_to(item, pool, target, rng);
+}
+
+/// Adds random mods (`add_random_mod`) until the item has `target` prefixes and suffixes or no
+/// mod is added. The mods already on the item count.
+fn fill_up_to(item: &mut Item, pool: &[ExplicitModDefinition], target: usize, rng: &mut impl Rng) {
     while item.prefixes.len() + item.suffixes.len() < target && add_random_mod(item, pool, rng) {}
 }
 
@@ -981,5 +1030,40 @@ mod tests {
             assert_eq!(apply_exalted_orb(item, &pool, &mut rng), Err(error));
             assert_eq!(item, &before);
         }
+    }
+
+    #[test]
+    fn the_reforging_orb_for_rare_items_needs_a_rare_item_and_leaves_others_unchanged() {
+        let mut rng = SeededRng::new(1);
+        let pool = [mod_of("a", AffixType::Prefix, 1)];
+        let mut magic = rare_item_with(&mut rng, 1, 0);
+        magic.rarity = Rarity::Magic;
+        let mut normal = normal_item(&mut rng);
+        for item in [&mut magic, &mut normal] {
+            let before = item.clone();
+            assert_eq!(can_apply_chaos_orb(item), Err(CraftError::ItemNotRare));
+            assert_eq!(
+                apply_chaos_orb(item, &pool, &mut rng),
+                Err(CraftError::ItemNotRare)
+            );
+            assert_eq!(item, &before);
+        }
+    }
+
+    #[test]
+    fn the_reforging_orb_for_rare_items_replaces_the_mods_and_stops_when_none_can_be_added() {
+        let mut rng = SeededRng::new(3);
+        let pool = [
+            mod_of("p1", AffixType::Prefix, 1),
+            mod_of("p2", AffixType::Prefix, 1),
+            mod_of("s1", AffixType::Suffix, 1),
+        ];
+        let mut item = rare_item_with(&mut rng, 3, 3);
+        assert_eq!(apply_chaos_orb(&mut item, &pool, &mut rng), Ok(()));
+        assert_eq!(item.rarity, Rarity::Rare);
+        let mut all: Vec<&str> = names(&item.prefixes);
+        all.extend(names(&item.suffixes));
+        all.sort_unstable();
+        assert_eq!(all, ["p1", "p2", "s1"]);
     }
 }
