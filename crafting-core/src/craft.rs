@@ -332,8 +332,8 @@ pub fn apply_exalted_orb(
 }
 
 /// The targets of the Chaos Orb and their chances (the PO's rule): 4, 5 or 6 mods, 8 : 3 : 1.
-const REFORGE_RARE_TARGETS: [usize; 3] = [4, 5, 6];
-const REFORGE_RARE_WEIGHTS: [u32; 3] = [8, 3, 1];
+const CHAOS_ORB_TARGETS: [usize; 3] = [4, 5, 6];
+const CHAOS_ORB_WEIGHTS: [u32; 3] = [8, 3, 1];
 
 /// Whether the Chaos Orb can be applied to `item`, without looking at any mod pool. Only the
 /// rarity counts: the Chaos Orb takes effect on every rare item, also when it can add fewer
@@ -367,7 +367,7 @@ pub fn apply_chaos_orb(
     can_apply_chaos_orb(item)?;
     item.prefixes.clear();
     item.suffixes.clear();
-    let target = REFORGE_RARE_TARGETS[choose_weighted(rng, &REFORGE_RARE_WEIGHTS)];
+    let target = CHAOS_ORB_TARGETS[choose_weighted(rng, &CHAOS_ORB_WEIGHTS)];
     fill_up_to(item, pool, target, rng);
     Ok(())
 }
@@ -470,13 +470,13 @@ mod tests {
     }
 
     #[test]
-    fn a_normal_item_can_take_the_orb() {
+    fn a_normal_item_can_take_the_orb_of_transmutation() {
         let item = normal_item(&mut SeededRng::new(1));
         assert_eq!(can_apply_orb_of_transmutation(&item), Ok(()));
     }
 
     #[test]
-    fn items_of_other_rarities_cannot_take_the_orb() {
+    fn items_of_other_rarities_cannot_take_the_orb_of_transmutation() {
         for rarity in [Rarity::Magic, Rarity::Rare, Rarity::Unique] {
             let mut item = normal_item(&mut SeededRng::new(1));
             item.rarity = rarity;
@@ -488,7 +488,7 @@ mod tests {
     }
 
     #[test]
-    fn a_failed_orb_leaves_the_item_unchanged() {
+    fn a_failed_orb_of_transmutation_leaves_the_item_unchanged() {
         let mut rng = SeededRng::new(1);
         let pool = [mod_of("a", AffixType::Prefix, 1)];
         let mut magic = normal_item(&mut rng);
@@ -502,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn without_a_valid_mod_the_orb_makes_the_item_magic_with_no_mods() {
+    fn without_a_valid_mod_the_orb_of_transmutation_makes_the_item_magic_with_no_mods() {
         let mut rng = SeededRng::new(1);
         let mut high = mod_of("high", AffixType::Prefix, 1);
         high.definition.level = 2;
@@ -722,7 +722,7 @@ mod tests {
     }
 
     #[test]
-    fn an_orb_never_adds_a_second_mod_of_the_family_of_the_first() {
+    fn the_orb_of_transmutation_never_adds_a_second_mod_of_the_family_of_the_first() {
         let mut rng = SeededRng::new(6);
         let mut suffix = mod_of("of the family", AffixType::Suffix, 1);
         suffix.definition.family = "p".to_owned();
@@ -1034,7 +1034,7 @@ mod tests {
     }
 
     #[test]
-    fn the_reforging_orb_for_rare_items_needs_a_rare_item_and_leaves_others_unchanged() {
+    fn the_chaos_orb_needs_a_rare_item_and_leaves_others_unchanged() {
         let mut rng = SeededRng::new(1);
         let pool = [mod_of("a", AffixType::Prefix, 1)];
         let mut magic = rare_item_with(&mut rng, 1, 0);
@@ -1052,7 +1052,7 @@ mod tests {
     }
 
     #[test]
-    fn the_reforging_orb_for_rare_items_replaces_the_mods_and_stops_when_none_can_be_added() {
+    fn the_chaos_orb_replaces_the_mods_and_stops_when_none_can_be_added() {
         let mut rng = SeededRng::new(3);
         let pool = [
             mod_of("p1", AffixType::Prefix, 1),

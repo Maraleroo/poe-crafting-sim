@@ -184,7 +184,8 @@ mod tests {
     const LOCKED_BASE_ID: &str = "Metadata/Items/Rings/RingB1";
 
     #[test]
-    fn the_pool_of_a_locked_base_is_passed_whole_and_the_orbs_leave_out_the_blocked_mods() {
+    fn the_pool_of_a_locked_base_is_passed_whole_and_the_orbs_of_transmutation_and_alteration_leave_out_the_blocked_mods(
+    ) {
         let all = mod_pool(LOCKED_BASE_ID).expect("the base has a pool");
         let mut workbench = Workbench::new(1);
         workbench.select(LOCKED_BASE_ID);
@@ -211,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn the_transmutation_makes_the_item_magic_and_disables_itself() {
+    fn the_orb_of_transmutation_makes_the_item_magic_and_disables_itself() {
         let mut workbench = Workbench::new(1);
         let implicits = workbench.item().implicits.clone();
         assert_eq!(workbench.apply(TRANSMUTATION), Ok(()));
@@ -223,7 +224,7 @@ mod tests {
     }
 
     #[test]
-    fn the_transmutation_on_a_magic_item_fails_and_changes_nothing() {
+    fn the_orb_of_transmutation_on_a_magic_item_fails_and_changes_nothing() {
         let mut workbench = Workbench::new(1);
         workbench.apply(TRANSMUTATION).unwrap();
         let magic = workbench.item().clone();
@@ -235,7 +236,7 @@ mod tests {
     }
 
     #[test]
-    fn the_alteration_on_a_normal_item_fails_and_changes_nothing() {
+    fn the_orb_of_alteration_on_a_normal_item_fails_and_changes_nothing() {
         let mut workbench = Workbench::new(1);
         let normal = workbench.item().clone();
         assert_eq!(workbench.apply(ALTERATION), Err(CraftError::ItemNotMagic));
@@ -243,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn the_alteration_keeps_the_item_magic_and_applicable() {
+    fn the_orb_of_alteration_keeps_the_item_magic_and_applicable() {
         let mut workbench = Workbench::new(1);
         workbench.apply(TRANSMUTATION).unwrap();
         let implicits = workbench.item().implicits.clone();
@@ -272,7 +273,7 @@ mod tests {
     }
 
     #[test]
-    fn the_augmentation_on_a_normal_item_fails_and_changes_nothing() {
+    fn the_orb_of_augmentation_on_a_normal_item_fails_and_changes_nothing() {
         let mut workbench = Workbench::new(1);
         let normal = workbench.item().clone();
         assert!(!workbench.applicable(AUGMENTATION));
@@ -285,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn the_augmentation_adds_one_mod_and_then_has_no_space() {
+    fn the_orb_of_augmentation_adds_one_mod_and_then_has_no_space() {
         let mut workbench = magic_with_room();
         let before = workbench.item().clone();
         assert!(workbench.applicable(AUGMENTATION));
@@ -311,7 +312,7 @@ mod tests {
     }
 
     #[test]
-    fn the_augmentation_with_room_but_no_valid_mod_fails_and_changes_nothing() {
+    fn the_orb_of_augmentation_with_room_but_no_valid_mod_fails_and_changes_nothing() {
         let mut workbench = magic_with_room();
         workbench.pool.clear();
         let before = workbench.item().clone();
@@ -363,7 +364,7 @@ mod tests {
     }
 
     #[test]
-    fn the_other_orbs_do_not_apply_to_a_rare_item() {
+    fn the_orbs_of_transmutation_alteration_and_augmentation_do_not_apply_to_a_rare_item() {
         let mut workbench = magic_with_room();
         workbench.apply(REGAL).unwrap();
         let rare = workbench.item().clone();
@@ -647,7 +648,8 @@ mod tests {
     }
 
     #[test]
-    fn without_any_valid_mod_the_currencies_make_the_item_magic_with_no_mods() {
+    fn without_any_valid_mod_the_orbs_of_transmutation_and_alteration_make_the_item_magic_with_no_mods(
+    ) {
         let mut workbench = Workbench::with_pool(1, Vec::new());
         assert_eq!(workbench.apply(TRANSMUTATION), Ok(()));
         assert_eq!(workbench.item().rarity, Rarity::Magic);
@@ -693,7 +695,7 @@ mod tests {
     }
 
     #[test]
-    fn the_orbs_roll_only_mods_up_to_the_chosen_item_level() {
+    fn the_orbs_of_transmutation_and_alteration_roll_only_mods_up_to_the_chosen_item_level() {
         let mut workbench = Workbench::new(1);
         workbench.set_item_level(LOW_LEVEL);
         for _ in 0..200 {
