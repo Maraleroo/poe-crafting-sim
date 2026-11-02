@@ -1,0 +1,51 @@
+name: Measure
+
+# Informational only (ADR 0025): the times of the core operations in the pull request and on
+# main, measured one after the other on the same runner. A slowdown shows as a warning and never
+# fails the job. A build error or a failed craft in the measuring program does.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: measure-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    name: Measure core operations
+    runs-on: ubuntu-24.04
+    steps:
+      # The merge commit of the pull request, with its two parents: the first parent is main.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      # The toolchain, components and wasm target come from rust-toolchain.toml.
+      - name: Install Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Measure the pull request
+        run: cargo run --release -p crafting-core --example measure -- --out "$RUNNER_TEMP/pr.tsv"
+      # The first pull request that adds the measuring program has no program on main. The
+      # compare step then shows a dash for every time on main.
+      - name: Measure main
+        run: |
+          set -euo pipefail
+          if git cat-file -e HEAD^1:crafting-core/examples/measure.rs; then
+            git worktree add "$RUNNER_TEMP/main" HEAD^1
+            cd "$RUNNER_TEMP/main"
+            CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" \
+              cargo run --release -p crafting-core --example measure -- --out "$RUNNER_TEMP/main.tsv"
+          else
+            echo "main has no measuring program yet, so only the pull request is measured." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Compare
+        run: cargo run --release -p crafting-core --example measure -- --compare "$RUNNER_TEMP/main.tsv" "$RUNNER_TEMP/pr.tsv" --summary "$GITHUB_STEP_SUMMARY"
