@@ -21,7 +21,7 @@
 use std::fmt::Write as _;
 use std::fs::{self, OpenOptions};
 use std::hint::black_box;
-use std::io::{self, ErrorKind, Write as _};
+use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 use std::time::{Duration, Instant};
@@ -376,12 +376,24 @@ fn parse_timings(text: &str) -> Result<Vec<(String, u64)>, String> {
         .collect()
 }
 
-/// The timings in a file. A missing file has none: `main` may have no measuring program yet.
+/// The timings in a file. A missing file is an error.
 fn read_timings(path: &Path) -> Result<Vec<(String, u64)>, String> {
-    match fs::read_to_string(path) {
-        Ok(text) => parse_timings(&text).map_err(|e| format!("{}: {e}", path.display())),
-        Err(e) if e.kind() == ErrorKind::NotFound => Ok(Vec::new()),
-        Err(e) => Err(format!("cannot read {}: {e}", path.display())),
+    let text =
+        fs::read_to_string(path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+    parse_timings(&text).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+/// The timings on `main`. A missing file has none: `main` may have no measuring program yet.
+/// Only this file may be missing; a missing file of the pull request is an error, so the
+/// program cannot pass without having measured the pull request.
+fn read_main_timings(path: &Path) -> Result<Vec<(String, u64)>, String> {
+    let exists = path
+        .try_exists()
+        .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+    if exists {
+        read_timings(path)
+    } else {
+        Ok(Vec::new())
     }
 }
 
@@ -437,7 +449,7 @@ fn compare(main: &[(String, u64)], pr: &[(String, u64)]) -> (String, Vec<String>
 }
 
 fn compare_files(main: &Path, pr: &Path, summary: Option<&Path>) -> Result<(), String> {
-    let (table, warnings) = compare(&read_timings(main)?, &read_timings(pr)?);
+    let (table, warnings) = compare(&read_main_timings(main)?, &read_timings(pr)?);
     match summary {
         Some(path) => OpenOptions::new()
             .create(true)
