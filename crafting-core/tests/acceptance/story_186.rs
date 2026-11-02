@@ -33,6 +33,11 @@
 //! `suffix` of `Item` by the lists `prefixes` and `suffixes` (ADR 0021). The tests read the
 //! lists; what they check is unchanged. Criterion 4 of AB#248 replaces the check in AC5 that the
 //! page builds the pool with `valid_mods`.
+//!
+//! Adapted for AB#326 (PO-confirmed): criterion 2 of AB#326 replaces the reading of AC7 that
+//! class and base names must not be in the comments of `web/` either. AC7 removes the comments
+//! with the shared helper in `story_326.rs` (ADR 0011, amendment AB#326) before it removes the
+//! base ids and searches for the names. The part of AC7 on UI texts is unchanged.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -720,6 +725,9 @@ fn ac6_bases_with_the_same_name_differ_by_their_implicit_range_text() {
 // under web/, and the assignment of classes to slots is data (ADR 0018). The file contents are
 // meant, not the rendered page. The base name "Ring" (MirrorRing) is also the slot name and is
 // left out. The wording is checked in the review and in the local preview.)
+// (Adapted for AB#326, PO-confirmed: criterion 2 of AB#326 replaces the reading that class and
+// base names must not be in comments either. That search skips comments, see `story_326.rs`.
+// The search for the UI texts is unchanged.)
 #[test]
 fn ac7_ui_texts_come_from_translations_and_names_from_the_game_data() {
     // Given the files under web/ and the bases of crafting-core
@@ -752,7 +760,8 @@ fn ac7_ui_texts_come_from_translations_and_names_from_the_game_data() {
         "UI texts must come from the translation files in web/i18n/: {hard_coded:#?}"
     );
 
-    // When searching all files under web/ for class and base names, without the base ids
+    // When searching all files under web/ for class and base names, without their comments
+    // (AB#326) and then without the base ids
     let mut names: BTreeSet<String> = bases
         .iter()
         .map(|base| base.name.clone())
@@ -761,9 +770,10 @@ fn ac7_ui_texts_come_from_translations_and_names_from_the_game_data() {
     names.extend(bases.iter().map(|base| base.item_class.clone()));
     let mut game_texts: Vec<String> = Vec::new();
     for path in &web {
-        let content = base_ids.iter().fold(read_path(path), |content, id| {
-            content.replace(id.as_str(), "")
-        });
+        let code = crate::story_326::code_of(path);
+        let content = base_ids
+            .iter()
+            .fold(code, |content, id| content.replace(id.as_str(), ""));
         for name in &names {
             if content.contains(name.as_str()) {
                 game_texts.push(format!("{} contains {name:?}", path.display()));

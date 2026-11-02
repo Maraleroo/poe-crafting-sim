@@ -28,6 +28,13 @@
 //! the lists; what they check is unchanged. Criteria 1 to 3 of AB#248 replace AC8 for a pool
 //! without any mod, and the PO's old wording in AC9.
 //!
+//! Adapted for AB#326 (PO-confirmed): criterion 2 of AB#326 replaces the reading of AC1 and AC5
+//! that game texts must not be in comments either: the orb's name in `crafting-core/src` and
+//! `web/` (AC1), and mod names, mod text lines and stat ids in `web/` (AC5; the PO allowed stat
+//! ids in comments). Both search the files without their comments, with the shared helper in
+//! `story_326.rs` (ADR 0011, amendment AB#326). The other text checks, among them AC6, are
+//! unchanged.
+//!
 //! What is checked outside `cargo test`, by the PO in the local preview:
 //! - AC1 to AC3: the rendering of the buttons and the magic item on the start page.
 //! - AC6: different results after reloading the page, and the network and storage tabs of
@@ -848,6 +855,8 @@ fn assert_one_sided_shares(pool: &[ExplicitModDefinition], tally: &Tally, label:
 // texts the page shows, the button label from the game data (ADR 0011) and that web uses it.)
 // (Adapted for AB#167, PO-confirmed: AC4 of AB#167 adds the conversion; the expected texts
 // show converted values where the game converts.)
+// (Adapted for AB#326, PO-confirmed: criterion 2 of AB#326 replaces the reading that the orb's
+// name must not be in comments either. The search for it skips comments, see `story_326.rs`.)
 #[test]
 fn ac1_orb_of_transmutation_makes_the_iron_ring_magic_with_rolled_mod_texts() {
     // Given the Iron Ring, the mod pool from crafting-core and the English translations
@@ -915,10 +924,11 @@ fn ac1_orb_of_transmutation_makes_the_iron_ring_magic_with_rolled_mod_texts() {
         !embedding.is_empty(),
         "a file under crafting-core/src/ must embed {CURRENCIES_JSON} with `include_str!`"
     );
-    // And the name is game data: it is not written into the code or the UI texts
+    // And the name is game data: it is not written into the code or the UI texts (comments are
+    // not searched, AB#326)
     let name_in_code = [
-        files_containing(&core_files, ORB_NAME, false),
-        files_containing(&web_files(), ORB_NAME, false),
+        crate::story_326::files_containing_in_code(&core_files, ORB_NAME),
+        crate::story_326::files_containing_in_code(&web_files(), ORB_NAME),
     ]
     .concat();
     assert!(
@@ -1203,6 +1213,9 @@ fn ac4_mod_pool_lives_in_a_data_file_with_all_table_values() {
 // (The shares of rules 1 to 3 are checked in AC7 and AC8, rule 4 in AC8.)
 // (Adapted for AB#185, PO-confirmed: criterion 6 of AB#185 gives every base its own pool
 // (ADR 0017). The page takes the Iron Ring's pool from `mod_pool` instead of `explicit_mods`.)
+// (Adapted for AB#326, PO-confirmed: criterion 2 of AB#326 replaces the reading that mod names,
+// mod text lines and stat ids must not be in comments under web/ either. The search for them
+// skips comments, see `story_326.rs`.)
 #[test]
 fn ac5_transmutation_lives_in_crafting_core_and_web_only_displays() {
     // Given the mod pool from crafting-core
@@ -1228,10 +1241,11 @@ fn ac5_transmutation_lives_in_crafting_core_and_web_only_displays() {
         ],
         "the transmutation happens in crafting-core",
     );
-    // And no file under web/ holds the mod pool's own data
-    let mut own_data: Vec<String> = Vec::new();
+    // And no file under web/ holds the mod pool's own data in its code (comments are not
+    // searched, AB#326; every file is read once for all needles)
+    let mut needles: Vec<&str> = Vec::new();
     for definition in &pool {
-        let mut needles: Vec<&str> = vec![definition.name.as_str()];
+        needles.push(definition.name.as_str());
         needles.extend(definition.definition.text.lines());
         needles.extend(
             definition
@@ -1240,8 +1254,8 @@ fn ac5_transmutation_lives_in_crafting_core_and_web_only_displays() {
                 .iter()
                 .map(|stat| stat.id.as_str()),
         );
-        own_data.extend(findings(&web_files(), &needles, false));
     }
+    let own_data = crate::story_326::findings_in_code(&web_files(), &needles);
     assert!(
         own_data.is_empty(),
         "web/ must only display the mods from crafting-core: {own_data:#?}"

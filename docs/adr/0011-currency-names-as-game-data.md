@@ -31,6 +31,24 @@ currency data the PO has supplied is the name used in the story.
 - The literal currency name appears only in `data/currencies.json`, not in the code of
   `crafting-core` or `web`. This is the same rule as for item names and mod texts.
 
+## Amendment (AB#326, 2026-11-02)
+- Game texts (names of items, item classes, currencies and mods, mod texts, currency
+  descriptions and messages; ADR 0008, ADR 0012) must not appear as text literals in the
+  code of `crafting-core` and `web`. Comments and documentation may name them, for example
+  the name of a currency in a doc comment.
+- Reason: a comment is never shown on the website and never translated, so it does not touch
+  the goal of the rule, one source for game texts that can be translated later. Paraphrases
+  such as "the regal orb" made comments harder to understand, and a test in AB#299 failed on
+  a comment.
+- "Code" means everything in the files under `crafting-core/src` and `web/` (without build
+  output) except comments: `//`, `///`, `//!` and `/* */` in Rust, `/* */` in CSS,
+  `<!-- -->` in HTML and `#` in TOML, each outside string literals. Files without comment
+  syntax count in full: the translation files in `web/i18n/` and the privacy pages in
+  `web/legal/`, which are content of the website, not documentation.
+- The acceptance tests that check that a game text lives only in the game data search the
+  file contents without comments. Other text checks keep searching comments too, for
+  example that the page does not use `valid_mods` (AB#248).
+
 ## Alternatives considered
 - Translation key in `web/i18n/en.json`: simplest, but it mixes a game text into the UI
   texts, against the PO's decision.

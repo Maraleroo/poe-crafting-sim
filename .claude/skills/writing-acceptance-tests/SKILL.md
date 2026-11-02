@@ -26,6 +26,7 @@ description: How to turn acceptance criteria into Rust acceptance tests that fai
 ## What permanent tests check
 - Permanent acceptance tests check behaviour and structure: game mechanics and statistics, privacy, the security of the workflows, and that texts come from translation or game data files and are not hard-coded.
 - They do not check the exact wording of game rules, UI texts, game texts or team files. That wording is checked at the acceptance: rules byte for byte in step 2 of the `story` skill, everything else in the review against the criteria in the PR and by the PO in the preview.
+- Checks for game texts in the code do not evaluate comments: a game text may appear in a comment or doc comment, only a text literal counts (ADR 0011).
 - Exception: legal texts (disclaimer, privacy policy, Impressum) are checked word for word.
 - A criterion that only checks wording is checked at the acceptance and gets no permanent test.
 - Existing wording tests are not cleaned up in advance. If a story runs into one, the exception in the hard rules of `CLAUDE.md` applies.

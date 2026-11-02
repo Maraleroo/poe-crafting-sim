@@ -12,6 +12,12 @@
 //! to `poe-crafting-rules` before these tests (AB#55); it passes as soon as the module
 //! compiles.
 //!
+//! Adapted for AB#326 (PO-confirmed): criterion 2 of AB#326 replaces the reading of AC2 that the
+//! base name "Iron Ring" must not be in the comments of `crafting-core/src` and `web/` either. AC2
+//! searches the files without their comments, with the shared helper in `story_326.rs` (ADR 0011,
+//! amendment AB#326). The other text checks of AC2 (`include_str!`, `std::fs`, the data file) are
+//! unchanged.
+//!
 //! What is checked outside `cargo test`:
 //! - AC1: the rendering on the start page. The PO checks it in the local preview. Here:
 //!   the item, its texts from `crafting-core` and the translation keys the page uses.
@@ -348,6 +354,8 @@ fn ac1_iron_ring_is_a_normal_item_with_its_base_values_and_labels() {
 // (Adapted for AB#167, PO-confirmed: AC1 of AB#167 replaces the table values by RePoE's.
 // `required_level` is the base's own requirement (0 for rings), the stat identifiers have
 // underscores, the placeholder names come from the converter, and there is no Global flag.)
+// (Adapted for AB#326, PO-confirmed: criterion 2 of AB#326 replaces the reading that the base
+// name must not be in comments either. The search for it skips comments, see `story_326.rs`.)
 #[test]
 fn ac2_item_data_lives_in_an_embedded_data_file_with_all_table_values() {
     // Given the data file, the crafting-core sources and the web files
@@ -425,9 +433,9 @@ fn ac2_item_data_lives_in_an_embedded_data_file_with_all_table_values() {
         .collect();
     let core_ids: BTreeSet<String> = base_items().into_iter().map(|base| base.id).collect();
     assert_eq!(core_ids, file_ids);
-    // And the item data is not scattered in code
-    let in_core = files_containing(&core_files, IRON_RING_NAME);
-    let in_web = files_containing(&web, IRON_RING_NAME);
+    // And the item data is not scattered in code (comments are not searched, AB#326)
+    let in_core = crate::story_326::files_containing_in_code(&core_files, IRON_RING_NAME);
+    let in_web = crate::story_326::files_containing_in_code(&web, IRON_RING_NAME);
     assert!(
         in_core.is_empty() && in_web.is_empty(),
         "{IRON_RING_NAME:?} must only be in {BASE_ITEMS_JSON}, also found in: {:#?}",

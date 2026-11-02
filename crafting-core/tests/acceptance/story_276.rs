@@ -40,6 +40,12 @@
 //! `Currency::OrbOfAugmentation`, `CraftError::NoSpaceForMods`, `can_apply_orb_of_augmentation`
 //! and `apply_orb_of_augmentation` do not exist yet.
 //!
+//! Adapted for AB#326 (PO-confirmed): criterion 2 of AB#326 replaces the reading of AC2, AC5 and
+//! AC6 that a game text must not be in the comments of `crafting-core/src` and `web/` either.
+//! `assert_only_in_game_data` searches the files without their comments, with the shared helper in
+//! `story_326.rs` (ADR 0011, amendment AB#326). A game text as a literal in the code still fails
+//! the check.
+//!
 //! What is checked outside `cargo test`, by the PO in the local preview:
 //! - AC2: the third button next to the other two orbs and its tooltip.
 //! - AC5 and AC6: how the inapplicable orb looks, its tooltip and the message after a click.
@@ -210,10 +216,11 @@ fn assert_web_src_uses(needles: &[&str], why: &str) {
 
 /// Asserts that a game text lives only in the game data: not in the code of `crafting-core`
 /// and not in any file under `web/` (ADR 0011, ADR 0012).
+/// Comments are not searched (AB#326, ADR 0011 amendment): see `story_326.rs`.
 fn assert_only_in_game_data(text: &str) {
     let in_code = [
-        files_containing(&core_src_files(), text),
-        files_containing(&web_files(), text),
+        crate::story_326::files_containing_in_code(&core_src_files(), text),
+        crate::story_326::files_containing_in_code(&web_files(), text),
     ]
     .concat();
     assert!(
