@@ -17,6 +17,7 @@ the human is the Product Owner (PO).
 - Format: `cargo fmt --all`
 - Lint: `cargo clippy --all-targets -- -D warnings`
 - Test: `cargo test --all`
+- Measure the core operations: `cargo run --release -p crafting-core --example measure` (ADR 0025)
 - Local preview: `trunk serve --open` in `web/` (needs Trunk and the `wasm32-unknown-unknown` target, see README)
 - Pages build: `trunk build --release --public-url /poe-crafting-sim/ --dist ../target/pages` in `web/`.
   It writes to `target/pages`, which Git ignores, not to `web/dist`, so a running `trunk serve`

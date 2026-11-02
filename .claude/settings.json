@@ -5,6 +5,7 @@
       "Bash(cargo clippy *)",
       "Bash(cargo build *)",
       "Bash(cargo test *)",
+      "Bash(cargo run --release -p crafting-core --example measure)",
       "Bash(git status)",
       "Bash(git fetch origin)",
       "Bash(git diff *)",
