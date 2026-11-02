@@ -251,6 +251,7 @@ fn item_operations() -> Vec<Operation> {
             start: full_rare_bone_ring.clone(),
             call: Box::new(|item, _| {
                 black_box(item.explicit_texts());
+                black_box(item.explicit_texts());
             }),
         },
         Operation {
