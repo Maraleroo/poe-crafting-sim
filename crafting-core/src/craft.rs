@@ -147,7 +147,7 @@ pub fn add_random_mod(
     true
 }
 
-/// Whether the orb can be applied to `item`, without looking at any mod pool.
+/// Whether the Orb of Transmutation can be applied to `item`, without looking at any mod pool.
 pub fn can_apply_orb_of_transmutation(item: &Item) -> Result<(), CraftError> {
     if item.rarity == Rarity::Normal {
         Ok(())
@@ -158,9 +158,10 @@ pub fn can_apply_orb_of_transmutation(item: &Item) -> Result<(), CraftError> {
 
 /// Makes a normal item magic and gives it new mods from `pool`, the pool of its base.
 ///
-/// The orb chooses a target number of mods, 1 or 2, each with a chance of 50 %. It then adds
-/// random mods (`add_random_mod`) until the item has that many mods or no mod is added. The
-/// orb always takes effect: without a valid mod the item becomes magic with no mods.
+/// The Orb of Transmutation chooses a target number of mods, 1 or 2, each with a chance of
+/// 50 %. It then adds random mods (`add_random_mod`) until the item has that many mods or no
+/// mod is added. The orb always takes effect: without a valid mod the item becomes magic with
+/// no mods.
 ///
 /// On an error the item stays unchanged.
 ///
@@ -177,7 +178,7 @@ pub fn apply_orb_of_transmutation(
     Ok(())
 }
 
-/// Whether the orb can be applied to `item`, without looking at any mod pool.
+/// Whether the Orb of Alteration can be applied to `item`, without looking at any mod pool.
 pub fn can_apply_orb_of_alteration(item: &Item) -> Result<(), CraftError> {
     if item.rarity == Rarity::Magic {
         Ok(())
@@ -187,9 +188,9 @@ pub fn can_apply_orb_of_alteration(item: &Item) -> Result<(), CraftError> {
 }
 
 /// Removes all prefixes and suffixes of a magic item and adds new mods from `pool`, the pool
-/// of its base, exactly as when a normal item becomes magic. By chance the new mods can be the
-/// same as the old ones. The orb always takes effect: without a valid mod the item has no mods
-/// afterwards.
+/// of its base, exactly as the Orb of Transmutation does for a normal item. By chance the new
+/// mods can be the same as the old ones. The Orb of Alteration always takes effect: without a
+/// valid mod the item has no mods afterwards.
 ///
 /// On an error the item stays unchanged.
 ///
@@ -207,8 +208,8 @@ pub fn apply_orb_of_alteration(
     Ok(())
 }
 
-/// Whether the orb can be applied to `item`, without looking at any mod pool. The rarity is
-/// checked first, then the room.
+/// Whether the Orb of Augmentation can be applied to `item`, without looking at any mod pool.
+/// The rarity is checked first, then the room.
 pub fn can_apply_orb_of_augmentation(item: &Item) -> Result<(), CraftError> {
     if item.rarity != Rarity::Magic {
         return Err(CraftError::ItemNotMagic);
@@ -242,7 +243,7 @@ pub fn apply_orb_of_augmentation(
     }
 }
 
-/// The item as it is under the regal orb: the same item with the rarity rare, so the room is
+/// The item as it is under the Regal Orb: the same item with the rarity rare, so the room is
 /// counted under the affix limits of a rare item.
 fn as_rare(item: &Item) -> Item {
     Item {
@@ -251,8 +252,8 @@ fn as_rare(item: &Item) -> Item {
     }
 }
 
-/// Whether the orb can be applied to `item`, without looking at any mod pool. The rarity is
-/// checked first, then the room under the affix limits of a rare item.
+/// Whether the Regal Orb can be applied to `item`, without looking at any mod pool. The rarity
+/// is checked first, then the room under the affix limits of a rare item.
 pub fn can_apply_regal_orb(item: &Item) -> Result<(), CraftError> {
     if item.rarity != Rarity::Magic {
         return Err(CraftError::ItemNotMagic);
@@ -289,8 +290,9 @@ pub fn apply_regal_orb(
     }
 }
 
-/// Whether the orb can be applied to `item`, with `pool` the pool of its base. The rarity is
-/// checked first, then the room under the affix limits, then whether the valid pool has a mod.
+/// Whether the Exalted Orb can be applied to `item`, with `pool` the pool of its base. The
+/// rarity is checked first, then the room under the affix limits, then whether the valid pool
+/// has a mod.
 pub fn can_apply_exalted_orb(
     item: &Item,
     pool: &[ExplicitModDefinition],
@@ -329,14 +331,13 @@ pub fn apply_exalted_orb(
     }
 }
 
-/// The targets of the reforging orb for rare items and their chances (the PO's rule): 4, 5 or
-/// 6 mods, 8 : 3 : 1.
+/// The targets of the Chaos Orb and their chances (the PO's rule): 4, 5 or 6 mods, 8 : 3 : 1.
 const REFORGE_RARE_TARGETS: [usize; 3] = [4, 5, 6];
 const REFORGE_RARE_WEIGHTS: [u32; 3] = [8, 3, 1];
 
-/// Whether the orb can be applied to `item`, without looking at any mod pool. Only the rarity
-/// counts: the orb takes effect on every rare item, also when it can add fewer mods than its
-/// target or none.
+/// Whether the Chaos Orb can be applied to `item`, without looking at any mod pool. Only the
+/// rarity counts: the Chaos Orb takes effect on every rare item, also when it can add fewer
+/// mods than its target or none.
 pub fn can_apply_chaos_orb(item: &Item) -> Result<(), CraftError> {
     if item.rarity == Rarity::Rare {
         Ok(())
@@ -349,10 +350,10 @@ pub fn can_apply_chaos_orb(item: &Item) -> Result<(), CraftError> {
 /// its base. By chance the new mods can be the same as the old ones. The implicits stay and the
 /// item stays rare.
 ///
-/// The orb chooses a target number of mods, 4, 5 or 6, with chances 8 : 3 : 1. It then adds
-/// random mods (`add_random_mod`) under the affix limits of a rare item until the item has that
-/// many mods or no mod is added. The orb always takes effect on a rare item, also when it adds
-/// fewer mods than its target.
+/// The Chaos Orb chooses a target number of mods, 4, 5 or 6, with chances 8 : 3 : 1. It then
+/// adds random mods (`add_random_mod`) under the affix limits of a rare item until the item has
+/// that many mods or no mod is added. The Chaos Orb always takes effect on a rare item, also
+/// when it adds fewer mods than its target.
 ///
 /// On an error the item stays unchanged.
 ///
@@ -371,9 +372,9 @@ pub fn apply_chaos_orb(
     Ok(())
 }
 
-/// The rule of the orbs that reforge: choose a target of 1 or 2 mods, each with a chance of
-/// 50 %, then add random mods until the item has that many prefixes and suffixes or no mod is
-/// added.
+/// The rule of the Orb of Transmutation and the Orb of Alteration: choose a target of 1 or 2
+/// mods, each with a chance of 50 %, then add random mods until the item has that many prefixes
+/// and suffixes or no mod is added.
 fn add_random_mods(item: &mut Item, pool: &[ExplicitModDefinition], rng: &mut impl Rng) {
     let target = 1 + roll_below(rng, 2) as usize;
     fill_up_to(item, pool, target, rng);
